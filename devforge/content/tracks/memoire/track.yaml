@@ -1,0 +1,72 @@
+id: memoire
+title: Gestion de la mémoire
+description: >
+  Où vivent tes données, combien de temps, et qui les libère. De la pile et du
+  tas jusqu'aux ramasse-miettes, aux fuites et aux caches du processeur.
+
+levels:
+  - level: 1
+    title: Pile et tas
+    skills:
+      - id: pile-tas
+        title: La pile et le tas
+      - id: valeurs-references
+        title: Valeurs et références
+      - id: duree-de-vie
+        title: Portée et durée de vie des objets
+      - id: representation
+        title: Taille et représentation des données
+
+  - level: 2
+    title: Gérer la mémoire à la main
+    skills:
+      - id: allocation-manuelle
+        title: Allocation manuelle (malloc et free)
+      - id: bugs-memoire
+        title: Fuites, use-after-free, double libération, débordements
+      - id: raii
+        title: RAII et destructeurs
+      - id: comptage-references
+        title: Comptage de références et cycles
+      - id: ownership
+        title: Possession et emprunt (Rust)
+
+  - level: 3
+    title: Les ramasse-miettes
+    skills:
+      - id: accessibilite
+        title: Racines et accessibilité
+      - id: mark-sweep
+        title: Marquer, balayer, compacter
+      - id: gc-copie
+        title: Ramasse-miettes par copie
+      - id: generationnel
+        title: L'hypothèse générationnelle
+      - id: pauses-gc
+        title: Pauses, GC concurrent et barrières
+
+  - level: 4
+    title: Fuites et diagnostic
+    skills:
+      - id: fuites-gc
+        title: Fuites de mémoire malgré le GC
+      - id: references-faibles
+        title: Références faibles, douces et fantômes
+      - id: heap-dump
+        title: Analyser un heap dump
+      - id: hors-tas
+        title: Mémoire hors tas et buffers directs
+
+  - level: 5
+    title: Mémoire et performance
+    skills:
+      - id: allocateurs
+        title: Allocateurs (arènes, pools, slabs)
+      - id: fragmentation
+        title: Fragmentation
+      - id: caches-cpu
+        title: Caches du processeur et localité
+      - id: faux-partage
+        title: Faux partage (false sharing)
+      - id: disposition-objets
+        title: Disposition des objets en mémoire

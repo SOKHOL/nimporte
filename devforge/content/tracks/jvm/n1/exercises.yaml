@@ -1,0 +1,160 @@
+exercises:
+  - id: jvm.n1.bytecode.parsons-ratio
+    type: parsons
+    title: Écris le bytecode
+    skills: [bytecode]
+    difficulty: 3
+    prompt: |
+      Remets dans l'ordre le bytecode de cette fonction, tel que `kotlinc` le génère :
+
+      ```kotlin
+      fun ratio(a: Int, b: Int, c: Int): Int = (a - b) / c
+      ```
+
+      Les variables locales sont `a` (0), `b` (1) et `c` (2). Deux lignes sont des pièges.
+    lines:
+      - iload_0
+      - iload_1
+      - isub
+      - iload_2
+      - idiv
+      - ireturn
+    distractors:
+      - iadd
+      - istore_0
+    hints:
+      - Une instruction comme `isub` dépile deux valeurs et empile le résultat.
+      - "`a - b` doit être calculé avant de diviser par `c`."
+    explanation: |
+      On empile `a` et `b`, `isub` les remplace par `a - b`, on empile `c`, `idiv`
+      calcule `(a - b) / c`, et `ireturn` renvoie le sommet de la pile. C'est le
+      bytecode réel affiché par `javap -c`.
+
+  - id: jvm.n1.bytecode.qcm-pile
+    type: qcm
+    title: Que contient la pile ?
+    skills: [bytecode]
+    difficulty: 2
+    prompt: |
+      Les variables locales valent `a = 7` (0) et `b = 2` (1). Après les instructions
+      `iload_0`, `iload_1`, `isub`, que contient la pile d'opérandes ?
+    choices:
+      - id: a
+        text: "`[5]`"
+        correct: true
+      - id: b
+        text: "`[7, 2]`"
+        feedback: "`isub` a dépilé ces deux valeurs."
+      - id: c
+        text: "`[-5]`"
+        feedback: "La valeur empilée en premier est l'opérande de gauche : 7 - 2."
+      - id: d
+        text: "`[7, 2, 5]`"
+    explanation: |
+      `iload_0` empile 7, `iload_1` empile 2, `isub` dépile 2 puis 7 et empile 7 - 2 = 5.
+
+  - id: jvm.n1.bytecode.qcm-execution
+    type: qcm
+    title: Comment tourne ton code ?
+    skills: [bytecode]
+    difficulty: 1
+    prompt: Comment la JVM exécute-t-elle le bytecode d'une application ?
+    choices:
+      - id: a
+        text: Elle l'interprète d'abord, puis compile en code machine les méthodes appelées souvent (JIT).
+        correct: true
+      - id: b
+        text: Elle compile tout en code machine avant de démarrer.
+        feedback: "C'est ce que fait la compilation native (GraalVM Native Image), pas la JVM classique."
+      - id: c
+        text: Elle l'interprète toujours, ligne par ligne.
+      - id: d
+        text: Le processeur exécute directement le bytecode.
+    explanation: |
+      Interpréter d'abord permet de démarrer vite ; compiler les méthodes chaudes
+      permet d'optimiser avec des informations réelles (types observés, branches
+      prises). D'où le temps de chauffe des applications JVM.
+
+  - id: jvm.n1.zones.match
+    type: match
+    title: Chaque chose à sa place
+    skills: [zones-memoire]
+    difficulty: 2
+    prompt: Relie chaque zone mémoire de la JVM à ce qu'elle contient.
+    pairs:
+      - left: Pile du thread
+        right: Les frames des appels en cours (variables locales, pile d'opérandes)
+      - left: Tas
+        right: Les objets et les tableaux, partagés par tous les threads
+      - left: Metaspace
+        right: Les métadonnées des classes chargées
+      - left: Code cache
+        right: Le code machine produit par le JIT
+      - left: Registre PC
+        right: L'adresse de l'instruction en cours, pour chaque thread
+    explanation: |
+      Pile et registre PC sont propres à chaque thread ; tas, metaspace et code cache
+      sont partagés par toute la JVM.
+
+  - id: jvm.n1.zones.qcm-metaspace
+    type: qcm
+    title: "OutOfMemoryError: Metaspace"
+    skills: [zones-memoire]
+    difficulty: 3
+    prompt: |
+      Un serveur d'applications plante avec `java.lang.OutOfMemoryError: Metaspace`
+      après une dizaine de redéploiements à chaud. Quelle est la cause la plus probable ?
+    choices:
+      - id: a
+        text: Une fuite de class loaders, qui garde chargées les anciennes versions des classes.
+        correct: true
+      - id: b
+        text: Trop d'objets créés par l'application.
+        feedback: "Ce serait `Java heap space`."
+      - id: c
+        text: Une récursion trop profonde.
+        feedback: "Ce serait `StackOverflowError`."
+      - id: d
+        text: Trop de threads.
+        feedback: "Ce serait `unable to create native thread`."
+    explanation: |
+      La metaspace contient les métadonnées des classes. Une classe n'est déchargée
+      que si son class loader devient inaccessible. Un seul objet de l'ancienne
+      version encore référencé (thread, `ThreadLocal`, driver JDBC enregistré…)
+      garde tout le class loader, et toutes ses classes, en mémoire.
+
+  - id: jvm.n1.boxing.predict-cache
+    type: predict-output
+    title: Le cache des Integer
+    skills: [boxing]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val a: Int? = 127
+          val b: Int? = 127
+          val c: Int? = 1000
+          val d: Int? = 1000
+          println(a === b)
+          println(c === d)
+          println(c == d)
+      }
+    choices:
+      - id: a
+        text: "`true` / `false` / `true`"
+        correct: true
+      - id: b
+        text: "`true` / `true` / `true`"
+      - id: c
+        text: "`false` / `false` / `true`"
+      - id: d
+        text: "`true` / `false` / `false`"
+    hints:
+      - "`Int?` est représenté par un objet `java.lang.Integer`."
+      - "`Integer.valueOf` réutilise des objets pour les petites valeurs."
+    explanation: |
+      `Int?` est « boxé » via `Integer.valueOf`, qui renvoie des objets en cache de
+      -128 à 127. `a` et `b` sont donc le même objet ; `c` et `d` sont deux objets
+      distincts de même valeur. `===` compare les identités, `==` les valeurs.
+      Moralité : ne compare jamais des nombres avec `===`.

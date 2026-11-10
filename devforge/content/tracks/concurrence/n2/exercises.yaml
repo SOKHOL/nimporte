@@ -1,0 +1,186 @@
+exercises:
+  - id: concurrence.n2.volatile.qcm-atomicite
+    type: qcm
+    title: Volatile suffit-il ?
+    skills: [visibilite-volatile, atomiques]
+    difficulty: 3
+    language: kotlin
+    prompt: Deux threads appellent `incrementer()` 100 000 fois chacun. Le résultat est-il toujours 200 000 ?
+    code: |
+      @Volatile var compteur = 0
+
+      fun incrementer() {
+          compteur++
+      }
+    choices:
+      - id: a
+        text: Non. Volatile garantit la visibilité, pas l'atomicité de « lire, ajouter, écrire ».
+        correct: true
+      - id: b
+        text: Oui, volatile rend toutes les opérations atomiques.
+      - id: c
+        text: Oui, mais seulement sur un processeur 64 bits.
+      - id: d
+        text: Non, car volatile est interdit sur un Int.
+    explanation: |
+      Chaque thread voit bien la dernière valeur écrite, mais deux threads peuvent
+      encore lire la même valeur avant d'écrire. Solutions : `AtomicInteger`,
+      `synchronized`, ou ne pas partager le compteur.
+
+  - id: concurrence.n2.interblocage.bug-virement
+    type: find-bug
+    title: Le virement qui fige tout
+    skills: [interblocage]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      Deux virements simultanés, `virer(a, b, 10)` et `virer(b, a, 20)`, bloquent
+      parfois l'application pour toujours. Touche la ligne où le problème se crée.
+    code: |
+      class Compte(val id: Int, var solde: Long)
+
+      fun virer(de: Compte, vers: Compte, montant: Long) {
+          synchronized(de) {
+              synchronized(vers) {
+                  de.solde -= montant
+                  vers.solde += montant
+              }
+          }
+      }
+    bug_lines: [4, 5]
+    hints:
+      - Quel verrou chaque thread prend-il en premier ?
+    explanation: |
+      L'ordre des verrous dépend de l'ordre des arguments. Thread 1 tient `a` et attend
+      `b` ; thread 2 tient `b` et attend `a` : attente circulaire.
+
+      Correction : prendre les verrous dans un ordre global, par exemple par `id` :
+      `val (premier, second) = if (de.id < vers.id) de to vers else vers to de`.
+
+  - id: concurrence.n2.collections.trous-merge
+    type: fill-blanks
+    title: Compter les visites sans verrou
+    skills: [collections-concurrentes, atomiques]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Des centaines de threads appellent `enregistrerVisite`. Complète le code pour
+      qu'aucune visite ne soit perdue, sans écrire de verrou.
+    code: |
+      val compteurs = {{1}}<String, Int>()
+
+      fun enregistrerVisite(page: String) {
+          compteurs.{{2}}(page, 1, Int::plus)
+      }
+    blanks:
+      "1":
+        answers: [ConcurrentHashMap]
+        options: [ConcurrentHashMap, HashMap, LinkedHashMap, TreeMap]
+      "2":
+        answers: [merge]
+        options: [merge, put, getOrPut, set]
+    explanation: |
+      `ConcurrentHashMap.merge` est **atomique** : si la clé est absente, elle met 1 ;
+      sinon elle applique `Int::plus` à l'ancienne valeur et à 1. Vérifié pour ce cours :
+      4 threads × 50 000 visites donnent exactement 200 000.
+
+  - id: concurrence.n2.conception.qcm-eviter
+    type: qcm
+    title: Le meilleur verrou
+    skills: [synchronized, atomiques]
+    difficulty: 2
+    multiple: true
+    prompt: Quelles approches évitent vraiment les problèmes de concurrence ? (plusieurs réponses)
+    choices:
+      - id: a
+        text: Partager seulement des objets immuables.
+        correct: true
+      - id: b
+        text: Confiner chaque donnée modifiable à un seul thread (ou une seule coroutine).
+        correct: true
+      - id: c
+        text: Ajouter des `Thread.sleep()` pour laisser le temps aux autres threads.
+        feedback: Ça déplace les fenêtres de course sans les fermer, et ça ralentit tout.
+      - id: d
+        text: Mettre `@Volatile` sur toutes les variables.
+        feedback: La visibilité ne garantit pas l'atomicité.
+    explanation: |
+      Un problème de concurrence demande un état **partagé** et **modifiable**.
+      Retire l'un des deux (immutabilité ou confinement) et le problème disparaît,
+      sans verrou ni risque d'interblocage.
+
+  - id: concurrence.n2.interblocage.scenario-prod
+    type: scenario
+    title: L'application ne répond plus
+    skills: [interblocage, synchronized]
+    difficulty: 3
+    prompt: |
+      Le service de paiement ne répond plus. Le CPU est à 0 %, la mémoire est normale,
+      les requêtes s'accumulent. Mène l'enquête.
+    start: debut
+    nodes:
+      debut:
+        text: CPU à 0 % et requêtes bloquées. Que fais-tu en premier ?
+        options:
+          - text: "Je capture l'état des threads : `jcmd <pid> Thread.print`"
+            next: dump
+            points: 3
+            feedback: Des threads bloqués sans consommer de CPU attendent quelque chose. Le thread dump dit quoi.
+          - text: Je redémarre le service tout de suite.
+            next: redemarrage
+            points: 1
+            feedback: Le service repart… mais tu as perdu la seule preuve du problème.
+          - text: J'augmente la taille du tas.
+            next: tas
+            points: 0
+            feedback: La mémoire n'est pas en cause.
+      redemarrage:
+        text: Deux heures plus tard, le service se bloque de nouveau. Cette fois ?
+        options:
+          - text: Je capture l'état des threads avant de redémarrer.
+            next: dump
+            points: 2
+      tas:
+        text: Rien ne change, le service reste figé. Que fais-tu ?
+        options:
+          - text: Je capture l'état des threads.
+            next: dump
+            points: 1
+      dump:
+        text: |
+          ```
+          Found one Java-level deadlock:
+          "pool-1-thread-7":
+            waiting to lock monitor 0x00007f3a (a Compte), which is held by "pool-1-thread-3"
+          "pool-1-thread-3":
+            waiting to lock monitor 0x00007f2c (a Compte), which is held by "pool-1-thread-7"
+          ```
+
+          Les deux piles d'appels passent par `virer(de, vers, montant)`. Quelle correction ?
+        options:
+          - text: Prendre les verrous des deux comptes toujours dans le même ordre (par identifiant).
+            next: resolu
+            points: 3
+          - text: Ajouter un `Thread.sleep(10)` entre les deux `synchronized`.
+            next: sleep
+            points: 0
+            feedback: L'interblocage devient plus rare, donc plus difficile à reproduire, mais il reste possible.
+          - text: Retirer le `synchronized` intérieur.
+            next: course
+            points: 0
+            feedback: Plus d'interblocage… mais le compte destinataire est modifié sans protection.
+      sleep:
+        ending: failure
+        text: ❌ Trois semaines plus tard, un vendredi soir, le service se fige de nouveau.
+      course:
+        ending: failure
+        text: "❌ Plus de blocage, mais des soldes faux apparaissent : une condition de course remplace l'interblocage."
+      resolu:
+        ending: success
+        text: |
+          ✅ Un ordre global des verrous casse l'attente circulaire. Tu ajoutes un test de
+          charge avec des virements croisés et une alerte sur le nombre de threads bloqués.
+    explanation: |
+      CPU à 0 % et requêtes bloquées : des threads **attendent**. Le thread dump montre
+      qui attend qui ; la JVM détecte même les interblocages de moniteurs. On corrige
+      en cassant l'attente circulaire (ordre global des verrous), pas en jouant sur le timing.

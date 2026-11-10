@@ -1,0 +1,141 @@
+exercises:
+  - id: concurrence.n1.threads.predict-join
+    type: predict-output
+    title: Dans quel ordre ?
+    skills: [creer-threads]
+    difficulty: 1
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val t = Thread { println("B") }
+          println("A")
+          t.start()
+          t.join()
+          println("C")
+      }
+    choices:
+      - id: a
+        text: "`A` `B` `C`, toujours dans cet ordre"
+        correct: true
+      - id: b
+        text: "`B` `A` `C`"
+        feedback: Le thread n'est lancé qu'après l'affichage de A.
+      - id: c
+        text: "`A` `C` `B`"
+        feedback: "`join()` attend la fin du thread avant de continuer."
+      - id: d
+        text: Un ordre différent à chaque exécution
+    explanation: |
+      `A` est affiché avant `start()`. Puis `join()` bloque `main` jusqu'à la fin du
+      thread, qui affiche `B`. Enfin `C`. Ici, l'ordre est garanti.
+
+  - id: concurrence.n1.threads.predict-run-start
+    type: predict-output
+    title: run ou start ?
+    skills: [creer-threads]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val t = Thread({ println(Thread.currentThread().name) }, "worker")
+          t.run()
+          t.start()
+          t.join()
+      }
+    choices:
+      - id: a
+        text: "`main` puis `worker`"
+        correct: true
+      - id: b
+        text: "`worker` puis `worker`"
+      - id: c
+        text: "`worker` seulement"
+      - id: d
+        text: Une exception, car le thread a déjà été exécuté.
+        feedback: "`run()` n'a pas démarré le thread : `start()` est encore permis."
+    explanation: |
+      `run()` est un simple appel de méthode : le code s'exécute dans le thread
+      courant, `main`. Seul `start()` crée un nouveau thread, nommé ici `worker`.
+
+  - id: concurrence.n1.course.qcm-compteur
+    type: qcm
+    title: Deux threads, un compteur
+    skills: [race-condition]
+    difficulty: 2
+    language: kotlin
+    prompt: Que peut afficher ce programme ?
+    code: |
+      var compteur = 0
+
+      fun main() {
+          val threads = List(2) { Thread { repeat(100_000) { compteur++ } } }
+          threads.forEach { it.start() }
+          threads.forEach { it.join() }
+          println(compteur)
+      }
+    choices:
+      - id: a
+        text: Une valeur inférieure ou égale à 200 000, qui peut changer d'une exécution à l'autre.
+        correct: true
+      - id: b
+        text: Toujours 200 000.
+        feedback: "Souvent, mais pas toujours : en préparant ce cours, une exécution sur cinq a donné 124 927."
+      - id: c
+        text: Toujours 100 000.
+      - id: d
+        text: Le programme plante avec une ConcurrentModificationException.
+    explanation: |
+      `compteur++` = lire, ajouter, écrire. Deux threads peuvent lire la même valeur
+      et écrire le même résultat : un incrément est perdu. Le résultat dépend de
+      l'entrelacement, donc varie d'une exécution à l'autre.
+
+  - id: concurrence.n1.notions.qcm-concurrence-parallelisme
+    type: qcm
+    title: Concurrence ou parallélisme ?
+    skills: [concurrence-parallelisme]
+    difficulty: 1
+    prompt: |
+      Un serveur tourne sur un processeur à **un seul cœur**. Il gère 1 000 connexions
+      en passant de l'une à l'autre dès qu'une attend le réseau. C'est…
+    choices:
+      - id: a
+        text: de la concurrence, sans parallélisme
+        correct: true
+      - id: b
+        text: du parallélisme, sans concurrence
+      - id: c
+        text: les deux
+        feedback: Avec un seul cœur, rien ne s'exécute au même instant.
+      - id: d
+        text: ni l'un ni l'autre
+    explanation: |
+      Les tâches progressent en même temps (concurrence) mais ne s'exécutent jamais
+      au même instant (pas de parallélisme). C'est le modèle des serveurs à boucle
+      d'événements (Node.js, Netty) et des coroutines.
+
+  - id: concurrence.n1.notions.qcm-partage
+    type: qcm
+    title: Que partagent les threads ?
+    skills: [processus-threads]
+    difficulty: 1
+    multiple: true
+    prompt: Que partagent les threads d'un même processus ? (plusieurs réponses)
+    choices:
+      - id: a
+        text: Le tas (les objets)
+        correct: true
+      - id: b
+        text: Les variables statiques
+        correct: true
+      - id: c
+        text: Leur pile d'appels
+        feedback: Chaque thread a sa propre pile.
+      - id: d
+        text: Leurs variables locales
+        feedback: Elles sont dans la pile de chaque thread. (Mais l'objet qu'elles référencent, lui, peut être partagé.)
+    explanation: |
+      Tout ce qui est sur le tas ou statique est potentiellement partagé, donc
+      potentiellement soumis aux conditions de course. Les variables locales sont
+      privées à chaque thread.

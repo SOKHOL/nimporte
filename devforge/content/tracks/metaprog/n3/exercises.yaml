@@ -1,0 +1,185 @@
+exercises:
+  - id: metaprog.n3.aop.match-vocabulaire
+    type: match
+    title: Le vocabulaire de l'AOP
+    skills: [aop-concepts, tissage]
+    difficulty: 1
+    prompt: Relie chaque terme à sa définition.
+    pairs:
+      - left: Aspect
+        right: Le module qui regroupe une préoccupation transverse
+      - left: Point de jonction
+        right: Un point de l'exécution où l'on peut intervenir, comme l'exécution d'une méthode
+      - left: Coupe
+        right: L'expression qui sélectionne les points de jonction
+      - left: Greffon
+        right: Le code exécuté avant, après ou autour du point de jonction
+      - left: Tissage
+        right: L'insertion des greffons dans le programme
+    explanation: |
+      Un aspect = une coupe (**où** intervenir) + un greffon (**quoi** faire).
+      Le tissage les applique, à la compilation, au chargement ou à l'exécution.
+
+  - id: metaprog.n3.aop.predict-appel-interne
+    type: predict-output
+    title: L'appel interne
+    skills: [spring-aop, aop-concepts]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import java.lang.reflect.Proxy
+
+      interface Service {
+          fun traiter()
+          fun enregistrer()
+      }
+
+      class ServiceImpl : Service {
+          override fun traiter() {
+              println("traiter")
+              enregistrer()
+          }
+
+          override fun enregistrer() {
+              println("enregistrer")
+          }
+      }
+
+      fun main() {
+          val cible = ServiceImpl()
+          val proxy = Proxy.newProxyInstance(
+              Service::class.java.classLoader,
+              arrayOf(Service::class.java),
+          ) { _, methode, args ->
+              println("[aspect] début ${methode.name}")
+              methode.invoke(cible, *(args ?: emptyArray()))
+          } as Service
+
+          proxy.traiter()
+      }
+    choices:
+      - id: a
+        text: "`[aspect] début traiter` / `traiter` / `enregistrer`"
+        correct: true
+      - id: b
+        text: "`[aspect] début traiter` / `traiter` / `[aspect] début enregistrer` / `enregistrer`"
+        feedback: "`enregistrer()` est appelée sur `this`, la vraie cible, pas sur le proxy."
+      - id: c
+        text: "`traiter` / `enregistrer`"
+      - id: d
+        text: "`[aspect] début traiter` / `[aspect] début enregistrer` / `traiter` / `enregistrer`"
+    explanation: |
+      Seul l'appel fait **sur le proxy** est intercepté. À l'intérieur de `traiter`,
+      `enregistrer()` est un appel sur `this`, l'objet réel. C'est exactement pourquoi
+      un `@Transactional` sur une méthode appelée depuis la même classe est ignoré par
+      Spring.
+
+  - id: metaprog.n3.transactional.review-commandes
+    type: code-review
+    title: "Revue de code : des transactions fantômes"
+    skills: [transactional, spring-aop]
+    difficulty: 4
+    language: kotlin
+    prompt: |
+      Ce service Spring écrit en Kotlin (sans le plugin `kotlin-spring`) est censé
+      enregistrer les commandes dans des transactions. Trouve au moins 2 problèmes.
+    code: |
+      @Service
+      class CommandeService(private val repo: CommandeRepository, private val stock: StockService) {
+
+          fun passerCommandes(commandes: List<Commande>) {
+              commandes.forEach { enregistrer(it) }
+          }
+
+          @Transactional
+          fun enregistrer(commande: Commande) {
+              repo.save(commande)
+              stock.reserver(commande)
+          }
+
+          @Transactional
+          private fun archiver(commande: Commande) {
+              repo.archive(commande)
+          }
+      }
+    issues:
+      - lines: [5]
+        category: bug
+        description: |
+          Appel interne : `enregistrer` est appelée sur `this`, sans passer par le proxy.
+          Aucune transaction n'est ouverte.
+      - lines: [14, 15]
+        category: bug
+        description: "`@Transactional` sur une méthode `private` : jamais interceptée, l'annotation est ignorée en silence."
+      - lines: [1, 2]
+        category: bug
+        description: |
+          Classe Kotlin `final` par défaut : sans le plugin `kotlin-spring` (all-open),
+          Spring ne peut pas créer de proxy par sous-classe pour ce bean.
+      - lines: [4, 5]
+        category: conception
+        description: |
+          Si une commande échoue au milieu du lot, les précédentes restent enregistrées.
+          Si le lot doit être atomique, c'est `passerCommandes` qui doit porter la transaction.
+    min_found: 2
+    explanation: |
+      Les trois premiers problèmes viennent du même fait : **Spring AOP fonctionne par
+      proxy**. Un aspect ne s'applique qu'aux appels qui traversent le proxy, sur des
+      méthodes qu'il peut redéfinir (publiques, non finales).
+
+  - id: metaprog.n3.aop.trous-around
+    type: fill-blanks
+    title: Écrire un aspect « autour »
+    skills: [aop-concepts]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Complète cet aspect AspectJ : il doit s'exécuter **autour** des méthodes annotées
+      `@Chronometre` et lancer la vraie méthode au milieu.
+    code: |
+      @Aspect
+      class ChronometreAspect {
+          @{{1}}("@annotation(com.devforge.Chronometre)")
+          fun mesurer(pjp: ProceedingJoinPoint): Any? {
+              val debut = System.nanoTime()
+              try {
+                  return pjp.{{2}}()
+              } finally {
+                  println("${pjp.signature.name} : ${(System.nanoTime() - debut) / 1_000_000} ms")
+              }
+          }
+      }
+    blanks:
+      "1":
+        answers: [Around]
+        options: [Around, Before, After, Pointcut]
+      "2":
+        answers: [proceed]
+        options: [proceed, invoke, call, execute]
+    explanation: |
+      Un greffon `@Around` reçoit un `ProceedingJoinPoint` et décide lui-même quand
+      (et si) la vraie méthode s'exécute, avec `proceed()`. C'est le seul type de
+      greffon qui peut mesurer une durée, modifier le résultat ou empêcher l'appel.
+
+  - id: metaprog.n3.transactional.qcm-rollback
+    type: qcm
+    title: Commit ou rollback ?
+    skills: [transactional]
+    difficulty: 4
+    prompt: Par défaut, quand Spring annule-t-il (rollback) une transaction ouverte par `@Transactional` ?
+    choices:
+      - id: a
+        text: Quand une exception non vérifiée (RuntimeException ou Error) sort de la méthode.
+        correct: true
+      - id: b
+        text: Quand n'importe quelle exception sort de la méthode.
+        feedback: "Une exception vérifiée (IOException…) provoque un **commit** par défaut. Piège classique en Kotlin."
+      - id: c
+        text: Jamais, il faut appeler rollback à la main.
+      - id: d
+        text: Quand la méthode renvoie null.
+    explanation: |
+      C'est l'héritage d'une convention Java : les exceptions vérifiées étaient vues
+      comme des cas métier « prévus ». En Kotlin, on ne les voit pas venir. Pour annuler
+      sur toute exception : `@Transactional(rollbackFor = [Exception::class])`.

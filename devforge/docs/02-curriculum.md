@@ -30,7 +30,7 @@ flowchart LR
   carriere["Carrière"]
   algo["Algorithmes"]
   poo["POO"]
-  fonctionnel["Fonctionnel & concurrence"]
+  fonctionnel["Fonctionnel"]
   cleancode["Clean code & tests"]
   patterns["Design patterns"]
   bdd["Bases de données"]
@@ -41,6 +41,20 @@ flowchart LR
   cloud["Cloud"]
   sre["Observabilité & SRE"]
   securite["Sécurité"]
+  maths["Maths"]
+  ordinateur["Ordinateur"]
+  memoire["Mémoire"]
+  jvm["JVM"]
+  concurrence["Threads & concurrence"]
+  metaprog["Métaprog & AOP"]
+  frameworks["Frameworks"]
+  compilation["Compilateurs"]
+  performance["Performance"]
+  debogage["Débogage"]
+  distribues["Systèmes distribués"]
+  donnees["Données"]
+  android["Android"]
+  ia["IA pour devs"]
 
   fondations --> algo
   fondations --> poo
@@ -63,14 +77,40 @@ flowchart LR
   linux -->|niv. 2| sre
   reseau -->|niv. 2| securite
   bdd --> securite
+  fondations --> ordinateur
+  fondations --> debogage
+  fondations -->|niv. 2| memoire
+  ordinateur --> memoire
+  fondations -->|niv. 2| concurrence
+  ordinateur --> concurrence
+  poo --> jvm
+  memoire --> jvm
+  poo -->|niv. 2| metaprog
+  patterns -->|niv. 2| metaprog
+  metaprog -->|niv. 2| frameworks
+  bdd -->|niv. 2| frameworks
+  algo -->|niv. 2| compilation
+  fonctionnel --> compilation
+  jvm -->|niv. 2| performance
+  algo -->|niv. 2| performance
+  sysdesign -->|niv. 2| distribues
+  concurrence -->|niv. 2| distribues
+  bdd -->|niv. 2| donnees
+  sysdesign --> donnees
+  poo -->|niv. 2| android
+  fonctionnel --> android
+  reseau -->|niv. 2| ia
 ```
 
-`Git`, `Linux` et `Carrière` n'ont aucun prérequis : on peut les commencer dès le premier jour.
+`Maths`, `Git`, `Linux` et `Carrière` n'ont aucun prérequis : on peut les commencer dès le premier jour.
 
-## Les 17 parcours
+## Les 31 parcours
 
 Légende : ⭐ = parcours pilote, dont les compétences sont détaillées dans un `track.yaml`
-et qui contient déjà des exercices.
+et qui contient déjà des leçons ou des exercices.
+
+Ce qui distingue un débutant d'un expert dans chaque domaine est détaillé dans
+[06 — Du novice à l'expert](06-novice-vers-expert.md).
 
 ### Fondations de la programmation — `fondations`
 
@@ -122,15 +162,15 @@ et qui contient déjà des exercices.
 | 4 | UML (classes, séquences), modélisation d'un domaine, invariants et programmation par contrat, Liskov en profondeur |
 | 5 | traits, mixins et délégation, prototypes, quand ne **pas** utiliser la POO |
 
-### Programmation fonctionnelle et concurrence — `fonctionnel`
+### Programmation fonctionnelle — `fonctionnel`
 
 | Niv. | Contenu |
 |---|---|
 | 1 | lambdas, fonctions d'ordre supérieur, map/filter/reduce, immutabilité |
 | 2 | fonctions pures, effets de bord, composition, sealed classes et pattern matching |
 | 3 | Option/Result, gestion d'erreurs fonctionnelle, évaluation paresseuse, récursivité terminale |
-| 4 | threads, verrous, race conditions, deadlocks, coroutines, async/await, flux réactifs |
-| 5 | modèle d'acteurs, structures persistantes, functors et monades en pratique, lock-free (aperçu) |
+| 4 | types algébriques, functors et monades en pratique (Arrow), effets, programmation réactive |
+| 5 | structures de données persistantes, lambda-calcul, langages purs (Haskell), théorie des catégories (aperçu) |
 
 ### Clean code, refactoring et tests — `clean-code`
 
@@ -234,6 +274,146 @@ Les 23 patterns du Gang of Four sont tous couverts, répartis selon leur fréque
 | 4 | modélisation des menaces (STRIDE), sécurité des conteneurs et de Kubernetes, chaîne logicielle, SAST/DAST/SCA |
 | 5 | sécurité dès la conception, réponse à incident de sécurité, bases du pentest éthique, RGPD |
 
+### Maths pour l'informatique — `maths`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | logique booléenne, bases numériques (binaire, hexadécimal), puissances de 2, arithmétique modulaire |
+| 2 | ensembles, relations, fonctions, récurrence et preuves simples, combinatoire |
+| 3 | probabilités, statistiques (moyenne, médiane, percentiles, écart-type), lois à longue traîne |
+| 4 | graphes, notation asymptotique, nombres flottants (IEEE 754), algèbre linéaire de base |
+| 5 | théorie de l'information (entropie), calculabilité (problème de l'arrêt), maths de la cryptographie |
+
+### Comment fonctionne un ordinateur — `ordinateur`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | binaire, octets, processeur, mémoire vive, stockage, du code source à l'exécution |
+| 2 | jeu d'instructions, registres, cycle d'exécution, lire quelques lignes d'assembleur |
+| 3 | système d'exploitation : processus, threads, ordonnancement, appels système, interruptions |
+| 4 | mémoire virtuelle, pagination, hiérarchie des caches, entrées-sorties (bloquantes, non bloquantes, epoll) |
+| 5 | pipeline, exécution spéculative, prédiction de branchement, SIMD, NUMA, *mechanical sympathy* |
+
+### ⭐ Gestion de la mémoire — `memoire`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | pile et tas, valeurs et références, portée et durée de vie, taille et représentation des données |
+| 2 | malloc et free, bugs mémoire (fuites, use-after-free, double libération, débordements), RAII, comptage de références et cycles, possession et emprunt (Rust) |
+| 3 | racines et accessibilité, marquer-balayer-compacter, GC par copie, hypothèse générationnelle, pauses et GC concurrent |
+| 4 | fuites malgré le GC, références faibles, douces et fantômes, heap dumps, mémoire hors tas |
+| 5 | allocateurs (arènes, pools), fragmentation, caches du processeur et localité, faux partage, disposition des objets |
+
+### ⭐ La JVM de l'intérieur — `jvm`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | bytecode et machine à pile, zones mémoire (tas, piles, metaspace, code cache), primitifs, boxing et cache des Integer |
+| 2 | chargement des classes, ordre d'initialisation, interpréteur et JIT, exceptions et piles d'appels |
+| 3 | collecteurs (Serial, Parallel, G1, ZGC, Shenandoah), G1 en détail, logs du GC, choisir et régler son GC |
+| 4 | options de la JVM, jcmd/jstack/jmap/jstat, Java Flight Recorder, inlining et escape analysis, la JVM en conteneur |
+| 5 | GraalVM et compilation native, JNI et Foreign Function & Memory, spécification de la JVM, langages de la JVM |
+
+### ⭐ Threads et concurrence — `concurrence`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | concurrence et parallélisme, processus et threads, créer et attendre des threads, conditions de course |
+| 2 | synchronized, visibilité et volatile, variables atomiques, interblocages, collections concurrentes |
+| 3 | modèle mémoire Java (happens-before), pools de threads, CompletableFuture, verrous avancés, ThreadLocal |
+| 4 | coroutines Kotlin, concurrence structurée et annulation, threads virtuels, flux réactifs et backpressure |
+| 5 | algorithmes sans verrou (CAS, ABA), barrières mémoire, modèle d'acteurs, tester du code concurrent, concevoir pour la concurrence |
+
+### ⭐ Métaprogrammation et AOP — `metaprog`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | annotations, réflexion, KClass et réflexion Kotlin |
+| 2 | préoccupations transverses, proxies dynamiques, délégation Kotlin |
+| 3 | AOP (aspect, point de jonction, coupe, greffon), tissage, Spring AOP et ses pièges, `@Transactional` sous le capot |
+| 4 | ASM et ByteBuddy, agents Java, génération de code (KSP), plugins du compilateur |
+| 5 | DSL Kotlin, macros, quand la magie coûte trop cher |
+
+### Les frameworks de l'intérieur — `frameworks`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | inversion de contrôle, bibliothèque ou framework, cycle de vie d'une requête web |
+| 2 | conteneur d'injection de dépendances : beans, portées, cycle de vie, auto-configuration (Spring Boot) |
+| 3 | JPA/Hibernate : contexte de persistance, dirty checking, chargement paresseux, transactions |
+| 4 | serveurs web (servlets, Netty, boucle d'événements), Ktor et ses plugins, frameworks réactifs |
+| 5 | lire le code source d'un framework ; écrire ton propre mini-framework (injection + routage) |
+
+### Langages et compilateurs — `compilation`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | interprété ou compilé, étapes d'un compilateur, grammaires |
+| 2 | analyse lexicale, analyse syntaxique (descente récursive), arbre syntaxique (AST) |
+| 3 | interpréteur d'AST, portée et environnements, fermetures |
+| 4 | systèmes de types, inférence de types, génération de bytecode |
+| 5 | optimisations (propagation de constantes, code mort), SSA, LLVM ; projet : ton propre langage |
+
+### Performance et optimisation — `performance`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | mesurer avant d'optimiser, latence et débit, percentiles (p50, p99) |
+| 2 | microbenchmarks (JMH) et leurs pièges, profilers, flame graphs |
+| 3 | complexité en pratique, allocations et pression sur le GC, caches applicatifs, entrées-sorties |
+| 4 | performance des bases de données, tests de charge, loi de Little, loi d'Amdahl |
+| 5 | *mechanical sympathy*, optimisations du JIT, structures adaptées au cache, latence de queue |
+
+### Débogage et diagnostic — `debogage`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | lire un message d'erreur et une stack trace, reproduire un bug, la méthode scientifique |
+| 2 | débogueur (points d'arrêt, pas à pas, conditions), logs utiles |
+| 3 | `git bisect`, réduire un cas de test, bugs intermittents, débogage à distance |
+| 4 | thread dumps (interblocages, contention), heap dumps (fuites), profilage en production |
+| 5 | déboguer un système distribué (traces, corrélation), post-mortems, déboguer le code des autres |
+
+### Systèmes distribués — `systemes-distribues`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | les illusions de l'informatique distribuée, pannes partielles, latence réseau |
+| 2 | temps et horloges (Lamport, horloges vectorielles), ordre des événements |
+| 3 | réplication (leader, multi-leader, sans leader), quorums, modèles de cohérence |
+| 4 | consensus (Raft, Paxos), élection de leader, 2PC et sagas, « exactement une fois » |
+| 5 | CRDT, split-brain, vérification formelle (TLA+), articles fondateurs (Dynamo, Spanner) |
+
+### Ingénierie des données — `donnees`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | formats (CSV, JSON, Parquet, Avro), ETL et ELT |
+| 2 | entrepôts de données, modèle en étoile, SQL analytique (fonctions de fenêtre) |
+| 3 | traitement par lots (Spark), orchestration (Airflow), qualité des données |
+| 4 | streaming (Kafka, Flink), fenêtres temporelles, sémantiques de livraison, change data capture |
+| 5 | lakehouse, gouvernance, évolution des schémas, coûts |
+
+### Développement Android — `android`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | composants d'une app, activités, cycle de vie, ressources, manifeste |
+| 2 | Jetpack Compose : composables, état, recomposition, listes |
+| 3 | ViewModel, navigation, coroutines sur Android, persistance (Room, DataStore) |
+| 4 | architecture en couches et en modules, WorkManager, tests, injection de dépendances |
+| 5 | performance (fluidité, démarrage), accessibilité, publication et suivi en production |
+
+### IA pour les développeurs — `ia-dev`
+
+| Niv. | Contenu |
+|---|---|
+| 1 | ce qu'est un LLM (jetons, contexte, probabilités), usages, limites, hallucinations |
+| 2 | appeler une API de LLM, rédiger de bons prompts, sorties structurées |
+| 3 | embeddings, recherche sémantique, RAG |
+| 4 | outils et agents, évaluation, coûts et latence, sécurité (injection de prompt) |
+| 5 | fine-tuning et alternatives, observabilité, concevoir un produit avec l'IA |
+
 ### Carrière et collaboration — `carriere`
 
 | Niv. | Contenu |
@@ -256,22 +436,35 @@ Un projet par rang, réalisé hors de l'app, sur GitHub. Chacun réutilise le pr
 | Expert | **système de réservation** en 2-3 services pilotés par événements, Kubernetes, Terraform, OpenTelemetry, SLO | architecture distribuée, IaC, SRE |
 | Maître | **DevForge en production** : runner de code sécurisé, multi-environnements, GitOps, chaos engineering, post-mortems | tout |
 
-## Ordre conseillé : 4 saisons
+### Projets d'expert
 
-Une saison ≈ 3 mois à 8-10 heures par semaine. L'ordre respecte les prérequis.
+Des projets courts qui obligent à comprendre ce qui se passe sous le capot.
+
+| Projet | Parcours |
+|---|---|
+| Un mini-conteneur d'injection de dépendances avec AOP par proxies | metaprog, frameworks |
+| Un pool de threads et une file bloquante écrits à la main, testés sous charge | concurrence |
+| Un simulateur visuel de ramasse-miettes (marquer-balayer, puis générationnel) | memoire, jvm |
+| Un interpréteur pour un petit langage, puis un compilateur vers du bytecode | compilation, jvm |
+| Un mini-Redis : serveur TCP, protocole, persistance, réplication | reseau-web, performance, systemes-distribues |
+| Raft en Kotlin, testé avec des pannes simulées | systemes-distribues, concurrence |
+
+## Ordre conseillé : 5 saisons
+
+Une saison ≈ 3 mois à 8-10 heures par semaine, soit environ 15 mois pour les 5 saisons. L'ordre respecte les prérequis.
 
 | Saison | Parcours |
 |---|---|
-| 1 — Les bases | fondations 1-3, git 1-2, linux 1-2, poo 1-3, clean-code 1-2, algo 1-2 |
-| 2 — Bien concevoir | design-patterns 1-3, fonctionnel 1-3, bdd 1-3, reseau-web 1-2, clean-code 3, devops 1-2 |
-| 3 — Architecturer et livrer | architecture 1-3, devops 3-4, reseau-web 3, securite 1-2, algo 3, system-design 1-2 |
-| 4 — Passer à l'échelle | system-design 3-4, cloud 1-3, sre 1-3, architecture 4, securite 3, carriere 1-4 |
-| Ensuite | niveaux 4-5 selon ta spécialisation (backend, mobile, plateforme, SRE…) |
+| 1 — Les bases | fondations 1-3, maths 1-2, git 1-2, linux 1-2, ordinateur 1-2, poo 1-3, clean-code 1-2, debogage 1-2, algo 1-2 |
+| 2 — Bien concevoir | design-patterns 1-3, fonctionnel 1-3, memoire 1-3, concurrence 1-2, jvm 1-2, bdd 1-3, reseau-web 1-2, clean-code 3, devops 1-2, android 1-3 |
+| 3 — Sous le capot | jvm 3-4, memoire 4, concurrence 3-4, metaprog 1-3, performance 1-3, ordinateur 3-4, architecture 1-3, devops 3-4, securite 1-2, algo 3 |
+| 4 — Passer à l'échelle | system-design 1-4, systemes-distribues 1-3, cloud 1-3, sre 1-3, frameworks 1-3, donnees 1-2, reseau-web 3, securite 3, ia-dev 1-3 |
+| 5 — Vers la maîtrise | compilation 1-4, debogage 3-5, carriere 1-5, niveaux 4-5 de tes parcours préférés, projets d'expert |
 
 ## Volume de contenu
 
-Ordre de grandeur pour tout le curriculum : 17 parcours × 5 niveaux × ~5 compétences
-× (1 leçon + ~10 exercices) ≈ **400 leçons et 4 000 exercices**.
+Ordre de grandeur pour tout le curriculum : 31 parcours × 5 niveaux × ~5 compétences
+× (1 leçon + ~10 exercices) ≈ **750 leçons et 7 500 exercices**.
 
 C'est le vrai chantier du projet. D'où les règles du [plan d'action](04-plan-d-action.md) :
 rédiger d'abord les parcours de la saison en cours, utiliser des gabarits, et se

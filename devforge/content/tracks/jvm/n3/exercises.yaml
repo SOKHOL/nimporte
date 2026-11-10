@@ -1,0 +1,169 @@
+exercises:
+  - id: jvm.n3.collecteurs.match
+    type: match
+    title: Le bon collecteur
+    skills: [collecteurs, choisir-gc]
+    difficulty: 2
+    prompt: Relie chaque collecteur à la situation où il est le plus adapté.
+    pairs:
+      - left: Serial
+        right: Un petit outil en ligne de commande, dans un conteneur à 1 CPU
+      - left: Parallel
+        right: Un traitement de nuit où seul le débit total compte
+      - left: G1
+        right: Un service web ordinaire, sans contrainte particulière
+      - left: ZGC
+        right: Une API de trading avec un tas de 64 Go et des pauses tolérées de quelques millisecondes
+    explanation: |
+      Serial : simple et économe. Parallel : débit maximal, pauses longues acceptées.
+      G1 : bon compromis, collecteur par défaut. ZGC : pauses très courtes, même sur
+      de très grands tas, au prix d'un peu de débit et de mémoire.
+
+  - id: jvm.n3.logs.qcm-live-set
+    type: qcm
+    title: Lire une ligne de log
+    skills: [logs-gc]
+    difficulty: 3
+    prompt: Que t'apprend cette ligne de log ?
+    code: |
+      [3601.2s][info][gc] GC(980) Pause Young (Normal) (G1 Evacuation Pause) 1010M->985M(1024M) 48.7ms
+    language: text
+    choices:
+      - id: a
+        text: Le tas est presque entièrement occupé par des objets vivants ; les collectes ne libèrent presque plus rien.
+        correct: true
+      - id: b
+        text: Tout va bien, la pause dure moins de 50 ms.
+        feedback: La pause est acceptable, mais 25 Mo libérés sur 1 Go signalent un tas saturé.
+      - id: c
+        text: Le GC a libéré 985 Mo.
+        feedback: "985M est l'occupation **après** la collecte, pas ce qui a été libéré."
+      - id: d
+        text: Le tas va grandir automatiquement, donc il n'y a rien à faire.
+        feedback: "La taille du tas (1024M) est déjà au maximum ici."
+    explanation: |
+      Après collecte, 985 Mo restent occupés sur 1 024 Mo : le live set remplit le tas.
+      Prochaines étapes : comparer avec les heures précédentes (le live set grossit-il ?
+      fuite) ou augmenter le tas si la charge a simplement augmenté. Sans réaction :
+      Full GC à répétition, puis `OutOfMemoryError`.
+
+  - id: jvm.n3.options.trous-zgc
+    type: fill-blanks
+    title: Lancer la JVM correctement
+    skills: [choisir-gc, logs-gc]
+    difficulty: 2
+    language: bash
+    prompt: |
+      Complète la commande : tas fixe de 4 Go, collecteur ZGC, et logs du GC écrits
+      dans `gc.log`.
+    code: |
+      java -Xms4g -{{1}}4g -XX:+{{2}} -{{3}}:gc*:file=gc.log -jar api.jar
+    blanks:
+      "1":
+        answers: [Xmx]
+        options: [Xmx, Xss, Xmn, Xlog]
+      "2":
+        answers: [UseZGC]
+        options: [UseZGC, EnableZGC, ZGC, UseLowPauseGC]
+      "3":
+        answers: [Xlog]
+        options: [Xlog, Xverbose, Xgc, Xlogs]
+    explanation: |
+      `-Xms` et `-Xmx` égaux évitent les redimensionnements du tas. `-XX:+UseZGC`
+      active ZGC. `-Xlog:gc*` est la journalisation unifiée (depuis Java 9) ; elle
+      coûte très peu et doit être active en production.
+
+  - id: jvm.n3.gc.scenario-latence
+    type: scenario
+    title: Les pics de latence
+    skills: [logs-gc, choisir-gc, g1]
+    difficulty: 4
+    prompt: |
+      Ton API répond en 20 ms en moyenne, mais toutes les 10 minutes environ, le p99
+      grimpe à 2 secondes pendant quelques instants. Mène l'enquête.
+    start: debut
+    nodes:
+      debut:
+        text: |
+          Les métriques CPU et réseau sont normales. La base de données répond vite.
+          Par où commences-tu ?
+        options:
+          - text: Je regarde les logs du GC sur la même période.
+            next: logs
+            points: 3
+            feedback: Des pics réguliers de latence sur la JVM font penser en premier au GC.
+          - text: J'ajoute deux instances pour absorber la charge.
+            next: plus-instances
+            points: 0
+            feedback: Les pics continuent, sur chaque instance.
+          - text: Je passe à ZGC, il paraît que c'est plus rapide.
+            next: zgc-aveugle
+            points: 1
+            feedback: Changer de collecteur sans diagnostic, c'est tirer au hasard.
+      plus-instances:
+        text: Les pics apparaissent maintenant sur les trois instances, chacune à son rythme. Et maintenant ?
+        options:
+          - text: Je regarde les logs du GC.
+            next: logs
+            points: 2
+      zgc-aveugle:
+        text: |
+          Avec ZGC, les pauses disparaissent… mais au bout de deux heures :
+          `OutOfMemoryError: Java heap space`. Et maintenant ?
+        options:
+          - text: Je reviens à G1 et je regarde les logs du GC.
+            next: logs
+            points: 1
+      logs:
+        text: |
+          ```
+          GC(311) Pause Young (Normal) (G1 Evacuation Pause) 3020M->2890M(4096M) 31ms
+          GC(312) Pause Young (Normal) (G1 Evacuation Pause) 3510M->3120M(4096M) 35ms
+          GC(313) Pause Full (G1 Compaction Pause) 4090M->3210M(4096M) 1874ms
+          ```
+
+          Que remarques-tu ?
+        options:
+          - text: Un Full GC de près de 2 secondes, et un tas toujours occupé à plus de 3 Go après collecte.
+            next: hypothese
+            points: 3
+          - text: Les collectes jeunes sont trop longues, il faut réduire MaxGCPauseMillis.
+            next: fausse-piste
+            points: 0
+            feedback: 31-35 ms, c'est raisonnable. Le problème est la pause Full de 1,8 s.
+      fausse-piste:
+        text: Les pics continuent, les pauses Full aussi. Que vérifies-tu ?
+        options:
+          - text: L'occupation du tas après chaque collecte, sur plusieurs heures.
+            next: hypothese
+            points: 1
+      hypothese:
+        text: |
+          Sur 24 heures, l'occupation après collecte est stable autour de 3,1 Go, même la nuit
+          quand le trafic est faible. Un heap dump montre 2,6 Go dans un seul `HashMap`
+          d'un cache de sessions sans limite. Que fais-tu ?
+        options:
+          - text: Je borne le cache (taille max + expiration), puis je mesure à nouveau.
+            next: resolu
+            points: 3
+            feedback: On corrige la cause, puis on vérifie avec les mêmes mesures.
+          - text: Je passe le tas à 16 Go.
+            next: palliatif
+            points: 1
+            feedback: Ça repousse le problème, et des Full GC sur 16 Go dureront plus longtemps.
+      resolu:
+        ending: success
+        text: |
+          ✅ Live set à 500 Mo, plus aucun Full GC, p99 stable à 45 ms. Tu notes dans le
+          post-mortem : alerte sur l'occupation après GC, et taille maximale obligatoire
+          pour tout cache.
+      palliatif:
+        ending: partial
+        text: |
+          🟡 Les pics deviennent rares… mais le cache continue de grossir. Dans trois
+          semaines, le problème reviendra en plus grave.
+    explanation: |
+      La démarche : relier le symptôme (pics réguliers) au GC grâce aux logs, lire
+      l'occupation **après** collecte (le live set), puis trouver **ce qui** occupe la
+      mémoire avec un heap dump. Changer de collecteur ou grossir le tas sans
+      diagnostic ne fait que déplacer le problème.

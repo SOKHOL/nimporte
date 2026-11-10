@@ -1,0 +1,67 @@
+id: jvm
+title: La JVM de l'intérieur
+description: >
+  Ce qui se passe vraiment quand ton code Kotlin ou Java tourne : bytecode,
+  chargement des classes, compilation à la volée, ramasse-miettes, outils de
+  diagnostic et réglages.
+
+levels:
+  - level: 1
+    title: Du code à la JVM
+    skills:
+      - id: bytecode
+        title: Le bytecode et la machine à pile
+      - id: zones-memoire
+        title: Les zones mémoire de la JVM
+      - id: boxing
+        title: Types primitifs, boxing et cache des Integer
+
+  - level: 2
+    title: Classes et exécution
+    skills:
+      - id: chargement-classes
+        title: Chargement des classes et class loaders
+      - id: initialisation
+        title: Ordre d'initialisation
+      - id: jit
+        title: Interpréteur et compilation à la volée (JIT)
+      - id: exceptions-jvm
+        title: Exceptions et piles d'appels
+
+  - level: 3
+    title: Le ramasse-miettes de HotSpot
+    skills:
+      - id: collecteurs
+        title: "Les collecteurs : Serial, Parallel, G1, ZGC, Shenandoah"
+      - id: g1
+        title: G1 en détail
+      - id: logs-gc
+        title: Lire les logs du GC
+      - id: choisir-gc
+        title: Choisir et régler son GC
+
+  - level: 4
+    title: Observer et régler
+    skills:
+      - id: options-jvm
+        title: Les options de la JVM
+      - id: outils-jdk
+        title: jcmd, jstack, jmap, jstat
+      - id: jfr
+        title: Java Flight Recorder et Mission Control
+      - id: optimisations-jit
+        title: Inlining, escape analysis, désoptimisation
+      - id: jvm-conteneurs
+        title: La JVM dans un conteneur
+
+  - level: 5
+    title: Au-delà de HotSpot
+    skills:
+      - id: graalvm
+        title: GraalVM et compilation native
+      - id: ffm
+        title: JNI et l'API Foreign Function & Memory
+      - id: specification-jvm
+        title: Lire la spécification de la JVM
+      - id: langages-jvm
+        title: Un bytecode, plusieurs langages

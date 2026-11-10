@@ -1,0 +1,73 @@
+id: concurrence
+title: Threads et concurrence
+description: >
+  Faire plusieurs choses à la fois sans corrompre ses données : threads,
+  synchronisation, modèle mémoire, pools, coroutines, threads virtuels et
+  algorithmes sans verrou.
+
+levels:
+  - level: 1
+    title: Faire plusieurs choses à la fois
+    skills:
+      - id: concurrence-parallelisme
+        title: Concurrence et parallélisme
+      - id: processus-threads
+        title: Processus et threads
+      - id: creer-threads
+        title: Créer et attendre des threads
+      - id: race-condition
+        title: Conditions de course
+
+  - level: 2
+    title: Synchroniser
+    skills:
+      - id: synchronized
+        title: Exclusion mutuelle et synchronized
+      - id: visibilite-volatile
+        title: Visibilité et volatile
+      - id: atomiques
+        title: Variables atomiques
+      - id: interblocage
+        title: Interblocages (deadlocks)
+      - id: collections-concurrentes
+        title: Collections concurrentes
+
+  - level: 3
+    title: Les outils de haut niveau
+    skills:
+      - id: jmm
+        title: Le modèle mémoire Java (happens-before)
+      - id: executors
+        title: Pools de threads et executors
+      - id: futures
+        title: Future et CompletableFuture
+      - id: verrous-avances
+        title: ReentrantLock, ReadWriteLock et conditions
+      - id: threadlocal
+        title: ThreadLocal
+
+  - level: 4
+    title: Concurrence moderne
+    skills:
+      - id: coroutines
+        title: Coroutines Kotlin
+      - id: concurrence-structuree
+        title: Concurrence structurée et annulation
+      - id: threads-virtuels
+        title: Threads virtuels
+      - id: flux-reactifs
+        title: Flux réactifs et backpressure
+
+  - level: 5
+    title: Concurrence experte
+    skills:
+      - id: sans-verrou
+        title: Algorithmes sans verrou, CAS et problème ABA
+      - id: barrieres-memoire
+        title: Barrières mémoire et réordonnancement
+      - id: acteurs
+        title: Le modèle d'acteurs
+      - id: tester-concurrence
+        title: Tester du code concurrent
+      - id: concevoir-concurrent
+        title: Concevoir pour la concurrence

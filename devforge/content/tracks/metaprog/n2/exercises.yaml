@@ -1,0 +1,150 @@
+exercises:
+  - id: metaprog.n2.proxy.predict-journal
+    type: predict-output
+    title: Un proxy qui journalise
+    skills: [proxy-dynamique]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import java.lang.reflect.Proxy
+
+      interface Calculatrice {
+          fun ajouter(a: Int, b: Int): Int
+      }
+
+      class CalculatriceSimple : Calculatrice {
+          override fun ajouter(a: Int, b: Int) = a + b
+      }
+
+      fun main() {
+          val cible = CalculatriceSimple()
+          val proxy = Proxy.newProxyInstance(
+              Calculatrice::class.java.classLoader,
+              arrayOf(Calculatrice::class.java),
+          ) { _, methode, args ->
+              println("→ ${methode.name}${args.toList()}")
+              val resultat = methode.invoke(cible, *args)
+              println("← $resultat")
+              resultat
+          } as Calculatrice
+
+          println(proxy.ajouter(2, 3))
+      }
+    choices:
+      - id: a
+        text: "`→ ajouter[2, 3]` / `← 5` / `5`"
+        correct: true
+      - id: b
+        text: "`5`"
+        feedback: L'appel passe par le gestionnaire du proxy, qui affiche avant et après.
+      - id: c
+        text: "`→ ajouter[2, 3]` / `5`"
+      - id: d
+        text: "`5` / `→ ajouter[2, 3]` / `← 5`"
+        feedback: "Le `println` de `main` ne s'exécute qu'une fois `ajouter` terminé."
+    explanation: |
+      Chaque appel sur le proxy est envoyé au gestionnaire : il affiche le nom de la
+      méthode et ses arguments, appelle la vraie cible par réflexion, affiche le
+      résultat et le renvoie. `main` affiche enfin ce résultat.
+
+  - id: metaprog.n2.delegation.predict-by
+    type: predict-output
+    title: La délégation Kotlin
+    skills: [delegation-kotlin, preoccupations-transverses]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      interface Calculatrice {
+          fun ajouter(a: Int, b: Int): Int
+          fun multiplier(a: Int, b: Int): Int
+      }
+
+      class CalculatriceSimple : Calculatrice {
+          override fun ajouter(a: Int, b: Int) = a + b
+          override fun multiplier(a: Int, b: Int) = a * b
+      }
+
+      class CalculatriceJournalisee(private val cible: Calculatrice) : Calculatrice by cible {
+          override fun ajouter(a: Int, b: Int): Int {
+              println("ajouter($a, $b)")
+              return cible.ajouter(a, b)
+          }
+      }
+
+      fun main() {
+          val calc = CalculatriceJournalisee(CalculatriceSimple())
+          println(calc.ajouter(2, 3))
+          println(calc.multiplier(2, 3))
+      }
+    choices:
+      - id: a
+        text: "`ajouter(2, 3)` / `5` / `6`"
+        correct: true
+      - id: b
+        text: "`ajouter(2, 3)` / `5` / `multiplier(2, 3)` / `6`"
+        feedback: "`multiplier` n'est pas redéfinie : elle est déléguée telle quelle, sans journal."
+      - id: c
+        text: "`5` / `6`"
+      - id: d
+        text: Erreur de compilation, `multiplier` n'est pas implémentée.
+        feedback: "`by cible` génère automatiquement les méthodes manquantes."
+    explanation: |
+      `by cible` fait générer par le compilateur toutes les méthodes de l'interface
+      qui ne sont pas redéfinies, en les transmettant à `cible`. Seule `ajouter` est
+      décorée.
+
+  - id: metaprog.n2.proxy.qcm-retrofit
+    type: qcm
+    title: La magie de Retrofit
+    skills: [proxy-dynamique]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Avec Retrofit, tu écris seulement cette interface, et `retrofit.create(GitHubApi::class.java)`
+      te renvoie un objet qui fait de vraies requêtes HTTP. Comment est-ce possible ?
+    code: |
+      interface GitHubApi {
+          @GET("users/{nom}/repos")
+          suspend fun depots(@Path("nom") nom: String): List<Depot>
+      }
+    choices:
+      - id: a
+        text: Retrofit crée un proxy dynamique ; chaque appel est intercepté et traduit en requête HTTP grâce aux annotations.
+        correct: true
+      - id: b
+        text: Un plugin du compilateur écrit l'implémentation au moment du build.
+        feedback: C'est l'approche d'autres bibliothèques, pas celle de Retrofit.
+      - id: c
+        text: Retrofit modifie le bytecode de l'interface au chargement.
+      - id: d
+        text: L'implémentation est téléchargée depuis GitHub.
+    explanation: |
+      `retrofit.create` appelle `Proxy.newProxyInstance`. Le gestionnaire lit les
+      annotations de la méthode appelée (`@GET`, `@Path`) par réflexion, construit la
+      requête, l'exécute et convertit la réponse.
+
+  - id: metaprog.n2.proxy.qcm-classe-finale
+    type: qcm
+    title: Pourquoi pas de proxy ?
+    skills: [proxy-dynamique]
+    difficulty: 3
+    prompt: |
+      Pourquoi un proxy du JDK (`java.lang.reflect.Proxy`) ne peut-il pas envelopper
+      une classe Kotlin ordinaire, sans interface ?
+    choices:
+      - id: a
+        text: Il ne sait implémenter que des interfaces. Pour une classe, il faut générer une sous-classe, ce qui est impossible si elle est final, comme les classes Kotlin par défaut.
+        correct: true
+      - id: b
+        text: Parce que Kotlin n'est pas compatible avec la réflexion Java.
+      - id: c
+        text: Parce que les proxies ne fonctionnent que sur Android.
+      - id: d
+        text: Parce que les classes Kotlin n'ont pas de bytecode.
+    explanation: |
+      Pour proxifier une classe, CGLIB ou ByteBuddy génèrent une sous-classe qui
+      redéfinit ses méthodes. Une classe ou une méthode `final` ne peut pas être
+      redéfinie. C'est pourquoi Spring avec Kotlin utilise le plugin `kotlin-spring`,
+      qui rend `open` les classes annotées.

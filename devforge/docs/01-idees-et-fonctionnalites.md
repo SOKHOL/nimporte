@@ -22,7 +22,7 @@ presque tout le curriculum (voir [le plan d'action](04-plan-d-action.md)).
 
 ### L'arbre de compétences
 
-- **17 parcours** (POO, Design patterns, DevOps, System design…) reliés par des
+- **31 parcours** (POO, Design patterns, JVM, Mémoire, Concurrence, AOP, DevOps, System design…) reliés par des
   **prérequis**. Exemple : *Design patterns* se débloque une fois *POO niveau 2* validé.
 - Chaque parcours a **5 niveaux**, qui sont aussi des rangs :
   **Novice → Apprenti → Compagnon → Expert → Maître**.
@@ -37,8 +37,8 @@ Chaque compétence a une jauge de maîtrise (0 à 100 %) calculée à partir des
 dernières tentatives et de la répétition espacée. Une compétence non pratiquée
 redescend doucement : c'est le signal qu'il faut la réviser.
 
-Le profil affiche un **radar** sur 7 axes : Code, Conception, Architecture, Ops,
-Data, Sécurité, Collaboration.
+Le profil affiche un **radar** sur 8 axes : Code, Conception, Architecture, Systèmes,
+Ops, Data, Sécurité, Collaboration.
 
 ## 3. Types d'exercices
 

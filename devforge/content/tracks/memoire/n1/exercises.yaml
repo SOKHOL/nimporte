@@ -1,0 +1,127 @@
+exercises:
+  - id: memoire.n1.valeurs.predict-references
+    type: predict-output
+    title: Copie de la valeur ou de la flèche ?
+    skills: [valeurs-references]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Point(var x: Int)
+
+      fun deplacer(p: Point) { p.x += 10 }
+
+      fun incrementer(n: Int) {
+          var m = n
+          m += 10
+      }
+
+      fun remplacer(p: Point) {
+          var q = p
+          q = Point(99)
+      }
+
+      fun main() {
+          val p = Point(1)
+          val n = 1
+          deplacer(p)
+          incrementer(n)
+          remplacer(p)
+          println("${p.x} $n")
+      }
+    choices:
+      - id: a
+        text: "`11 1`"
+        correct: true
+      - id: b
+        text: "`11 11`"
+        feedback: "`incrementer` modifie une copie locale de l'entier."
+      - id: c
+        text: "`99 1`"
+        feedback: "`remplacer` change la référence locale `q`, pas l'objet ni la variable `p` de `main`."
+      - id: d
+        text: "`1 1`"
+        feedback: "`deplacer` reçoit une référence vers le même objet : il le modifie bien."
+    explanation: |
+      Les arguments sont passés **par valeur**. Pour `p`, cette valeur est une
+      référence : `deplacer` modifie donc l'objet partagé. `incrementer` travaille
+      sur une copie de l'entier. `remplacer` fait pointer sa copie locale de la
+      référence vers un nouvel objet, ce qui ne change rien pour l'appelant.
+
+  - id: memoire.n1.pile.qcm-vrai-faux
+    type: qcm
+    title: Vrai ou faux sur la pile
+    skills: [pile-tas, duree-de-vie]
+    difficulty: 1
+    multiple: true
+    prompt: Lesquelles de ces affirmations sont vraies ?
+    choices:
+      - id: a
+        text: Chaque thread a sa propre pile.
+        correct: true
+      - id: b
+        text: La frame d'une fonction est libérée automatiquement quand la fonction se termine.
+        correct: true
+      - id: c
+        text: Un objet créé dans une fonction est stocké dans la frame de cette fonction.
+        feedback: "L'objet est sur le tas ; la frame ne contient que la référence. (Exception : le JIT peut éviter l'allocation s'il prouve que l'objet ne s'échappe pas.)"
+      - id: d
+        text: La pile est partagée entre tous les threads.
+        feedback: C'est le tas qui est partagé.
+    explanation: |
+      La pile est privée à chaque thread et se libère toute seule au retour des
+      fonctions. Les objets, eux, vivent sur le tas, partagé, et survivent tant qu'ils
+      sont référencés.
+
+  - id: memoire.n1.pile.qcm-recursion
+    type: qcm
+    title: La récursion sans fin
+    skills: [pile-tas]
+    difficulty: 1
+    language: kotlin
+    prompt: Que se passe-t-il à l'exécution de cette fonction ?
+    code: |
+      fun profondeur(n: Int): Int = profondeur(n + 1) + 1
+    choices:
+      - id: a
+        text: "`StackOverflowError` : chaque appel empile une frame jusqu'à remplir la pile."
+        correct: true
+      - id: b
+        text: "`OutOfMemoryError: Java heap space`"
+        feedback: "Aucun objet n'est créé sur le tas : c'est la pile qui déborde."
+      - id: c
+        text: La fonction tourne indéfiniment sans planter.
+        feedback: "Ce n'est pas une boucle : chaque appel consomme de la pile."
+      - id: d
+        text: La JVM transforme la récursion en boucle, donc il ne se passe rien de grave.
+        feedback: "La JVM ne le fait pas. En Kotlin, `tailrec` le fait, et seulement pour une récursion terminale (ce n'est pas le cas ici, à cause du `+ 1`)."
+    explanation: |
+      Chaque appel ajoute une frame sur la pile du thread, qui est petite.
+      Une récursion trop profonde provoque `StackOverflowError`.
+
+  - id: memoire.n1.representation.qcm-liste-int
+    type: qcm
+    title: Le vrai poids d'une liste
+    skills: [representation]
+    difficulty: 3
+    prompt: |
+      Un `IntArray` d'un million d'éléments occupe environ 4 Mo.
+      Combien occupe à peu près une `List<Int>` contenant les mêmes grands nombres ?
+    choices:
+      - id: a
+        text: environ 4 Mo, c'est la même chose
+      - id: b
+        text: environ 8 Mo
+      - id: c
+        text: environ 20 Mo
+        correct: true
+      - id: d
+        text: environ 100 Mo
+    hints:
+      - Dans une `List<Int>`, chaque nombre est un objet `Integer`.
+    explanation: |
+      Une `List<Int>` stocke des objets `Integer` (~16 octets chacun : en-tête +
+      valeur) et un tableau de références (~4 octets par élément). Environ 20 octets
+      par nombre, soit **5 fois plus** qu'un `IntArray`, et un million d'objets à
+      gérer pour le ramasse-miettes. Pour de gros volumes de nombres, préfère les
+      tableaux primitifs.

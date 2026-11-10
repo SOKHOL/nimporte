@@ -1,0 +1,61 @@
+id: metaprog
+title: Métaprogrammation et AOP
+description: >
+  Le code qui lit, modifie ou génère du code : annotations, réflexion,
+  proxies, programmation orientée aspect, manipulation de bytecode et
+  génération de code. Pour comprendre la « magie » des frameworks.
+
+levels:
+  - level: 1
+    title: Le code qui parle du code
+    skills:
+      - id: annotations
+        title: Annotations
+      - id: reflexion
+        title: Réflexion
+      - id: reflexion-kotlin
+        title: KClass et réflexion Kotlin
+
+  - level: 2
+    title: Proxies et préoccupations transverses
+    skills:
+      - id: preoccupations-transverses
+        title: Préoccupations transverses
+      - id: proxy-dynamique
+        title: Proxies dynamiques
+      - id: delegation-kotlin
+        title: Délégation Kotlin (by)
+
+  - level: 3
+    title: Programmation orientée aspect
+    skills:
+      - id: aop-concepts
+        title: Aspect, point de jonction, coupe, greffon
+      - id: tissage
+        title: "Le tissage : compilation, chargement, exécution"
+      - id: spring-aop
+        title: Spring AOP et ses pièges
+      - id: transactional
+        title: "@Transactional sous le capot"
+
+  - level: 4
+    title: Générer et transformer du code
+    skills:
+      - id: manipulation-bytecode
+        title: ASM et ByteBuddy
+      - id: agents-java
+        title: Agents Java et instrumentation
+      - id: generation-code
+        title: Génération de code (KSP, annotation processing)
+      - id: plugins-compilateur
+        title: Plugins du compilateur Kotlin
+
+  - level: 5
+    title: Des langages dans le langage
+    skills:
+      - id: dsl-kotlin
+        title: DSL Kotlin et lambdas avec receveur
+      - id: macros
+        title: Macros (Rust, Lisp)
+      - id: cout-magie
+        title: Quand la magie coûte trop cher

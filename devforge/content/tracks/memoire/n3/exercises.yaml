@@ -1,0 +1,99 @@
+exercises:
+  - id: memoire.n3.accessibilite.qcm-cycle
+    type: qcm
+    title: Le cycle orphelin
+    skills: [accessibilite]
+    difficulty: 2
+    language: kotlin
+    prompt: À la fin de `main`, avant le retour, quels objets `Noeud` le GC de la JVM peut-il libérer ?
+    code: |
+      class Noeud { var voisin: Noeud? = null }
+
+      fun main() {
+          var a: Noeud? = Noeud()
+          var b: Noeud? = Noeud()
+          a!!.voisin = b
+          b!!.voisin = a
+          a = null
+          b = null
+          // ici
+      }
+    choices:
+      - id: a
+        text: Les deux, car aucune racine ne les atteint plus.
+        correct: true
+      - id: b
+        text: Aucun, car chacun est encore référencé par l'autre.
+        feedback: Ce serait vrai avec un comptage de références, pas avec un GC traçant.
+      - id: c
+        text: Seulement le premier.
+      - id: d
+        text: Seulement le second.
+    explanation: |
+      Le GC de la JVM part des racines (ici, les variables locales de `main`).
+      `a` et `b` valent `null` : les deux nœuds ne sont plus accessibles, cycle ou pas.
+      Avec un comptage de références, ils fuiraient.
+
+  - id: memoire.n3.algorithmes.match
+    type: match
+    title: Les familles de GC
+    skills: [mark-sweep, gc-copie, generationnel]
+    difficulty: 2
+    prompt: Relie chaque technique à sa description.
+    pairs:
+      - left: Marquer-balayer
+        right: Marque les objets accessibles, puis libère les autres sans rien déplacer
+      - left: Marquer-compacter
+        right: Marque, puis fait glisser les survivants pour supprimer les trous
+      - left: Copie
+        right: Recopie les survivants dans un autre espace, pour un coût proportionnel aux objets vivants
+      - left: Comptage de références
+        right: Libère un objet dès que plus rien ne pointe vers lui, mais fuit sur les cycles
+      - left: Générationnel
+        right: Collecte souvent la zone des objets récents, rarement celle des anciens
+    explanation: |
+      Les GC réels combinent ces techniques. Par exemple, G1 copie les survivants de
+      la jeune génération et compacte la vieille génération région par région.
+
+  - id: memoire.n3.generationnel.qcm-pourquoi
+    type: qcm
+    title: Pourquoi des générations ?
+    skills: [generationnel]
+    difficulty: 2
+    prompt: Pourquoi les ramasse-miettes générationnels sont-ils si efficaces ?
+    choices:
+      - id: a
+        text: La plupart des objets meurent jeunes, donc collecter souvent une petite zone où presque tout est mort coûte très peu.
+        correct: true
+      - id: b
+        text: Les vieux objets sont plus petits, donc plus rapides à collecter.
+      - id: c
+        text: Ils n'arrêtent jamais l'application.
+        feedback: Les collectes de la jeune génération sont en général des pauses courtes, mais ce sont bien des pauses.
+      - id: d
+        text: Ils n'ont pas besoin de connaître les racines.
+    explanation: |
+      Une collecte par copie coûte en proportion des objets **vivants**. Dans la jeune
+      génération, presque tout est déjà mort : on recopie quelques survivants et on
+      récupère tout le reste d'un coup.
+
+  - id: memoire.n3.pauses.qcm-compromis
+    type: qcm
+    title: Le triangle du GC
+    skills: [pauses-gc]
+    difficulty: 3
+    prompt: Un ramasse-miettes ne peut pas tout optimiser à la fois. Quels sont les trois objectifs en tension ?
+    choices:
+      - id: a
+        text: Le débit, la latence (durée des pauses) et l'empreinte mémoire.
+        correct: true
+      - id: b
+        text: La vitesse de compilation, la taille du binaire et la sécurité.
+      - id: c
+        text: Le nombre de threads, le nombre de classes et la taille de la pile.
+      - id: d
+        text: La portabilité, la lisibilité et la testabilité.
+    explanation: |
+      Réduire les pauses (ZGC) demande plus de travail concurrent et des barrières,
+      donc moins de débit et plus de mémoire. Maximiser le débit (Parallel GC)
+      accepte des pauses plus longues. C'est le compromis central du réglage d'un GC.

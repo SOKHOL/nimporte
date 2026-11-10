@@ -35,6 +35,8 @@ domains:
     title: Conception
   - id: architecture
     title: Architecture
+  - id: systemes
+    title: Systèmes
   - id: ops
     title: Ops
   - id: data
@@ -76,7 +78,7 @@ tracks:
     status: pilot
 
   - id: fonctionnel
-    title: Programmation fonctionnelle et concurrence
+    title: Programmation fonctionnelle
     domain: code
     requires: [fondations@2]
     status: planned
@@ -139,6 +141,90 @@ tracks:
     title: Sécurité
     domain: securite
     requires: [reseau-web@2, bdd@1]
+    status: planned
+
+  - id: maths
+    title: Maths pour l'informatique
+    domain: code
+    requires: []
+    status: planned
+
+  - id: ordinateur
+    title: Comment fonctionne un ordinateur
+    domain: systemes
+    requires: [fondations@1]
+    status: planned
+
+  - id: memoire
+    title: Gestion de la mémoire
+    domain: systemes
+    requires: [fondations@2, ordinateur@1]
+    status: pilot
+
+  - id: jvm
+    title: La JVM de l'intérieur
+    domain: systemes
+    requires: [poo@1, memoire@1]
+    status: pilot
+
+  - id: concurrence
+    title: Threads et concurrence
+    domain: systemes
+    requires: [fondations@2, ordinateur@1]
+    status: pilot
+
+  - id: metaprog
+    title: Métaprogrammation et AOP
+    domain: conception
+    requires: [poo@2, design-patterns@2]
+    status: pilot
+
+  - id: frameworks
+    title: Les frameworks de l'intérieur
+    domain: architecture
+    requires: [metaprog@2, bdd@2]
+    status: planned
+
+  - id: compilation
+    title: Langages et compilateurs
+    domain: code
+    requires: [algo@2, fonctionnel@1]
+    status: planned
+
+  - id: performance
+    title: Performance et optimisation
+    domain: systemes
+    requires: [jvm@2, algo@2]
+    status: planned
+
+  - id: debogage
+    title: Débogage et diagnostic
+    domain: code
+    requires: [fondations@1]
+    status: planned
+
+  - id: systemes-distribues
+    title: Systèmes distribués
+    domain: architecture
+    requires: [system-design@2, concurrence@2]
+    status: planned
+
+  - id: donnees
+    title: Ingénierie des données
+    domain: data
+    requires: [bdd@2, system-design@1]
+    status: planned
+
+  - id: android
+    title: Développement Android
+    domain: code
+    requires: [poo@2, fonctionnel@1]
+    status: planned
+
+  - id: ia-dev
+    title: IA pour les développeurs
+    domain: code
+    requires: [reseau-web@2]
     status: planned
 
   - id: carriere

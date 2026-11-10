@@ -1,0 +1,136 @@
+exercises:
+  - id: memoire.n4.fuites.bug-ecouteur
+    type: find-bug
+    title: L'écran qui ne meurt jamais
+    skills: [fuites-gc]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      Après avoir ouvert et fermé l'écran de profil 50 fois, l'application consomme
+      250 Mo de plus et finit en `OutOfMemoryError`. Touche la ligne responsable.
+    code: |
+      object EventBus {
+          private val abonnes = mutableListOf<(String) -> Unit>()
+          fun abonner(abonne: (String) -> Unit) { abonnes += abonne }
+          fun publier(evenement: String) = abonnes.forEach { it(evenement) }
+      }
+
+      class EcranProfil {
+          private val image = ByteArray(5_000_000)
+
+          fun ouvrir() {
+              EventBus.abonner { evenement -> rafraichir(evenement) }
+          }
+
+          private fun rafraichir(evenement: String) = println("profil : $evenement")
+      }
+    bug_lines: [11]
+    hints:
+      - Que capture la lambda passée à `abonner` ?
+      - "`EventBus` est un `object` : son contenu est accessible depuis une racine statique."
+    explanation: |
+      La lambda appelle `rafraichir`, donc elle capture `this`, l'écran entier avec
+      son image de 5 Mo. `EventBus` (statique, donc racine) la garde pour toujours :
+      chaque écran ouvert devient immortel.
+
+      Correction : garder la lambda et la **désabonner** à la fermeture de l'écran
+      (ajouter `desabonner()` au bus), ou lier l'abonnement au cycle de vie de l'écran.
+
+  - id: memoire.n4.heap-dump.qcm-retained
+    type: qcm
+    title: Taille propre ou taille retenue ?
+    skills: [heap-dump]
+    difficulty: 3
+    prompt: |
+      Dans Eclipse MAT, un objet `SessionCache` a une taille **propre** (*shallow*) de
+      24 octets et une taille **retenue** (*retained*) de 1,2 Go. Que signifie la taille retenue ?
+    choices:
+      - id: a
+        text: La mémoire qui serait libérée si cet objet était collecté, car il est le seul chemin vers tout ce qu'il référence.
+        correct: true
+      - id: b
+        text: La mémoire occupée par l'objet seul, sans ses champs.
+        feedback: C'est la taille propre (24 octets).
+      - id: c
+        text: La mémoire réservée par la JVM pour cet objet mais encore inutilisée.
+      - id: d
+        text: La quantité de mémoire qu'il a allouée depuis le démarrage.
+    explanation: |
+      La taille retenue est la somme de tout ce que cet objet **domine** : les objets
+      qui ne sont accessibles qu'à travers lui. 24 octets propres, 1,2 Go retenus :
+      ce petit objet est le point d'entrée de la fuite. Cherche ensuite pourquoi il
+      est lui-même encore accessible (chemin vers les racines).
+
+  - id: memoire.n4.fuites.review-cache-threadlocal
+    type: code-review
+    title: "Revue de code : deux fuites et un bug"
+    skills: [fuites-gc]
+    difficulty: 4
+    language: kotlin
+    prompt: |
+      Ce code tourne dans un serveur qui reste allumé des semaines. Trouve au moins
+      2 problèmes.
+    code: |
+      object CacheUtilisateurs {
+          private val cache = HashMap<String, Utilisateur>()
+
+          fun get(id: String): Utilisateur =
+              cache.getOrPut(id) { chargerDepuisLaBase(id) }
+      }
+
+      class TraitementRequete(private val pool: ExecutorService) {
+          private val contexte = ThreadLocal<ContexteRequete>()
+
+          fun traiter(requete: Requete) = pool.submit {
+              contexte.set(ContexteRequete(requete))
+              executer(requete)
+          }
+      }
+    issues:
+      - lines: [2, 5]
+        category: performance
+        description: |
+          Cache sans limite ni expiration dans un singleton : il grossit indéfiniment.
+          Utiliser un cache borné (LRU, Caffeine) avec une durée d'expiration.
+      - lines: [2]
+        category: bug
+        description: "`HashMap` partagée entre threads sans synchronisation : corruption possible. Utiliser `ConcurrentHashMap`."
+      - lines: [12]
+        category: bug
+        description: |
+          `ThreadLocal` jamais nettoyé : les threads du pool vivent indéfiniment, donc
+          chaque contexte reste accessible et peut même « fuir » vers la requête suivante.
+          Toujours appeler `contexte.remove()` dans un `finally`.
+    min_found: 2
+    explanation: |
+      Les fuites des serveurs viennent presque toujours d'objets à longue durée de
+      vie (singletons, threads de pool) qui accumulent des références. Un cache doit
+      **toujours** avoir une taille maximale ; un `ThreadLocal` dans un pool doit
+      **toujours** être nettoyé.
+
+  - id: memoire.n4.references.qcm-weak
+    type: qcm
+    title: La bonne référence
+    skills: [references-faibles]
+    difficulty: 3
+    prompt: |
+      Tu veux associer des métadonnées à des objets que tu ne contrôles pas, sans
+      empêcher ces objets d'être libérés quand plus personne ne les utilise.
+      Quel outil choisis-tu ?
+    choices:
+      - id: a
+        text: Une `WeakHashMap` (clés tenues par des références faibles).
+        correct: true
+      - id: b
+        text: Une `HashMap` ordinaire dans un `object`.
+        feedback: Elle garderait les clés en vie pour toujours.
+      - id: c
+        text: Une `SoftReference` sur chaque métadonnée.
+        feedback: Elle ne libère qu'en cas de manque de mémoire, et c'est la clé qu'il faut ne pas retenir.
+      - id: d
+        text: Une `PhantomReference`.
+        feedback: Elle sert à nettoyer une ressource après la mort d'un objet, pas à le retrouver.
+    explanation: |
+      Dans une `WeakHashMap`, quand une clé n'est plus accessible ailleurs, le GC la
+      libère et l'entrée disparaît. Attention : si la **valeur** référence la clé,
+      la clé reste accessible et rien n'est libéré.

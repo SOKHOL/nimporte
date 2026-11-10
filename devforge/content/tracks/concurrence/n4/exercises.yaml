@@ -1,0 +1,276 @@
+exercises:
+  - id: concurrence.n4.coroutines.predict-launch
+    type: predict-output
+    title: L'ordre des coroutines
+    skills: [coroutines]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import kotlinx.coroutines.delay
+      import kotlinx.coroutines.launch
+      import kotlinx.coroutines.runBlocking
+
+      fun main() = runBlocking {
+          launch {
+              delay(100)
+              println("B")
+          }
+          launch { println("A") }
+          println("C")
+      }
+    choices:
+      - id: a
+        text: "`C` / `A` / `B`"
+        correct: true
+      - id: b
+        text: "`A` / `B` / `C`"
+        feedback: "`launch` planifie la coroutine et rend la main immédiatement."
+      - id: c
+        text: "`B` / `A` / `C`"
+      - id: d
+        text: "`C` / `B` / `A`"
+        feedback: "La première coroutine se suspend 100 ms sur `delay` : la seconde passe avant."
+    explanation: |
+      `launch` ne fait que planifier : `main` continue et affiche `C`. Puis la première
+      coroutine démarre et se suspend sur `delay(100)`, la seconde affiche `A`, et la
+      première reprend 100 ms plus tard pour afficher `B`. Tout cela sur un seul thread.
+
+  - id: concurrence.n4.coroutines.predict-async
+    type: predict-output
+    title: Deux calculs en même temps
+    skills: [coroutines]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import kotlinx.coroutines.async
+      import kotlinx.coroutines.delay
+      import kotlinx.coroutines.runBlocking
+
+      fun main() = runBlocking {
+          val debut = System.currentTimeMillis()
+          val a = async { delay(300); 1 }
+          val b = async { delay(300); 2 }
+          println(a.await() + b.await())
+          println(if (System.currentTimeMillis() - debut < 500) "en parallèle" else "l'un après l'autre")
+      }
+    choices:
+      - id: a
+        text: "`3` / `en parallèle`"
+        correct: true
+      - id: b
+        text: "`3` / `l'un après l'autre`"
+        feedback: "Les deux `async` sont lancés avant le premier `await` : leurs délais se chevauchent."
+      - id: c
+        text: "`12` / `en parallèle`"
+      - id: d
+        text: Une erreur, car `delay` ne fonctionne pas dans `async`.
+    explanation: |
+      Les deux calculs démarrent aussitôt ; `await` attend le résultat. Les deux délais
+      de 300 ms se chevauchent : environ 300 ms au total. Si on avait écrit
+      `async { … }.await()` sur chaque ligne, ils se seraient exécutés l'un après l'autre.
+
+  - id: concurrence.n4.structuree.predict-echec
+    type: predict-output
+    title: Quand un enfant échoue
+    skills: [concurrence-structuree]
+    difficulty: 4
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import kotlinx.coroutines.coroutineScope
+      import kotlinx.coroutines.delay
+      import kotlinx.coroutines.launch
+      import kotlinx.coroutines.runBlocking
+
+      fun main(): Unit = runBlocking {
+          try {
+              coroutineScope {
+                  launch {
+                      delay(100)
+                      error("panne réseau")
+                  }
+                  launch {
+                      try {
+                          delay(1_000)
+                          println("téléchargement fini")
+                      } finally {
+                          println("téléchargement annulé")
+                      }
+                  }
+              }
+          } catch (e: IllegalStateException) {
+              println("Erreur : ${e.message}")
+          }
+      }
+    choices:
+      - id: a
+        text: "`téléchargement annulé` / `Erreur : panne réseau`"
+        correct: true
+      - id: b
+        text: "`téléchargement fini` / `Erreur : panne réseau`"
+        feedback: L'échec du premier enfant annule le second avant la fin de son délai.
+      - id: c
+        text: "`Erreur : panne réseau` seulement"
+        feedback: "Le bloc `finally` de la coroutine annulée s'exécute bien."
+      - id: d
+        text: Le programme plante avec IllegalStateException.
+    explanation: |
+      Concurrence structurée : l'échec d'un enfant annule ses frères (leur `finally`
+      s'exécute), puis `coroutineScope` relance l'erreur, rattrapée ici par le `catch`.
+      Sortie vérifiée en exécutant le programme.
+
+  - id: concurrence.n4.annulation.bug-catch-exception
+    type: find-bug
+    title: La coroutine qui ne veut pas mourir
+    skills: [coroutines, concurrence-structuree]
+    difficulty: 4
+    language: kotlin
+    prompt: |
+      Quand l'écran se ferme, `viewModelScope` est annulé… mais cette synchronisation
+      continue de consommer du CPU. Touche la ligne responsable.
+    code: |
+      suspend fun synchroniser() {
+          while (true) {
+              try {
+                  envoyerDonnees()
+                  delay(5_000)
+              } catch (e: Exception) {
+                  journaliser(e)
+              }
+          }
+      }
+    bug_lines: [6]
+    hints:
+      - Comment une coroutine apprend-elle qu'elle est annulée ?
+    explanation: |
+      L'annulation passe par une `CancellationException` levée par `delay`. Le
+      `catch (e: Exception)` l'avale : la boucle continue, chaque `delay` relève aussitôt
+      l'exception, et la coroutine tourne à vide. Correction : ajouter avant
+      `catch (e: CancellationException) { throw e }`, ou n'attraper que des exceptions
+      précises (`IOException`…).
+
+  - id: concurrence.n4.coroutines.match-outils
+    type: match
+    title: Le bon outil
+    skills: [coroutines, concurrence-structuree]
+    difficulty: 2
+    prompt: Relie chaque outil des coroutines à son usage.
+    pairs:
+      - left: launch
+        right: Lancer un travail sans attendre de résultat
+      - left: async / await
+        right: Lancer un calcul et récupérer son résultat plus tard
+      - left: withContext(Dispatchers.IO)
+        right: Exécuter un bloc bloquant sur un autre pool, puis revenir
+      - left: coroutineScope
+        right: Attendre toutes les coroutines lancées dedans, et tout annuler si l'une échoue
+      - left: runBlocking
+        right: Faire le pont avec du code bloquant, dans main ou dans un test
+    explanation: |
+      Sur Android, on lance avec `viewModelScope.launch`, on change de pool avec
+      `withContext`, et on n'utilise jamais `runBlocking` (il bloquerait le thread de
+      l'interface).
+
+  - id: concurrence.n4.coroutines.trous-viewmodel
+    type: fill-blanks
+    title: Charger sans bloquer l'écran
+    skills: [coroutines]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Complète ce ViewModel : le chargement doit tourner en arrière-plan, sur le pool des
+      entrées-sorties, sans jamais bloquer l'interface.
+    code: |
+      class ProfilViewModel(private val repo: ProfilRepository) : ViewModel() {
+          val etat = MutableStateFlow<Profil?>(null)
+
+          fun charger() {
+              viewModelScope.{{1}} {
+                  val profil = {{2}}(Dispatchers.IO) { repo.lireDepuisDisque() }
+                  etat.value = profil
+              }
+          }
+      }
+    blanks:
+      "1":
+        answers: [launch]
+        options: [launch, runBlocking, thread, await]
+      "2":
+        answers: [withContext]
+        options: [withContext, runBlocking, launch, delay]
+    explanation: |
+      `viewModelScope.launch` lance une coroutine liée à la vie de l'écran.
+      `withContext(Dispatchers.IO)` exécute la lecture bloquante sur le pool d'E/S puis
+      revient sur le thread principal pour mettre à jour l'état. `runBlocking` gèlerait
+      l'interface (et Android finirait par afficher « L'application ne répond pas »).
+
+  - id: concurrence.n4.coroutines.qcm-sleep
+    type: qcm
+    title: delay ou Thread.sleep ?
+    skills: [coroutines]
+    difficulty: 2
+    prompt: Dans une coroutine qui tourne sur `Dispatchers.Default`, pourquoi ne pas utiliser `Thread.sleep(1_000)` ?
+    choices:
+      - id: a
+        text: Il bloque le thread ; pendant ce temps, les autres coroutines ne peuvent plus l'utiliser.
+        correct: true
+      - id: b
+        text: Il ne compile pas dans une fonction `suspend`.
+        feedback: Il compile, c'est bien ce qui le rend dangereux.
+      - id: c
+        text: Il annule la coroutine.
+      - id: d
+        text: Il est moins précis que `delay`.
+    explanation: |
+      `Dispatchers.Default` n'a qu'autant de threads que de cœurs. Quelques `Thread.sleep`
+      suffisent à le paralyser. `delay` suspend la coroutine et rend le thread.
+
+  - id: concurrence.n4.virtuels.qcm-duree
+    type: qcm
+    title: 10 000 siestes
+    skills: [threads-virtuels]
+    difficulty: 2
+    language: kotlin
+    prompt: Combien de temps prend ce programme, environ ?
+    code: |
+      Executors.newVirtualThreadPerTaskExecutor().use { executor ->
+          repeat(10_000) { executor.submit { Thread.sleep(1_000) } }
+      }
+    choices:
+      - id: a
+        text: environ 1 seconde
+        correct: true
+      - id: b
+        text: environ 50 secondes
+        feedback: Ce serait le cas avec un pool de 200 threads classiques.
+      - id: c
+        text: environ 10 000 secondes
+      - id: d
+        text: Il plante, faute de mémoire pour 10 000 threads.
+        feedback: Un thread virtuel ne coûte que quelques centaines d'octets.
+    explanation: |
+      Pendant `sleep`, chaque thread virtuel est décroché de son porteur : les 10 000
+      attentes se déroulent en même temps. Mesuré pour ce cours : 1,08 seconde.
+
+  - id: concurrence.n4.virtuels.qcm-quand
+    type: qcm
+    title: Quand ne servent-ils à rien ?
+    skills: [threads-virtuels]
+    difficulty: 3
+    prompt: Dans quel cas les threads virtuels n'apportent-ils aucun gain ?
+    choices:
+      - id: a
+        text: Un calcul intensif sans attente (compression d'images, calcul scientifique).
+        correct: true
+      - id: b
+        text: Un serveur HTTP qui appelle une base de données pour chaque requête.
+      - id: c
+        text: Un client qui télécharge 1 000 fichiers en parallèle.
+      - id: d
+        text: Un service qui attend des messages d'une file.
+    explanation: |
+      Les threads virtuels rendent les **attentes** bon marché. Pour du calcul pur, le
+      facteur limitant est le nombre de cœurs : un pool de la taille du nombre de cœurs
+      reste la bonne réponse.

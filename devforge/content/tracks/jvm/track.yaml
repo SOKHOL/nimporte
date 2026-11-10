@@ -15,6 +15,18 @@ levels:
         title: Les zones mémoire de la JVM
       - id: boxing
         title: Types primitifs, boxing et cache des Integer
+    boss:
+      id: jvm.n1.boss
+      title: "Boss : le gardien du bytecode"
+      exercises:
+        - jvm.n1.bytecode.parsons-ratio
+        - jvm.n1.bytecode.qcm-pile
+        - jvm.n1.bytecode.qcm-execution
+        - jvm.n1.zones.match
+        - jvm.n1.zones.qcm-metaspace
+        - jvm.n1.boxing.predict-cache
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 2
     title: Classes et exécution
@@ -27,6 +39,18 @@ levels:
         title: Interpréteur et compilation à la volée (JIT)
       - id: exceptions-jvm
         title: Exceptions et piles d'appels
+    boss:
+      id: jvm.n2.boss
+      title: "Boss : le compilateur fantôme"
+      exercises:
+        - jvm.n2.initialisation.predict-parent-enfant
+        - jvm.n2.initialisation.predict-object
+        - jvm.n2.chargement.qcm-cast-impossible
+        - jvm.n2.jit.match-optimisations
+        - jvm.n2.jit.qcm-warmup
+        - jvm.n2.exceptions.qcm-cause-racine
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 3
     title: Le ramasse-miettes de HotSpot

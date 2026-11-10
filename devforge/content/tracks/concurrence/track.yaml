@@ -31,6 +31,17 @@ levels:
         title: Interblocages (deadlocks)
       - id: collections-concurrentes
         title: Collections concurrentes
+    boss:
+      id: concurrence.n2.boss
+      title: "Boss : l'interblocage de minuit"
+      exercises:
+        - concurrence.n2.volatile.qcm-atomicite
+        - concurrence.n2.interblocage.bug-virement
+        - concurrence.n2.collections.trous-merge
+        - concurrence.n2.conception.qcm-eviter
+        - concurrence.n2.interblocage.scenario-prod
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 3
     title: Les outils de haut niveau

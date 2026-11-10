@@ -1,0 +1,134 @@
+exercises:
+  - id: metaprog.n1.annotations.predict-cible
+    type: predict-output
+    title: L'annotation disparue
+    skills: [annotations, reflexion]
+    difficulty: 4
+    language: kotlin
+    prompt: Qu'affiche ce programme (compilé avec Kotlin 2.0) ?
+    code: |
+      @Target(AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
+      @Retention(AnnotationRetention.RUNTIME)
+      annotation class NonVide
+
+      data class Inscription(@NonVide val email: String, @field:NonVide val pseudo: String)
+
+      fun champsObligatoiresVides(objet: Any): List<String> = objet.javaClass.declaredFields
+          .filter { it.isAnnotationPresent(NonVide::class.java) }
+          .filter { it.isAccessible = true; (it.get(objet) as String).isBlank() }
+          .map { it.name }
+
+      fun main() {
+          println(champsObligatoiresVides(Inscription(email = "", pseudo = "")))
+      }
+    choices:
+      - id: a
+        text: "`[pseudo]`"
+        correct: true
+      - id: b
+        text: "`[email, pseudo]`"
+        feedback: "Sans `@field:`, l'annotation de `email` est allée sur le paramètre du constructeur, pas sur le champ."
+      - id: c
+        text: "`[]`"
+      - id: d
+        text: "`[email]`"
+    hints:
+      - Une propriété de constructeur est à la fois un paramètre, un champ et un getter. Sur lequel l'annotation de `email` est-elle posée ?
+    explanation: |
+      L'annotation autorise deux cibles (champ et paramètre). Sans précision, Kotlin 2.0
+      choisit le paramètre du constructeur. Seul `pseudo`, annoté avec `@field:`, porte
+      l'annotation sur son champ. C'est le piège classique de Bean Validation en Kotlin :
+      écris `@field:NotBlank`.
+
+  - id: metaprog.n1.annotations.trous-declaration
+    type: fill-blanks
+    title: Déclarer une annotation
+    skills: [annotations]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Déclare une annotation qui se pose sur des **fonctions** et qu'un aspect pourra lire
+      **à l'exécution**.
+    code: |
+      @Target(AnnotationTarget.{{1}})
+      @Retention(AnnotationRetention.{{2}})
+      annotation class Chronometre
+    blanks:
+      "1":
+        answers: [FUNCTION]
+        options: [FUNCTION, CLASS, FIELD, FILE]
+      "2":
+        answers: [RUNTIME]
+        options: [RUNTIME, SOURCE, BINARY]
+    explanation: |
+      `FUNCTION` limite l'annotation aux fonctions. `RUNTIME` la conserve dans le bytecode
+      **et** la rend visible par réflexion, ce dont un aspect ou un framework a besoin.
+
+  - id: metaprog.n1.annotations.qcm-retention
+    type: qcm
+    title: Visible ou pas ?
+    skills: [annotations, reflexion]
+    difficulty: 2
+    prompt: Une annotation déclarée avec `@Retention(AnnotationRetention.SOURCE)` peut-elle être lue par réflexion à l'exécution ?
+    choices:
+      - id: a
+        text: Non, elle n'existe plus après la compilation.
+        correct: true
+      - id: b
+        text: Oui, toutes les annotations sont lisibles par réflexion.
+      - id: c
+        text: Seulement avec la bibliothèque kotlin-reflect.
+      - id: d
+        text: Seulement en mode debug.
+    explanation: |
+      `SOURCE` : effacée à la compilation. `BINARY` : présente dans le `.class` mais
+      invisible pour la réflexion. `RUNTIME` : visible à l'exécution.
+
+  - id: metaprog.n1.reflexion.qcm-r8
+    type: qcm
+    title: Ça marche en debug, pas en release
+    skills: [reflexion]
+    difficulty: 3
+    prompt: |
+      Une app Android fonctionne en debug. En release (R8 activé), le code qui charge une
+      classe par son nom (`Class.forName("com.app.plugins.Export")`) plante avec
+      `ClassNotFoundException`. Pourquoi ?
+    choices:
+      - id: a
+        text: R8 a renommé ou supprimé la classe, qu'il croyait inutilisée ; il faut une règle -keep.
+        correct: true
+      - id: b
+        text: La réflexion est interdite en release sur Android.
+      - id: c
+        text: La classe n'est compilée qu'en debug.
+      - id: d
+        text: Le class loader de release est différent de celui de debug.
+    explanation: |
+      R8 analyse le code de façon statique : il ne voit pas qu'une chaîne de caractères
+      désigne une classe. Il la renomme (obfuscation) ou la supprime. Une règle
+      `-keep class com.app.plugins.** { *; }` la protège, ou mieux : éviter la réflexion.
+
+  - id: metaprog.n1.reflexion.qcm-generation
+    type: qcm
+    title: Pourquoi générer du code ?
+    skills: [reflexion, reflexion-kotlin]
+    difficulty: 3
+    multiple: true
+    prompt: Pourquoi kotlinx.serialization, Room ou Hilt génèrent-ils du code à la compilation plutôt que d'utiliser la réflexion ? (plusieurs réponses)
+    choices:
+      - id: a
+        text: Le code généré s'exécute plus vite qu'une exploration par réflexion.
+        correct: true
+      - id: b
+        text: Les erreurs sont détectées à la compilation, pas en production.
+        correct: true
+      - id: c
+        text: Il reste compatible avec l'obfuscation et la réduction de code (R8).
+        correct: true
+      - id: d
+        text: La réflexion n'existe pas sur Android.
+        feedback: Elle existe, mais elle coûte cher et se marie mal avec R8.
+    explanation: |
+      Générer du code à la compilation, c'est déplacer le travail de l'exécution vers le
+      build : plus rapide, plus sûr, compatible avec R8. Le prix : un build un peu plus long
+      et un outil de génération (KSP) à configurer.

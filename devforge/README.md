@@ -53,10 +53,16 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 - 9 parcours pilotes détaillés compétence par compétence : POO, Design patterns,
   Architecture, System design, DevOps, **Gestion de la mémoire, JVM, Threads et
   concurrence, Métaprogrammation et AOP**.
-- **12 leçons et 61 exercices**, couvrant 9 types d'exercices : pile et tas, ramasse-miettes,
-  fuites mémoire, bytecode, zones mémoire de la JVM, G1 et ZGC, threads, synchronisation
-  et interblocages, proxies dynamiques, AOP et `@Transactional`… Tous les extraits Kotlin
-  ont été compilés et exécutés pour vérifier les réponses attendues.
+- **20 leçons et 91 exercices**, couvrant 9 types d'exercices, et 5 boss :
+  - mémoire : pile et tas, ramasse-miettes, fuites ;
+  - JVM : bytecode, zones mémoire, cache des `Integer`, chargement des classes, ordre
+    d'initialisation, compilateur JIT, stack traces, G1 et ZGC ;
+  - concurrence : threads, conditions de course, `volatile`, interblocages, modèle
+    mémoire Java, pools de threads, `CompletableFuture`, coroutines, threads virtuels ;
+  - métaprogrammation : annotations, réflexion, proxies dynamiques, AOP, `@Transactional` ;
+  - et les bases en POO, design patterns, architecture, system design et DevOps.
+
+  Tous les extraits Kotlin ont été compilés et exécutés pour vérifier les réponses attendues.
 - Un validateur (schémas + cohérence) avec ses tests, lancé par GitHub Actions.
 
 ## Structure

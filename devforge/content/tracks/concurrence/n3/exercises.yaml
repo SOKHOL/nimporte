@@ -1,0 +1,213 @@
+exercises:
+  - id: concurrence.n3.jmm.qcm-reordonnancement
+    type: qcm
+    title: Le résultat impossible
+    skills: [jmm]
+    difficulty: 4
+    prompt: |
+      Les variables partagées `x` et `y` valent 0, sans aucune synchronisation.
+      Le thread A exécute `x = 1; r1 = y`. Le thread B exécute `y = 1; r2 = x`.
+      Peut-on obtenir `r1 == 0` et `r2 == 0` en même temps ?
+    choices:
+      - id: a
+        text: Oui. Sans relation arrive-avant, le processeur et le JIT peuvent réordonner lectures et écritures.
+        correct: true
+      - id: b
+        text: Non, c'est mathématiquement impossible, quel que soit l'entrelacement.
+        feedback: C'est impossible dans un modèle « séquentiellement cohérent », mais la JVM ne garantit pas ce modèle sans synchronisation.
+      - id: c
+        text: Seulement sur un processeur à un seul cœur.
+      - id: d
+        text: Seulement si les variables sont `@Volatile`.
+        feedback: C'est l'inverse, `@Volatile` interdit justement ce résultat.
+    explanation: |
+      En tenant compte de tous les entrelacements, on trouve (0,1), (1,0) et (1,1). Mais
+      chaque thread peut voir sa lecture passer avant sa propre écriture (tampons
+      d'écriture du processeur, réordonnancement par le JIT) : (0,0) est autorisé et
+      réellement observé. Avec `@Volatile` sur `x` et `y`, il devient impossible.
+
+  - id: concurrence.n3.jmm.bug-double-checked
+    type: find-bug
+    title: Le singleton à moitié construit
+    skills: [jmm]
+    difficulty: 4
+    language: kotlin
+    prompt: |
+      Très rarement, sous forte charge, un thread obtient un `Service` dont `config` vaut
+      `null`. Touche la ligne responsable.
+    code: |
+      class Service private constructor() {
+          val config: Map<String, String> = chargerConfig()
+
+          companion object {
+              private var instance: Service? = null
+
+              fun get(): Service {
+                  if (instance == null) {
+                      synchronized(this) {
+                          if (instance == null) instance = Service()
+                      }
+                  }
+                  return instance!!
+              }
+          }
+      }
+    bug_lines: [5]
+    hints:
+      - La première lecture de `instance` se fait hors du verrou. Qu'est-ce qui garantit qu'elle voit un objet complet ?
+    explanation: |
+      Sans `@Volatile`, rien ne relie l'écriture de `instance` (dans le verrou) à la
+      lecture faite hors du verrou : un thread peut voir la référence avant les champs de
+      l'objet. Corrections : `object Service`, ou `by lazy`, ou à défaut
+      `@Volatile private var instance`.
+
+  - id: concurrence.n3.jmm.match-arrive-avant
+    type: match
+    title: Les règles arrive-avant
+    skills: [jmm]
+    difficulty: 3
+    prompt: Relie chaque action à la garantie qu'elle donne.
+    pairs:
+      - left: Écrire une variable @Volatile
+        right: L'écriture est visible par toute lecture ultérieure de cette variable
+      - left: Relâcher un verrou
+        right: Tout ce qui précède est visible par le prochain thread qui prend ce même verrou
+      - left: thread.start()
+        right: Tout ce que le thread parent a fait avant est visible par le nouveau thread
+      - left: thread.join()
+        right: Tout ce que le thread a fait est visible après le retour de join
+      - left: Un val fixé dans le constructeur
+        right: Sa valeur est visible une fois l'objet construit, sans synchronisation
+    explanation: |
+      Ces règles, et leur transitivité, sont tout ce que le JMM garantit. Un code
+      concurrent est correct si chaque lecture partagée est reliée à l'écriture qu'elle
+      doit voir par une chaîne de relations arrive-avant.
+
+  - id: concurrence.n3.futures.predict-combine
+    type: predict-output
+    title: Composer des calculs
+    skills: [futures]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import java.util.concurrent.CompletableFuture
+
+      fun main() {
+          val prix = CompletableFuture.supplyAsync { 100 }
+          val remise = CompletableFuture.supplyAsync { 20 }
+          val total = prix.thenCombine(remise) { p, r -> p - r }
+              .thenApply { it * 2 }
+          println(total.join())
+      }
+    choices:
+      - id: a
+        text: "`160`"
+        correct: true
+      - id: b
+        text: "`200`"
+      - id: c
+        text: "`80`"
+      - id: d
+        text: Ça dépend du calcul qui finit en premier.
+        feedback: "`thenCombine` attend les deux résultats avant d'appliquer la fonction."
+    explanation: |
+      `thenCombine` attend les deux futurs et calcule 100 - 20 = 80, `thenApply` double :
+      160. `join()` attend le résultat final. L'ordre de fin des deux calculs n'a aucune
+      importance.
+
+  - id: concurrence.n3.futures.predict-erreur
+    type: predict-output
+    title: Une erreur dans la chaîne
+    skills: [futures]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import java.util.concurrent.CompletableFuture
+
+      fun main() {
+          val resultat = CompletableFuture.supplyAsync<Int> { throw IllegalStateException("base indisponible") }
+              .thenApply { it * 2 }
+              .exceptionally { e ->
+                  println("Erreur : ${e.cause?.message}")
+                  0
+              }
+          println(resultat.join())
+      }
+    choices:
+      - id: a
+        text: "`Erreur : base indisponible` / `0`"
+        correct: true
+      - id: b
+        text: "`Erreur : null` / `0`"
+        feedback: "`e` est une `CompletionException` dont la `cause` est bien l'IllegalStateException."
+      - id: c
+        text: Le programme plante avec IllegalStateException.
+        feedback: "`exceptionally` rattrape l'erreur et fournit une valeur de repli."
+      - id: d
+        text: "`0` seulement"
+    explanation: |
+      L'erreur saute l'étape `thenApply` et arrive dans `exceptionally`, enveloppée dans
+      une `CompletionException` ; le message d'origine est dans `e.cause`. Résultat de
+      repli : 0. Sortie vérifiée en exécutant le programme.
+
+  - id: concurrence.n3.executors.qcm-taille
+    type: qcm
+    title: Dimensionner un pool
+    skills: [executors]
+    difficulty: 3
+    prompt: |
+      Sur une machine à 8 cœurs, chaque tâche attend 90 ms une réponse HTTP puis calcule
+      10 ms. Combien de threads faut-il environ pour occuper les 8 cœurs ?
+    choices:
+      - id: a
+        text: environ 8
+        feedback: Ce serait vrai pour du calcul pur ; ici, les threads attendent 90 % du temps.
+      - id: b
+        text: environ 16
+      - id: c
+        text: environ 80
+        correct: true
+      - id: d
+        text: environ 1 000
+    explanation: |
+      Formule : cœurs × (1 + attente / calcul) = 8 × (1 + 90/10) = 80. C'est un point de
+      départ, à confirmer par la mesure. Si les attentes dominent vraiment, les coroutines
+      ou les threads virtuels évitent d'avoir à dimensionner ce pool.
+
+  - id: concurrence.n3.executors.review-meteo
+    type: code-review
+    title: "Revue de code : le service météo"
+    skills: [executors, futures]
+    difficulty: 4
+    language: kotlin
+    prompt: Ce service tourne sur un serveur très sollicité. Trouve au moins 2 problèmes.
+    code: |
+      class ServiceMeteo(private val client: HttpClient) {
+          private val pool = Executors.newCachedThreadPool()
+
+          fun previsions(villes: List<String>): List<String> {
+              val futurs = villes.map { ville ->
+                  CompletableFuture.supplyAsync { client.get("/meteo/$ville") }
+              }
+              return futurs.map { it.get() }
+          }
+      }
+    issues:
+      - lines: [6]
+        category: performance
+        description: |
+          `supplyAsync` sans exécuteur : les appels HTTP bloquants tournent dans le pool
+          commun, prévu pour le calcul. Il s'épuise et ralentit toute l'application.
+          Passer un pool dédié et borné.
+      - lines: [8]
+        category: bug
+        description: "`get()` sans délai : si un appel ne répond jamais, le thread appelant reste bloqué pour toujours. Utiliser `get(délai)` ou `orTimeout`."
+      - lines: [2]
+        category: conception
+        description: Un pool est créé mais jamais utilisé ni arrêté ; et un pool « à la demande » sans limite serait de toute façon dangereux sous la charge.
+    min_found: 2
+    explanation: |
+      Les trois réflexes : un pool dédié et borné pour les entrées-sorties, un délai sur
+      chaque attente, et un cycle de vie clair pour chaque pool (création, `shutdown`).

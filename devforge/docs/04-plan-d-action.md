@@ -32,7 +32,7 @@ Environ **30 semaines** pour les phases 0 à 4.
 
 - Vision, curriculum, architecture et plan (ce dossier) ✅
 - Format YAML, JSON Schema, validateur, tests et CI ✅
-- Contenu pilote : 61 exercices et 12 leçons sur 9 parcours ✅
+- Contenu pilote : 91 exercices, 20 leçons et 5 boss sur 9 parcours ✅
 - Terminer *POO niveau 1* : une leçon par compétence, ~8 exercices par compétence, le boss
 - Maquettes basse fidélité (papier ou Figma) : carte des parcours, session, correction, profil
 - Choisir le nom définitif et l'icône

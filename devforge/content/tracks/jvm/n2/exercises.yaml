@@ -1,0 +1,263 @@
+exercises:
+  - id: jvm.n2.initialisation.predict-parent-enfant
+    type: predict-output
+    title: Le parent voit-il l'enfant ?
+    skills: [initialisation]
+    difficulty: 4
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      open class Parent {
+          init { println("Parent : init") }
+          open val nom: String = "parent"
+          init { println("Parent voit : $nom") }
+      }
+
+      class Enfant : Parent() {
+          override val nom: String = "enfant"
+          init { println("Enfant : init, nom = $nom") }
+      }
+
+      fun main() {
+          Enfant()
+      }
+    choices:
+      - id: a
+        text: "`Parent : init` / `Parent voit : null` / `Enfant : init, nom = enfant`"
+        correct: true
+      - id: b
+        text: "`Parent : init` / `Parent voit : parent` / `Enfant : init, nom = enfant`"
+        feedback: "La propriété est redéfinie : c'est le getter de `Enfant` qui est appelé."
+      - id: c
+        text: "`Parent : init` / `Parent voit : enfant` / `Enfant : init, nom = enfant`"
+        feedback: Le champ de l'enfant n'est pas encore initialisé quand le parent se construit.
+      - id: d
+        text: Une NullPointerException.
+        feedback: "La chaîne `null` est simplement insérée dans le texte : pas d'exception ici."
+    hints:
+      - Quel constructeur s'exécute en premier, celui du parent ou celui de l'enfant ?
+    explanation: |
+      Le constructeur du parent s'exécute avant celui de l'enfant. En lisant `nom`, il
+      appelle le getter redéfini de `Enfant`, dont le champ vaut encore la valeur par
+      défaut de la JVM : `null`. Une propriété non nullable peut donc valoir `null` !
+      Règle : jamais de propriété ou de méthode `open` utilisée dans un constructeur.
+
+  - id: jvm.n2.initialisation.predict-object
+    type: predict-output
+    title: Quand l'objet est-il créé ?
+    skills: [chargement-classes, initialisation]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      object Config {
+          init { println("Config chargée") }
+          val url = "https://devforge.dev"
+      }
+
+      fun main() {
+          println("Début")
+          println(Config.url)
+          println(Config.url)
+      }
+    choices:
+      - id: a
+        text: "`Début` / `Config chargée` / l'URL / l'URL"
+        correct: true
+      - id: b
+        text: "`Config chargée` / `Début` / l'URL / l'URL"
+        feedback: L'objet n'est pas initialisé au démarrage, mais à sa première utilisation.
+      - id: c
+        text: "`Début` / `Config chargée` / l'URL / `Config chargée` / l'URL"
+        feedback: L'initialisation n'a lieu qu'une seule fois.
+      - id: d
+        text: "`Début` / l'URL / l'URL"
+    explanation: |
+      Une classe est initialisée à sa première utilisation, une seule fois, et la JVM
+      garantit que c'est thread-safe. Un `object` Kotlin est donc un singleton paresseux,
+      sans aucune synchronisation à écrire.
+
+  - id: jvm.n2.chargement.qcm-cast-impossible
+    type: qcm
+    title: Une classe qui ne se reconnaît pas
+    skills: [chargement-classes]
+    difficulty: 4
+    prompt: |
+      Dans un serveur avec un système de plugins, on obtient :
+      `ClassCastException: com.app.Utilisateur cannot be cast to com.app.Utilisateur`.
+      Comment est-ce possible ?
+    choices:
+      - id: a
+        text: La classe a été chargée par deux class loaders différents ; pour la JVM, ce sont deux classes distinctes.
+        correct: true
+      - id: b
+        text: Le fichier .class est corrompu.
+      - id: c
+        text: Le cast est impossible en Kotlin, il faut utiliser `as?`.
+      - id: d
+        text: Deux threads ont modifié l'objet en même temps.
+    explanation: |
+      Une classe est identifiée par son nom **et** son class loader. Si le plugin a
+      embarqué sa propre copie de `com.app.Utilisateur`, son loader la charge à nouveau :
+      même nom, classe différente. Solution : partager ces classes via le loader parent.
+
+  - id: jvm.n2.chargement.qcm-object-thread-safe
+    type: qcm
+    title: Le singleton gratuit
+    skills: [initialisation]
+    difficulty: 3
+    prompt: Pourquoi un `object` Kotlin est-il thread-safe sans aucune synchronisation dans le code ?
+    choices:
+      - id: a
+        text: La JVM garantit que l'initialisation d'une classe a lieu une seule fois, les autres threads attendant qu'elle soit finie.
+        correct: true
+      - id: b
+        text: Le compilateur Kotlin ajoute `synchronized` sur toutes ses méthodes.
+        feedback: Seule l'initialisation est protégée ; les méthodes de l'objet ne le sont pas.
+      - id: c
+        text: Un `object` est copié dans chaque thread.
+      - id: d
+        text: Il ne l'est pas, il faut toujours utiliser `by lazy`.
+    explanation: |
+      L'initialisation de classe est protégée par un verrou interne de la JVM. Attention :
+      cela garantit une création unique et sûre, pas que l'état **modifiable** de l'objet
+      soit protégé ensuite.
+
+  - id: jvm.n2.jit.match-optimisations
+    type: match
+    title: Les optimisations du JIT
+    skills: [jit]
+    difficulty: 3
+    prompt: Relie chaque optimisation à ce qu'elle fait.
+    pairs:
+      - left: Inlining
+        right: Recopie le corps d'une petite méthode à l'endroit où elle est appelée
+      - left: Escape analysis
+        right: Évite d'allouer sur le tas un objet qui ne sort pas de la méthode
+      - left: Élimination du code mort
+        right: Supprime un calcul dont le résultat n'est jamais utilisé
+      - left: Désoptimisation
+        right: Abandonne un code compilé dont une hypothèse est devenue fausse
+      - left: OSR
+        right: Remplace une boucle en cours d'exécution par sa version compilée
+    explanation: |
+      L'inlining est l'optimisation mère : une fois le code recopié, le JIT voit plus
+      loin et peut appliquer les autres. La désoptimisation est le filet de sécurité qui
+      permet au JIT de faire des paris.
+
+  - id: jvm.n2.jit.review-benchmark
+    type: code-review
+    title: "Revue de code : un benchmark maison"
+    skills: [jit]
+    difficulty: 4
+    language: kotlin
+    prompt: Un collègue mesure la performance de `calculerHash` ainsi. Trouve au moins 2 problèmes.
+    code: |
+      fun main() {
+          val debut = System.currentTimeMillis()
+          for (i in 0 until 1_000_000) {
+              calculerHash("devforge-$i")
+          }
+          val fin = System.currentTimeMillis()
+          println("Temps moyen : ${(fin - debut) / 1_000_000.0} ms")
+      }
+    issues:
+      - lines: [4]
+        category: bug
+        description: |
+          Le résultat de `calculerHash` n'est jamais utilisé : le JIT peut supprimer l'appel
+          (code mort) et on mesure une boucle presque vide.
+      - lines: [3]
+        category: test
+        description: |
+          Aucun préchauffage : les premières itérations tournent dans l'interpréteur, puis
+          en C1, puis en C2. La mesure mélange tout.
+      - lines: [2, 6]
+        category: test
+        description: "`System.currentTimeMillis()` n'est pas fait pour mesurer : résolution grossière, horloge qui peut sauter. Au minimum `System.nanoTime()`, idéalement JMH."
+      - lines: [4]
+        category: performance
+        description: La construction de la chaîne `"devforge-$i"` est mesurée en même temps que le hash.
+    min_found: 2
+    explanation: |
+      Mesurer correctement sur la JVM est difficile : préchauffage, code mort, constantes
+      repliées, GC pendant la mesure… JMH règle ces problèmes (`@Benchmark`, `Blackhole`
+      pour consommer les résultats, plusieurs itérations et *forks*).
+
+  - id: jvm.n2.jit.qcm-warmup
+    type: qcm
+    title: Lent après chaque déploiement
+    skills: [jit]
+    difficulty: 3
+    prompt: |
+      Après chaque déploiement, le p99 de l'API est trois fois plus élevé pendant environ
+      deux minutes, puis tout redevient normal. Quelle est l'explication la plus probable ?
+    choices:
+      - id: a
+        text: Le temps de chauffe de la JVM (code encore interprété, JIT au travail) et des caches encore vides.
+        correct: true
+      - id: b
+        text: Une fuite de mémoire.
+        feedback: Une fuite empire avec le temps, elle ne s'améliore pas toute seule.
+      - id: c
+        text: La base de données redémarre à chaque déploiement.
+      - id: d
+        text: Le ramasse-miettes est désactivé au démarrage.
+    explanation: |
+      Juste après le démarrage, le code tourne dans l'interpréteur et les compilateurs C1
+      et C2 consomment du CPU. Parades : envoyer quelques requêtes de préchauffage avant
+      d'ouvrir le trafic, déployer progressivement, ou réduire le temps de démarrage
+      (CDS, compilation native GraalVM).
+
+  - id: jvm.n2.exceptions.qcm-cause-racine
+    type: qcm
+    title: Où est le vrai problème ?
+    skills: [exceptions-jvm]
+    difficulty: 2
+    language: text
+    prompt: D'après cette stack trace, quelle est la cause racine ?
+    code: |
+      Exception in thread "main" ConfigException: Configuration invalide
+      	at StacktraceKt.chargerConfig(stacktrace.kt:8)
+      	at StacktraceKt.main(stacktrace.kt:12)
+      Caused by: java.lang.NumberFormatException: For input string: "80a"
+      	at java.base/java.lang.Integer.parseInt(Integer.java:662)
+      	at StacktraceKt.lirePort(stacktrace.kt:3)
+      	at StacktraceKt.chargerConfig(stacktrace.kt:6)
+      	... 2 more
+    choices:
+      - id: a
+        text: "Le texte \"80a\" n'est pas un nombre, dans `lirePort` (ligne 3)."
+        correct: true
+      - id: b
+        text: Un bug dans `Integer.parseInt` du JDK.
+        feedback: Le JDK signale l'erreur ; la mauvaise donnée vient de notre code.
+      - id: c
+        text: "`main` appelle `chargerConfig` au mauvais moment (ligne 12)."
+      - id: d
+        text: Le fichier de configuration est introuvable.
+    explanation: |
+      On descend jusqu'au dernier `Caused by:`, puis on cherche la première ligne de notre
+      propre code dans ce bloc. Les lignes du JDK disent *comment* ça a échoué ; nos
+      lignes disent *pourquoi*.
+
+  - id: jvm.n2.exceptions.qcm-cout
+    type: qcm
+    title: Les exceptions pour tout ?
+    skills: [exceptions-jvm]
+    difficulty: 3
+    prompt: Pourquoi éviter d'utiliser les exceptions pour le déroulement normal d'un programme (par exemple pour signaler « élément absent ») ?
+    choices:
+      - id: a
+        text: Créer une exception capture toute la pile d'appels, ce qui coûte cher, et cache l'intention du code.
+        correct: true
+      - id: b
+        text: Les exceptions désactivent le JIT pour toute l'application.
+      - id: c
+        text: Kotlin interdit de lever plus de 100 exceptions par seconde.
+      - id: d
+        text: Les exceptions ne fonctionnent pas dans les coroutines.
+    explanation: |
+      La capture de la pile (`fillInStackTrace`) est la partie coûteuse. Pour un cas
+      prévu, préfère un type de retour explicite : `null`, `Result`, ou une `sealed class`
+      qui décrit les issues possibles.

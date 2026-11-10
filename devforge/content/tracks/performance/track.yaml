@@ -1,0 +1,57 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: performance
+title: Performance et optimisation
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: mesurer-avant-d-optimiser
+    title: Mesurer avant d'optimiser
+  - id: latence-et-debit
+    title: Latence et débit
+  - id: percentiles-p50-p99
+    title: Percentiles (p50, p99)
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: microbenchmarks-jmh-et-leurs-pieges
+    title: Microbenchmarks (JMH) et leurs pièges
+  - id: profilers
+    title: Profilers
+  - id: flame-graphs
+    title: Flame graphs
+- level: 3
+  title: Approfondir
+  skills:
+  - id: complexite-en-pratique
+    title: Complexité en pratique
+  - id: allocations-et-pression-sur-le-gc
+    title: Allocations et pression sur le GC
+  - id: caches-applicatifs
+    title: Caches applicatifs
+  - id: entrees-sorties
+    title: Entrées-sorties
+- level: 4
+  title: Concevoir
+  skills:
+  - id: performance-des-bases-de-donnees
+    title: Performance des bases de données
+  - id: tests-de-charge
+    title: Tests de charge
+  - id: loi-de-little
+    title: Loi de Little
+  - id: loi-d-amdahl
+    title: Loi d'Amdahl
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: mechanical-sympathy
+    title: '*mechanical sympathy*'
+  - id: optimisations-du-jit
+    title: Optimisations du JIT
+  - id: structures-adaptees-au-cache
+    title: Structures adaptées au cache
+  - id: latence-de-queue
+    title: Latence de queue

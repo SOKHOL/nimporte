@@ -1,0 +1,67 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: bdd
+title: Bases de données
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: tables
+    title: Tables
+  - id: select-insert-update-delete
+    title: SELECT/INSERT/UPDATE/DELETE
+  - id: where
+    title: WHERE
+  - id: order-by
+    title: ORDER BY
+  - id: cles-primaires
+    title: Clés primaires
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: jointures
+    title: Jointures
+  - id: group-by
+    title: GROUP BY
+  - id: sous-requetes
+    title: Sous-requêtes
+  - id: cles-etrangeres
+    title: Clés étrangères
+  - id: modelisation
+    title: Modélisation
+  - id: normalisation-1nf-3nf
+    title: Normalisation (1NF → 3NF)
+- level: 3
+  title: Approfondir
+  skills:
+  - id: index
+    title: Index
+  - id: plans-d-execution-explain
+    title: Plans d'exécution (EXPLAIN)
+  - id: transactions-acid
+    title: Transactions ACID
+  - id: niveaux-d-isolation
+    title: Niveaux d'isolation
+  - id: orm-et-probleme-n-1
+    title: ORM et problème N+1
+- level: 4
+  title: Concevoir
+  skills:
+  - id: nosql-document-cle-valeur-colonnes
+    title: NoSQL (document, clé-valeur, colonnes, graphe)
+  - id: replication
+    title: Réplication
+  - id: partitionnement
+    title: Partitionnement
+  - id: migrations-sans-interruption
+    title: Migrations sans interruption
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: internes-mvcc-wal-lsm-trees
+    title: Internes (MVCC, WAL, LSM-trees)
+  - id: bases-distribuees
+    title: Bases distribuées
+  - id: choisir-son-stockage
+    title: Choisir son stockage

@@ -1,0 +1,53 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: frameworks
+title: Les frameworks de l'intérieur
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: inversion-de-controle
+    title: Inversion de contrôle
+  - id: bibliotheque-ou-framework
+    title: Bibliothèque ou framework
+  - id: cycle-de-vie-d-une-requete-web
+    title: Cycle de vie d'une requête web
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: conteneur-d-injection-de-dependances
+    title: 'Conteneur d''injection de dépendances : beans'
+  - id: portees
+    title: Portées
+  - id: cycle-de-vie
+    title: Cycle de vie
+  - id: auto-configuration-spring-boot
+    title: Auto-configuration (Spring Boot)
+- level: 3
+  title: Approfondir
+  skills:
+  - id: jpa-hibernate-contexte-de
+    title: 'JPA/Hibernate : contexte de persistance'
+  - id: dirty-checking
+    title: Dirty checking
+  - id: chargement-paresseux
+    title: Chargement paresseux
+  - id: transactions
+    title: Transactions
+- level: 4
+  title: Concevoir
+  skills:
+  - id: serveurs-web-servlets-netty-boucle-d
+    title: Serveurs web (servlets, Netty, boucle d'événements)
+  - id: ktor-et-ses-plugins
+    title: Ktor et ses plugins
+  - id: frameworks-reactifs
+    title: Frameworks réactifs
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: lire-le-code-source-d-un-framework
+    title: Lire le code source d'un framework
+  - id: ecrire-ton-propre-mini-framework
+    title: Écrire ton propre mini-framework (injection + routage)

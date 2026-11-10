@@ -162,7 +162,11 @@ private fun TrackCard(track: TrackRef, content: Content, progress: Progress, rul
                     modifier = Modifier.fillMaxWidth(),
                 )
             } else {
-                Text("Contenu à venir — compétences déjà listées", style = MaterialTheme.typography.bodySmall)
+                val skills = content.tracks[track.id]?.levels?.sumOf { it.skills.size } ?: 0
+                Text(
+                    if (skills > 0) "Contenu à venir · $skills compétences au programme" else "Contenu à venir",
+                    style = MaterialTheme.typography.bodySmall,
+                )
             }
             if (missing.isNotEmpty()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

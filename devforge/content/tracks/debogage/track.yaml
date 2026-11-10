@@ -1,0 +1,51 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: debogage
+title: Débogage et diagnostic
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: lire-un-message-d-erreur-et-une
+    title: Lire un message d'erreur et une stack trace
+  - id: reproduire-un-bug
+    title: Reproduire un bug
+  - id: la-methode-scientifique
+    title: La méthode scientifique
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: debogueur-points-d-arret-pas-a-pas
+    title: Débogueur (points d'arrêt, pas à pas, conditions)
+  - id: logs-utiles
+    title: Logs utiles
+- level: 3
+  title: Approfondir
+  skills:
+  - id: git-bisect
+    title: Git bisect
+  - id: reduire-un-cas-de-test
+    title: Réduire un cas de test
+  - id: bugs-intermittents
+    title: Bugs intermittents
+  - id: debogage-a-distance
+    title: Débogage à distance
+- level: 4
+  title: Concevoir
+  skills:
+  - id: thread-dumps-interblocages
+    title: Thread dumps (interblocages, contention)
+  - id: heap-dumps-fuites
+    title: Heap dumps (fuites)
+  - id: profilage-en-production
+    title: Profilage en production
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: deboguer-un-systeme-distribue-traces
+    title: Déboguer un système distribué (traces, corrélation)
+  - id: post-mortems
+    title: Post-mortems
+  - id: deboguer-le-code-des-autres
+    title: Déboguer le code des autres

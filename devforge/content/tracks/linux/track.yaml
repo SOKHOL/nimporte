@@ -1,0 +1,67 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: linux
+title: Linux et shell
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: arborescence
+    title: Arborescence
+  - id: fichiers
+    title: Fichiers
+  - id: permissions
+    title: Permissions
+  - id: pipes
+    title: Pipes
+  - id: redirections
+    title: Redirections
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: processus
+    title: Processus
+  - id: signaux
+    title: Signaux
+  - id: variables-d-environnement
+    title: Variables d'environnement
+  - id: grep-sed-awk-find
+    title: Grep/sed/awk/find
+  - id: scripts-bash
+    title: Scripts bash
+- level: 3
+  title: Approfondir
+  skills:
+  - id: systemd
+    title: Systemd
+  - id: journaux
+    title: Journaux
+  - id: reseau-ss-curl-dig
+    title: Réseau (ss, curl, dig)
+  - id: ssh-et-cles
+    title: SSH et clés
+  - id: cron
+    title: Cron
+  - id: paquets
+    title: Paquets
+- level: 4
+  title: Concevoir
+  skills:
+  - id: diagnostic-de-performance-top-vmstat
+    title: Diagnostic de performance (top, vmstat, iostat, strace, lsof)
+  - id: systemes-de-fichiers
+    title: Systèmes de fichiers
+  - id: cgroups-et-namespaces
+    title: Cgroups et namespaces
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: appels-systeme
+    title: Appels système
+  - id: ordonnanceur
+    title: Ordonnanceur
+  - id: durcissement
+    title: Durcissement
+  - id: ebpf-apercu
+    title: EBPF (aperçu)

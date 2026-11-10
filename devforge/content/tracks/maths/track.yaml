@@ -1,0 +1,59 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: maths
+title: Maths pour l'informatique
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: logique-booleenne
+    title: Logique booléenne
+  - id: bases-numeriques-binaire-hexadecimal
+    title: Bases numériques (binaire, hexadécimal)
+  - id: puissances-de-2
+    title: Puissances de 2
+  - id: arithmetique-modulaire
+    title: Arithmétique modulaire
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: ensembles
+    title: Ensembles
+  - id: relations
+    title: Relations
+  - id: fonctions
+    title: Fonctions
+  - id: recurrence-et-preuves-simples
+    title: Récurrence et preuves simples
+  - id: combinatoire
+    title: Combinatoire
+- level: 3
+  title: Approfondir
+  skills:
+  - id: probabilites
+    title: Probabilités
+  - id: statistiques-moyenne-mediane
+    title: Statistiques (moyenne, médiane, percentiles, écart-type)
+  - id: lois-a-longue-traine
+    title: Lois à longue traîne
+- level: 4
+  title: Concevoir
+  skills:
+  - id: graphes
+    title: Graphes
+  - id: notation-asymptotique
+    title: Notation asymptotique
+  - id: nombres-flottants-ieee-754
+    title: Nombres flottants (IEEE 754)
+  - id: algebre-lineaire-de-base
+    title: Algèbre linéaire de base
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: theorie-de-l-information-entropie
+    title: Théorie de l'information (entropie)
+  - id: calculabilite-probleme-de-l-arret
+    title: Calculabilité (problème de l'arrêt)
+  - id: maths-de-la-cryptographie
+    title: Maths de la cryptographie

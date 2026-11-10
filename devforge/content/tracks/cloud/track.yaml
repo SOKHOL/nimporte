@@ -1,0 +1,57 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: cloud
+title: Cloud
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: iaas
+    title: IaaS
+  - id: paas
+    title: PaaS
+  - id: saas
+    title: SaaS
+  - id: regions-et-zones
+    title: Régions et zones
+  - id: responsabilite-partagee
+    title: Responsabilité partagée
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: calcul-vm-conteneurs-manages
+    title: Calcul (VM, conteneurs managés, serverless)
+  - id: stockage-objet-bloc-fichier
+    title: Stockage (objet, bloc, fichier)
+  - id: bases-managees
+    title: Bases managées
+- level: 3
+  title: Approfondir
+  skills:
+  - id: reseau-cloud-vpc-sous-reseaux
+    title: Réseau cloud (VPC, sous-réseaux, groupes de sécurité, NAT)
+  - id: iam-et-moindre-privilege
+    title: IAM et moindre privilège
+- level: 4
+  title: Concevoir
+  skills:
+  - id: architectures-de-reference
+    title: Architectures de référence
+  - id: haute-disponibilite
+    title: Haute disponibilité
+  - id: reprise-apres-sinistre-rpo-rto
+    title: Reprise après sinistre (RPO, RTO)
+  - id: finops
+    title: FinOps
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: multi-cloud
+    title: Multi-cloud
+  - id: landing-zones
+    title: Landing zones
+  - id: gouvernance
+    title: Gouvernance
+  - id: frameworks-well-architected
+    title: Frameworks *well-architected*

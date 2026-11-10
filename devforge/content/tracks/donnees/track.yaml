@@ -1,0 +1,53 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: donnees
+title: Ingénierie des données
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: formats-csv-json-parquet-avro
+    title: Formats (CSV, JSON, Parquet, Avro)
+  - id: etl-et-elt
+    title: ETL et ELT
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: entrepots-de-donnees
+    title: Entrepôts de données
+  - id: modele-en-etoile
+    title: Modèle en étoile
+  - id: sql-analytique-fonctions-de-fenetre
+    title: SQL analytique (fonctions de fenêtre)
+- level: 3
+  title: Approfondir
+  skills:
+  - id: traitement-par-lots-spark
+    title: Traitement par lots (Spark)
+  - id: orchestration-airflow
+    title: Orchestration (Airflow)
+  - id: qualite-des-donnees
+    title: Qualité des données
+- level: 4
+  title: Concevoir
+  skills:
+  - id: streaming-kafka-flink
+    title: Streaming (Kafka, Flink)
+  - id: fenetres-temporelles
+    title: Fenêtres temporelles
+  - id: semantiques-de-livraison
+    title: Sémantiques de livraison
+  - id: change-data-capture
+    title: Change data capture
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: lakehouse
+    title: Lakehouse
+  - id: gouvernance
+    title: Gouvernance
+  - id: evolution-des-schemas
+    title: Évolution des schémas
+  - id: couts
+    title: Coûts

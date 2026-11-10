@@ -72,7 +72,7 @@ fun TrackScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
-                Text(detail?.description ?: "Ce parcours n'est pas encore rédigé. Il fait partie du curriculum : voir docs/02-curriculum.md.")
+                Text(detail?.description ?: "Ce parcours n'est pas encore rédigé.")
             }
             if (missing.isNotEmpty()) {
                 item {

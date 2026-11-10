@@ -132,6 +132,12 @@ class ContentTreeTest(unittest.TestCase):
         self.edit_yaml("curriculum.yaml", cycle)
         self.assertTrue(any("cycle" in e for e in self.errors()))
 
+    def test_planned_track_cannot_hold_exercises(self):
+        level_dir = self.content / "tracks" / "maths" / "n1"
+        level_dir.mkdir(parents=True)
+        shutil.copy(self.content / "tracks" / "poo" / "n1" / "exercises.yaml", level_dir / "exercises.yaml")
+        self.assertTrue(any("planned" in e and "maths" in e for e in self.errors()))
+
     def test_skill_from_a_higher_level_is_reported(self):
         self.edit_yaml("tracks/poo/n1/exercises.yaml",
                        lambda d: d["exercises"][0]["skills"].append("solid"))

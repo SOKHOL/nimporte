@@ -1,0 +1,61 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: fonctionnel
+title: Programmation fonctionnelle
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: lambdas
+    title: Lambdas
+  - id: fonctions-d-ordre-superieur
+    title: Fonctions d'ordre supérieur
+  - id: map-filter-reduce
+    title: Map/filter/reduce
+  - id: immutabilite
+    title: Immutabilité
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: fonctions-pures
+    title: Fonctions pures
+  - id: effets-de-bord
+    title: Effets de bord
+  - id: composition
+    title: Composition
+  - id: sealed-classes-et-pattern-matching
+    title: Sealed classes et pattern matching
+- level: 3
+  title: Approfondir
+  skills:
+  - id: option-result
+    title: Option/Result
+  - id: gestion-d-erreurs-fonctionnelle
+    title: Gestion d'erreurs fonctionnelle
+  - id: evaluation-paresseuse
+    title: Évaluation paresseuse
+  - id: recursivite-terminale
+    title: Récursivité terminale
+- level: 4
+  title: Concevoir
+  skills:
+  - id: types-algebriques
+    title: Types algébriques
+  - id: functors-et-monades-en-pratique
+    title: Functors et monades en pratique (Arrow)
+  - id: effets
+    title: Effets
+  - id: programmation-reactive
+    title: Programmation réactive
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: structures-de-donnees-persistantes
+    title: Structures de données persistantes
+  - id: lambda-calcul
+    title: Lambda-calcul
+  - id: langages-purs-haskell
+    title: Langages purs (Haskell)
+  - id: theorie-des-categories-apercu
+    title: Théorie des catégories (aperçu)

@@ -4,8 +4,20 @@
 > patterns, architecture, DevOps, cloud, SRE, sécurité. Avec des niveaux, des
 > exercices, des challenges et un arbre de compétences.
 
-**Statut :** conception (phase 0). Ce dossier contient la vision, le curriculum,
-l'architecture, le plan d'action, et un premier contenu pilote validé automatiquement.
+**Statut :** phase 1 — l'app Android fonctionne hors-ligne avec le contenu pilote.
+
+## Installer l'app sur ton téléphone
+
+1. Ouvre la page **[DevForge — dernière version](https://github.com/SOKHOL/nimporte/releases/tag/devforge-latest)**
+   depuis ton téléphone Android.
+2. Télécharge `DevForge.apk`, ouvre-le, et autorise l'installation depuis cette source
+   quand Android le demande.
+3. Chaque push sur la branche reconstruit l'APK : une nouvelle version s'installe
+   par-dessus l'ancienne, sans perdre ta progression.
+
+Ce que fait l'app : carte des 31 parcours, leçons, sessions d'exercices (9 types),
+boss chronométrés qui valident un niveau, révisions espacées (boîtes de Leitner),
+défi du jour, XP et série de jours, profil avec radar de compétences.
 
 ## L'idée en 30 secondes
 
@@ -55,9 +67,23 @@ devforge/
 │   ├── curriculum.yaml        # parcours et prérequis
 │   ├── schema/                # JSON Schema du contenu
 │   └── tracks/<parcours>/     # track.yaml, leçons (.md), exercices (.yaml)
+├── android/                   # l'app (Kotlin + Jetpack Compose)
+│   ├── app/                   # écrans, navigation, ViewModels
+│   └── core/                  # model, markdown, domain, data — Kotlin pur, testé
 └── tools/
-    ├── validate_content.py    # validateur
+    ├── validate_content.py    # validateur du contenu
     └── test_validate_content.py
+```
+
+## Compiler l'app
+
+Avec Android Studio : ouvre le dossier `devforge/android`. En ligne de commande (JDK 17
+et SDK Android installés) :
+
+```bash
+cd devforge/android
+./gradlew :core:domain:test :core:data:test   # tests du cœur
+./gradlew :app:assembleDebug                  # APK dans app/build/outputs/apk/debug/
 ```
 
 ## Valider le contenu
@@ -70,5 +96,6 @@ python -m unittest discover -s devforge/tools -v
 
 ## Prochaine étape
 
-Terminer le niveau 1 de POO puis créer le projet Android : voir le
-[backlog](docs/04-plan-d-action.md#backlog-des-phases-0-et-1).
+Phase 2 : rédiger beaucoup plus de contenu (une leçon et ~8 exercices par compétence),
+puis notifications et widget pour le défi du jour. Voir le
+[plan d'action](docs/04-plan-d-action.md).

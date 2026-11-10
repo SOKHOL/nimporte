@@ -39,9 +39,15 @@ Environ **30 semaines** pour les phases 0 à 4.
 
 **Terminé quand :** le niveau 1 de POO est jouable « sur papier » de bout en bout.
 
-## Phase 1 — MVP Android hors-ligne (6 semaines)
+## Phase 1 — MVP Android hors-ligne (6 semaines) — ✅ première version livrée
 
 **Objectif :** une app installée sur ton téléphone, que tu utilises tous les jours.
+
+**État :** l'app existe dans [`devforge/android/`](../android/) et la CI publie l'APK.
+Elle va même plus loin que prévu : les 9 types d'exercices des phases 1 et 2, les boss,
+les révisions espacées, le défi du jour et le radar sont déjà là. Écarts assumés avec
+le plan : progression en JSON plutôt que Room, injection manuelle plutôt que Hilt,
+YAML lu par l'app plutôt que compilé (ADR 0005 à 0007).
 
 - Projet Android multi-module (Kotlin, Compose, Material 3, version catalog)
 - `:content-compiler` : YAML → JSON, embarqué dans l'APK
@@ -103,20 +109,20 @@ serveur, sécurité (threat model du runner).
 | P0-02 | Compléter le boss de POO niveau 1 avec des exercices dédiés | 0 |
 | P0-03 | Maquettes basse fidélité des 4 écrans principaux | 0 |
 | P0-04 | ADR 0004 : choix de la bibliothèque de rendu Markdown dans Compose | 0 |
-| P1-01 | Créer le projet Android multi-module (Kotlin, Compose, Material 3, version catalog) | 1 |
-| P1-02 | CI GitHub Actions : ktlint, detekt, tests unitaires, build de l'APK | 1 |
-| P1-03 | `:content-compiler` : YAML → JSON, avec tests | 1 |
-| P1-04 | `:core:model` : Track, Level, Skill, Lesson, Exercise (sealed), avec tests | 1 |
-| P1-05 | `:core:data` : lecture du pack JSON depuis les assets, `ContentRepository` | 1 |
-| P1-06 | Room : tentatives, maîtrise, statistiques ; `ProgressRepository` | 1 |
-| P1-07 | Évaluateurs des 5 types d'exercices (Strategy), tests exhaustifs | 1 |
-| P1-08 | Écran carte des parcours, avec verrous selon les prérequis (Specification) | 1 |
-| P1-09 | Lecteur de leçons Markdown avec coloration syntaxique | 1 |
-| P1-10 | Session d'exercices (machine d'état) et écran de correction avec explication | 1 |
-| P1-11 | Composants des 5 types d'exercices (dont le glisser-déposer du Parsons) | 1 |
-| P1-12 | XP, niveaux et série quotidienne | 1 |
-| P1-13 | Écran profil | 1 |
-| P1-14 | Tests UI des parcours critiques ; APK signé publié comme artefact | 1 |
+| P1-01 ✅ | Créer le projet Android multi-module (Kotlin, Compose, Material 3, version catalog) | 1 |
+| P1-02 ✅ | CI GitHub Actions : tests unitaires, build de l'APK, pré-version | 1 |
+| P1-03 ✅ | Lecture du contenu YAML par l'app (ADR 0005), testée sur le vrai contenu | 1 |
+| P1-04 ✅ | `:core:model` : Track, Level, Skill, Lesson, Exercise (sealed) | 1 |
+| P1-05 ✅ | `:core:data` : chargeur de contenu, adaptateur des assets | 1 |
+| P1-06 ✅ | Progression enregistrée en JSON (ADR 0006) | 1 |
+| P1-07 ✅ | Évaluateurs des 10 types d'exercices (Strategy), testés | 1 |
+| P1-08 ✅ | Carte des parcours, prérequis conseillés (Specification) | 1 |
+| P1-09 ✅ | Lecteur de leçons Markdown avec coloration syntaxique (ADR 0004) | 1 |
+| P1-10 ✅ | Session d'exercices (machine d'état) et correction avec explication | 1 |
+| P1-11 ✅ | Composants des 9 types d'exercices (Parsons au toucher, avec annulation) | 1 |
+| P1-12 ✅ | XP, niveaux, boss, série quotidienne, révisions, défi du jour | 1 |
+| P1-13 ✅ | Écran profil avec radar | 1 |
+| P1-14 | Tests UI Compose des parcours critiques ; ktlint et detekt en CI | 1 |
 
 ## Rythme hebdomadaire conseillé
 

@@ -1,0 +1,65 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: clean-code
+title: Clean code, refactoring et tests
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: nommage
+    title: Nommage
+  - id: fonctions-courtes
+    title: Fonctions courtes
+  - id: commentaires-utiles
+    title: Commentaires utiles
+  - id: dry
+    title: DRY
+  - id: kiss
+    title: KISS
+  - id: yagni
+    title: YAGNI
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: code-smells
+    title: Code smells
+  - id: refactorings-de-base-extraire
+    title: Refactorings de base (extraire, renommer, déplacer)
+  - id: tests-unitaires
+    title: Tests unitaires
+  - id: structure-arrange-act-assert
+    title: Structure Arrange-Act-Assert
+- level: 3
+  title: Approfondir
+  skills:
+  - id: tdd
+    title: TDD
+  - id: doublures-de-test-mock-stub-fake
+    title: Doublures de test (mock, stub, fake)
+  - id: pyramide-des-tests
+    title: Pyramide des tests
+  - id: tests-d-integration
+    title: Tests d'intégration
+  - id: couverture
+    title: Couverture
+- level: 4
+  title: Concevoir
+  skills:
+  - id: refactoring-de-legacy-tests-de
+    title: Refactoring de legacy (tests de caractérisation, *seams*)
+  - id: tests-de-contrat
+    title: Tests de contrat
+  - id: property-based-testing
+    title: Property-based testing
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: mutation-testing
+    title: Mutation testing
+  - id: architecture-testable
+    title: Architecture testable
+  - id: strategie-de-tests-d-une-equipe
+    title: Stratégie de tests d'une équipe
+  - id: revue-de-code-comme-pratique
+    title: Revue de code comme pratique

@@ -1,0 +1,71 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: git
+title: Git et collaboration
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: init
+    title: Init
+  - id: add
+    title: Add
+  - id: commit
+    title: Commit
+  - id: log
+    title: Log
+  - id: diff
+    title: Diff
+  - id: gitignore
+    title: .gitignore
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: branches
+    title: Branches
+  - id: merge
+    title: Merge
+  - id: conflits
+    title: Conflits
+  - id: remotes
+    title: Remotes
+  - id: push-pull
+    title: Push/pull
+  - id: pull-requests
+    title: Pull requests
+- level: 3
+  title: Approfondir
+  skills:
+  - id: rebase
+    title: Rebase
+  - id: cherry-pick
+    title: Cherry-pick
+  - id: stash
+    title: Stash
+  - id: reflog
+    title: Reflog
+  - id: bisect
+    title: Bisect
+- level: 4
+  title: Concevoir
+  skills:
+  - id: workflows-trunk-based-github-flow
+    title: Workflows (trunk-based, GitHub Flow, GitFlow)
+  - id: conventional-commits
+    title: Conventional Commits
+  - id: semver
+    title: SemVer
+  - id: hooks
+    title: Hooks
+  - id: monorepos
+    title: Monorepos
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: internes-blobs-trees-commits-refs
+    title: Internes (blobs, trees, commits, refs)
+  - id: strategies-de-merge
+    title: Stratégies de merge
+  - id: tres-gros-depots
+    title: Très gros dépôts

@@ -1,0 +1,53 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: compilation
+title: Langages et compilateurs
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: interprete-ou-compile
+    title: Interprété ou compilé
+  - id: etapes-d-un-compilateur
+    title: Étapes d'un compilateur
+  - id: grammaires
+    title: Grammaires
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: analyse-lexicale
+    title: Analyse lexicale
+  - id: analyse-syntaxique-descente
+    title: Analyse syntaxique (descente récursive)
+  - id: arbre-syntaxique-ast
+    title: Arbre syntaxique (AST)
+- level: 3
+  title: Approfondir
+  skills:
+  - id: interpreteur-d-ast
+    title: Interpréteur d'AST
+  - id: portee-et-environnements
+    title: Portée et environnements
+  - id: fermetures
+    title: Fermetures
+- level: 4
+  title: Concevoir
+  skills:
+  - id: systemes-de-types
+    title: Systèmes de types
+  - id: inference-de-types
+    title: Inférence de types
+  - id: generation-de-bytecode
+    title: Génération de bytecode
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: optimisations-propagation-de
+    title: Optimisations (propagation de constantes, code mort)
+  - id: ssa
+    title: SSA
+  - id: llvm
+    title: LLVM
+  - id: projet-ton-propre-langage
+    title: 'Projet : ton propre langage'

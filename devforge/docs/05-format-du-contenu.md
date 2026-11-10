@@ -17,6 +17,10 @@ content/
             └── exercises.yaml    # les exercices du niveau (un ou plusieurs fichiers)
 ```
 
+Un parcours `planned` peut déjà avoir son `track.yaml` (le programme de ses 5 niveaux,
+affiché dans l'app), mais pas encore de dossier de niveau : pour ajouter des leçons ou
+des exercices, passe-le en `pilot` dans `curriculum.yaml`.
+
 ## Identifiants
 
 - Parcours et compétences : `minuscules-avec-tirets` (ex. `design-patterns`, `factory-method`).
@@ -68,7 +72,7 @@ Chaque type n'accepte que ses propres champs, en plus des champs communs.
 |---|---|---|
 | `qcm` | `choices`, `multiple` | au moins un choix correct ; exactement un si `multiple` est absent |
 | `predict-output` | `code` + `choices` ou `expected_output` | exactement un choix correct |
-| `find-bug` | `code`, `bug_lines` | les lignes existent (numérotées à partir de 1) |
+| `find-bug` | `code`, `bug_lines` | les lignes existent (numérotées à partir de 1) ; dans l'app, la réponse est juste si toutes les lignes touchées sont dans `bug_lines` |
 | `parsons` | `lines` (dans l'ordre correct), `distractors` | aucun leurre identique à une ligne de la solution |
 | `fill-blanks` | `code` avec `{{1}}`, `{{2}}`…, `blanks` | chaque trou est décrit, apparaît une fois, et sa banque de mots contient une bonne réponse |
 | `match` | `pairs` (`left`, `right`) | au moins 3 paires, pas de doublons |

@@ -1,0 +1,55 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: ia-dev
+title: IA pour les développeurs
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: ce-qu-est-un-llm-jetons-contexte
+    title: Ce qu'est un LLM (jetons, contexte, probabilités)
+  - id: usages
+    title: Usages
+  - id: limites
+    title: Limites
+  - id: hallucinations
+    title: Hallucinations
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: appeler-une-api-de-llm
+    title: Appeler une API de LLM
+  - id: rediger-de-bons-prompts
+    title: Rédiger de bons prompts
+  - id: sorties-structurees
+    title: Sorties structurées
+- level: 3
+  title: Approfondir
+  skills:
+  - id: embeddings
+    title: Embeddings
+  - id: recherche-semantique
+    title: Recherche sémantique
+  - id: rag
+    title: RAG
+- level: 4
+  title: Concevoir
+  skills:
+  - id: outils-et-agents
+    title: Outils et agents
+  - id: evaluation
+    title: Évaluation
+  - id: couts-et-latence
+    title: Coûts et latence
+  - id: securite-injection-de-prompt
+    title: Sécurité (injection de prompt)
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: fine-tuning-et-alternatives
+    title: Fine-tuning et alternatives
+  - id: observabilite
+    title: Observabilité
+  - id: concevoir-un-produit-avec-l-ia
+    title: Concevoir un produit avec l'IA

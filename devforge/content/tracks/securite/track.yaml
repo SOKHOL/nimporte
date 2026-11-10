@@ -1,0 +1,65 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: securite
+title: Sécurité
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: confidentialite
+    title: Confidentialité
+  - id: integrite
+    title: Intégrité
+  - id: disponibilite
+    title: Disponibilité
+  - id: mots-de-passe
+    title: Mots de passe
+  - id: hachage-vs-chiffrement
+    title: Hachage vs chiffrement
+  - id: https
+    title: HTTPS
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: owasp-top-10-injections
+    title: 'OWASP Top 10 : injections'
+  - id: xss
+    title: XSS
+  - id: csrf
+    title: CSRF
+  - id: controle-d-acces-defaillant
+    title: Contrôle d'accès défaillant
+  - id: validation-des-entrees
+    title: Validation des entrées
+- level: 3
+  title: Approfondir
+  skills:
+  - id: authentification-et-autorisation
+    title: Authentification et autorisation
+  - id: gestion-des-secrets
+    title: Gestion des secrets
+  - id: cryptographie-appliquee-aes-rsa
+    title: Cryptographie appliquée (AES, RSA, signatures)
+- level: 4
+  title: Concevoir
+  skills:
+  - id: modelisation-des-menaces-stride
+    title: Modélisation des menaces (STRIDE)
+  - id: securite-des-conteneurs-et-de
+    title: Sécurité des conteneurs et de Kubernetes
+  - id: chaine-logicielle
+    title: Chaîne logicielle
+  - id: sast-dast-sca
+    title: SAST/DAST/SCA
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: securite-des-la-conception
+    title: Sécurité dès la conception
+  - id: reponse-a-incident-de-securite
+    title: Réponse à incident de sécurité
+  - id: bases-du-pentest-ethique
+    title: Bases du pentest éthique
+  - id: rgpd
+    title: RGPD

@@ -1,0 +1,51 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: carriere
+title: Carrière et collaboration
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: poser-une-bonne-question
+    title: Poser une bonne question
+  - id: lire-une-documentation
+    title: Lire une documentation
+  - id: ecrire-un-ticket-clair
+    title: Écrire un ticket clair
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: revue-de-code-donner-et-recevoir
+    title: Revue de code (donner et recevoir)
+  - id: estimation
+    title: Estimation
+  - id: decoupage-en-taches
+    title: Découpage en tâches
+- level: 3
+  title: Approfondir
+  skills:
+  - id: documentation-technique
+    title: Documentation technique
+  - id: adr
+    title: ADR
+  - id: rfc
+    title: RFC
+  - id: presentations-techniques
+    title: Présentations techniques
+- level: 4
+  title: Concevoir
+  skills:
+  - id: entretiens-techniques-algo-system
+    title: Entretiens techniques (algo, system design, comportemental)
+  - id: mentorat
+    title: Mentorat
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: leadership-technique
+    title: Leadership technique
+  - id: influence-sans-autorite
+    title: Influence sans autorité
+  - id: roles-staff-et-principal-engineer
+    title: Rôles staff et principal engineer

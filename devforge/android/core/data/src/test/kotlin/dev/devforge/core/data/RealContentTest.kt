@@ -23,7 +23,7 @@ class RealContentTest {
     @Test
     fun `le contenu se charge entièrement`() {
         assertEquals(31, content.curriculum.tracks.size)
-        assertEquals(content.curriculum.tracks.count { it.isPilot }, content.tracks.size)
+        assertEquals(31, content.tracks.size) // chaque parcours a au moins son programme (track.yaml)
         assertTrue(content.exercises.size >= 61)
         assertTrue(content.lessons.size >= 12)
         assertTrue(content.lessons.all { it.markdown.isNotBlank() && !it.markdown.startsWith("---") })

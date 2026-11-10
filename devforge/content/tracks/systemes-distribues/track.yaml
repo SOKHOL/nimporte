@@ -1,0 +1,53 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: systemes-distribues
+title: Systèmes distribués
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: les-illusions-de-l-informatique
+    title: Les illusions de l'informatique distribuée
+  - id: pannes-partielles
+    title: Pannes partielles
+  - id: latence-reseau
+    title: Latence réseau
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: temps-et-horloges-lamport-horloges
+    title: Temps et horloges (Lamport, horloges vectorielles)
+  - id: ordre-des-evenements
+    title: Ordre des événements
+- level: 3
+  title: Approfondir
+  skills:
+  - id: replication-leader-multi-leader-sans
+    title: Réplication (leader, multi-leader, sans leader)
+  - id: quorums
+    title: Quorums
+  - id: modeles-de-coherence
+    title: Modèles de cohérence
+- level: 4
+  title: Concevoir
+  skills:
+  - id: consensus-raft-paxos
+    title: Consensus (Raft, Paxos)
+  - id: election-de-leader
+    title: Élection de leader
+  - id: 2pc-et-sagas
+    title: 2PC et sagas
+  - id: exactement-une-fois
+    title: « exactement une fois »
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: crdt
+    title: CRDT
+  - id: split-brain
+    title: Split-brain
+  - id: verification-formelle-tla
+    title: Vérification formelle (TLA+)
+  - id: articles-fondateurs-dynamo-spanner
+    title: Articles fondateurs (Dynamo, Spanner)

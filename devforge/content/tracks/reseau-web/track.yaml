@@ -1,0 +1,71 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: reseau-web
+title: Réseau, web et API
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: client-serveur
+    title: Client/serveur
+  - id: http-methodes-codes-en-tetes
+    title: HTTP (méthodes, codes, en-têtes)
+  - id: url
+    title: URL
+  - id: dns
+    title: DNS
+  - id: json
+    title: JSON
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: rest-ressources-idempotence
+    title: REST (ressources, idempotence, pagination, versions)
+  - id: cookies
+    title: Cookies
+  - id: sessions
+    title: Sessions
+  - id: cors
+    title: CORS
+- level: 3
+  title: Approfondir
+  skills:
+  - id: tcp-ip
+    title: TCP/IP
+  - id: tls
+    title: TLS
+  - id: http-2-et-http-3
+    title: HTTP/2 et HTTP/3
+  - id: oauth2
+    title: OAuth2
+  - id: openid-connect
+    title: OpenID Connect
+  - id: jwt
+    title: JWT
+  - id: websockets
+    title: WebSockets
+- level: 4
+  title: Concevoir
+  skills:
+  - id: grpc
+    title: GRPC
+  - id: graphql
+    title: GraphQL
+  - id: conception-d-api-openapi
+    title: Conception d'API (OpenAPI, rétrocompatibilité)
+  - id: rate-limiting
+    title: Rate limiting
+  - id: api-gateway
+    title: API gateway
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: performance-reseau
+    title: Performance réseau
+  - id: proxys-et-load-balancers-l4-l7
+    title: Proxys et load balancers L4/L7
+  - id: cdn
+    title: CDN
+  - id: edge-computing
+    title: Edge computing

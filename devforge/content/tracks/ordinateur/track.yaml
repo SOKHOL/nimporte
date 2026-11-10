@@ -1,0 +1,71 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: ordinateur
+title: Comment fonctionne un ordinateur
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: binaire
+    title: Binaire
+  - id: octets
+    title: Octets
+  - id: processeur
+    title: Processeur
+  - id: memoire-vive
+    title: Mémoire vive
+  - id: stockage
+    title: Stockage
+  - id: du-code-source-a-l-execution
+    title: Du code source à l'exécution
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: jeu-d-instructions
+    title: Jeu d'instructions
+  - id: registres
+    title: Registres
+  - id: cycle-d-execution
+    title: Cycle d'exécution
+  - id: lire-quelques-lignes-d-assembleur
+    title: Lire quelques lignes d'assembleur
+- level: 3
+  title: Approfondir
+  skills:
+  - id: systeme-d-exploitation-processus
+    title: 'Système d''exploitation : processus'
+  - id: threads
+    title: Threads
+  - id: ordonnancement
+    title: Ordonnancement
+  - id: appels-systeme
+    title: Appels système
+  - id: interruptions
+    title: Interruptions
+- level: 4
+  title: Concevoir
+  skills:
+  - id: memoire-virtuelle
+    title: Mémoire virtuelle
+  - id: pagination
+    title: Pagination
+  - id: hierarchie-des-caches
+    title: Hiérarchie des caches
+  - id: entrees-sorties-bloquantes-non
+    title: Entrées-sorties (bloquantes, non bloquantes, epoll)
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: pipeline
+    title: Pipeline
+  - id: execution-speculative
+    title: Exécution spéculative
+  - id: prediction-de-branchement
+    title: Prédiction de branchement
+  - id: simd
+    title: SIMD
+  - id: numa
+    title: NUMA
+  - id: mechanical-sympathy
+    title: '*mechanical sympathy*'

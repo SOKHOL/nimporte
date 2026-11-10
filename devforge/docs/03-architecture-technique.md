@@ -36,26 +36,25 @@ flowchart LR
 
 ## 3. L'app Android
 
-### Modules Gradle
+### Modules Gradle (implémentés)
 
-Inspiré de l'app exemple officielle *Now in Android*.
+Le projet est dans [`devforge/android/`](../android/).
 
 ```
-:app                     point d'entrée, navigation, assemblage de l'injection de dépendances
-:core:model              entités en Kotlin pur (Track, Skill, Exercise…)
-:core:domain             cas d'usage et interfaces (ports) — Kotlin pur
-:core:data               Room, DataStore, lecture du pack de contenu, implémentation des repositories
-:core:designsystem       thème Material 3, composants Compose réutilisables
-:core:testing            fakes et utilitaires de test
-:feature:skilltree       carte des parcours
-:feature:lesson          lecteur de leçons Markdown
-:feature:exercise        moteur d'exercices : un composant et un évaluateur par type
-:feature:session         enchaînement d'une session, correction, résultat
-:feature:challenge       défi du jour, boss, katas
-:feature:review          répétition espacée
-:feature:profile         XP, badges, radar, statistiques
-:content-compiler        outil JVM : YAML → JSON, exécuté pendant le build
+:app                     Android + Compose : écrans, navigation, ViewModels, assemblage (AppContainer)
+:core:model              entités en Kotlin pur : parcours, exercices (sealed class), progression
+:core:markdown           analyseur Markdown et coloration syntaxique — Kotlin pur
+:core:domain             évaluation, XP, révisions, niveaux, boss, sessions ; ports — Kotlin pur
+:core:data               lecture du contenu YAML, progression en JSON — Kotlin pur (JVM)
 ```
+
+Les quatre modules `core` n'ont **aucune dépendance Android** : ils sont testés sur la JVM
+(38 tests), dont un test qui charge le vrai contenu du dépôt et vérifie que chaque
+exercice est réussi avec sa propre solution.
+
+Découpage prévu quand l'app grossira : `:core:designsystem`, puis un module par
+fonctionnalité (`:feature:session`, `:feature:profile`…), sur le modèle de l'app exemple
+officielle *Now in Android*.
 
 **Règle de dépendance :** `feature → domain → model` et `data → domain`.
 Le domaine ne connaît ni Android, ni Room, ni Compose : il se teste en JVM pur,
@@ -82,11 +81,15 @@ classDiagram
 
 - **Contenu** (Track, Level, Skill, Lesson, Exercise, Boss) : en lecture seule, chargé
   depuis le pack JSON.
-- **Progression** (Attempt, SkillMastery, ReviewCard, Badge, statistiques) : dans Room.
+- **Progression** (`Progress` : XP, résultats par exercice, niveaux validés, boss, série,
+  cartes de révision) : un objet immuable enregistré en JSON
+  ([ADR 0006](adr/0006-progression-en-json.md)), Room plus tard.
 
 ### Le moteur d'exercices
 
-Esquisse vérifiée (elle compile et s'exécute) :
+Esquisse vérifiée (elle compile et s'exécute). La version complète est dans
+`core/domain/…/evaluation/Evaluation.kt` : un évaluateur par type, pour les 10 types.
+
 
 ```kotlin
 // :core:model — le contenu, sans aucune dépendance Android
@@ -182,7 +185,7 @@ Construire DevForge, c'est pratiquer le parcours *Design patterns* pour de vrai.
 | Observer | `StateFlow` des ViewModels ; événements de domaine |
 | Repository | accès au contenu et à la progression, indépendant de la source (JSON, Room, réseau) |
 | Specification | conditions de déblocage combinables (`poo@2 et clean-code@1`) |
-| Command | actions annulables dans les exercices Parsons (déplacer une ligne, annuler) |
+| Command | actions annulables dans les exercices Parsons (`ParsonsBoard`, `Move.Place` / `Move.Remove`) |
 | Decorator | calcul de l'XP : base → bonus premier essai → bonus de série → malus d'indices |
 | Chain of Responsibility | normalisation des réponses texte (espaces → casse → synonymes acceptés) |
 | Adapter | runner de code local (faux, pour les tests) ou distant (API) derrière la même interface |
@@ -196,12 +199,14 @@ Construire DevForge, c'est pratiquer le parcours *Design patterns* pour de vrai.
 |---|---|
 | Langage | Kotlin 2.x |
 | UI | Jetpack Compose, Material 3, Navigation Compose |
-| Injection de dépendances | Hilt (ou Koin, plus simple à apprendre) |
-| Stockage local | Room (progression), DataStore (préférences) |
+| Injection de dépendances | à la main (`AppContainer`, [ADR 0007](adr/0007-injection-manuelle.md)) ; Hilt plus tard |
+| Stockage local | JSON (progression, [ADR 0006](adr/0006-progression-en-json.md)) ; Room plus tard |
+| Contenu | YAML lu par snakeyaml-engine ([ADR 0005](adr/0005-lecture-du-yaml-par-l-app.md)) |
+| Markdown | analyseur maison ([ADR 0004](adr/0004-rendu-markdown-maison.md)) |
 | Sérialisation | kotlinx.serialization |
 | Asynchrone | Coroutines et Flow |
-| Tâches planifiées | WorkManager (rappel du défi du jour) |
-| Widget | Jetpack Glance |
+| Tâches planifiées | WorkManager (rappel du défi du jour) — phase 2 |
+| Widget | Jetpack Glance — phase 2 |
 | Tests | JUnit, Turbine (Flows), fakes plutôt que mocks, tests UI Compose |
 | Qualité | ktlint, detekt, Android Lint |
 | Build | Gradle Kotlin DSL, version catalog, plugins de convention |
@@ -210,7 +215,9 @@ Construire DevForge, c'est pratiquer le parcours *Design patterns* pour de vrai.
 
 1. **Rédaction** en YAML (exercices) et Markdown (leçons) dans `content/`, versionnés dans Git.
 2. **Validation** en CI : JSON Schema + règles de cohérence (`tools/validate_content.py`).
-3. **Compilation** en un pack JSON versionné, embarqué dans l'APK (`assets/`).
+3. **Embarqué tel quel** dans l'APK (`assets/`) et lu au démarrage
+   ([ADR 0005](adr/0005-lecture-du-yaml-par-l-app.md)). Un pack JSON précompilé viendra
+   quand le volume le justifiera.
 4. **Phase 3** : packs téléchargeables depuis le backend, pour mettre le contenu à jour
    sans republier l'app.
 
@@ -256,3 +263,7 @@ conséquences, alternatives. C'est aussi une compétence du curriculum.
 - [0001 — Kotlin et Jetpack Compose pour l'app](adr/0001-kotlin-compose-android.md)
 - [0002 — Le contenu en YAML dans Git](adr/0002-contenu-yaml-dans-git.md)
 - [0003 — Hors-ligne d'abord](adr/0003-hors-ligne-d-abord.md)
+- [0004 — Un rendu Markdown écrit à la main](adr/0004-rendu-markdown-maison.md)
+- [0005 — L'app lit directement le YAML](adr/0005-lecture-du-yaml-par-l-app.md)
+- [0006 — La progression dans un fichier JSON, avant Room](adr/0006-progression-en-json.md)
+- [0007 — Injection de dépendances à la main](adr/0007-injection-manuelle.md)

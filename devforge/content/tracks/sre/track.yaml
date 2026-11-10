@@ -1,0 +1,63 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: sre
+title: Observabilité et SRE
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: logs
+    title: Logs
+  - id: metriques
+    title: Métriques
+  - id: traces-a-quoi-ils-servent
+    title: 'Traces : à quoi ils servent'
+  - id: monitoring-vs-observabilite
+    title: Monitoring vs observabilité
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: logs-structures
+    title: Logs structurés
+  - id: prometheus-counter-gauge-histogram
+    title: Prometheus (counter, gauge, histogram)
+  - id: tableaux-de-bord-grafana
+    title: Tableaux de bord Grafana
+  - id: alertes
+    title: Alertes
+- level: 3
+  title: Approfondir
+  skills:
+  - id: traces-distribuees-opentelemetry
+    title: Traces distribuées (OpenTelemetry)
+  - id: methodes-red-et-use
+    title: Méthodes RED et USE
+  - id: sli
+    title: SLI
+  - id: slo
+    title: SLO
+  - id: sla
+    title: SLA
+  - id: budgets-d-erreur
+    title: Budgets d'erreur
+- level: 4
+  title: Concevoir
+  skills:
+  - id: gestion-d-incident-roles
+    title: Gestion d'incident (rôles, communication)
+  - id: post-mortems-sans-blame
+    title: Post-mortems sans blâme
+  - id: capacity-planning
+    title: Capacity planning
+  - id: tests-de-charge
+    title: Tests de charge
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: chaos-engineering
+    title: Chaos engineering
+  - id: fiabilite-a-grande-echelle
+    title: Fiabilité à grande échelle
+  - id: reduction-du-travail-repetitif-toil
+    title: Réduction du travail répétitif (toil)

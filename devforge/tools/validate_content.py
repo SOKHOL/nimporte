@@ -322,8 +322,14 @@ class Validator:
             self.error("content/tracks", f"le parcours pilote {missing!r} n'a pas de dossier")
         for extra in sorted(set(dirs) - set(curriculum)):
             self.error(f"content/tracks/{extra}", "dossier qui ne correspond à aucun parcours de curriculum.yaml")
-        for not_pilot in sorted((set(dirs) & set(curriculum)) - pilots):
-            self.error(f"content/tracks/{not_pilot}", "le parcours a du contenu mais n'est pas marqué « pilot »")
+        # Un parcours « planned » peut déjà avoir son track.yaml (le programme), mais pas de contenu.
+        for planned in sorted((set(dirs) & set(curriculum)) - pilots):
+            extra = sorted(p.name for p in dirs[planned].iterdir() if p.name != "track.yaml")
+            if extra:
+                self.error(
+                    f"content/tracks/{planned}",
+                    f"parcours « planned » avec du contenu ({', '.join(extra)}) : passe-le en « pilot »",
+                )
 
         for track_id, track_dir in dirs.items():
             if track_id in curriculum:

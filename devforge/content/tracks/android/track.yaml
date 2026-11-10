@@ -1,0 +1,61 @@
+# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
+id: android
+title: Développement Android
+description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
+  niveau.'
+levels:
+- level: 1
+  title: Découvrir
+  skills:
+  - id: composants-d-une-app
+    title: Composants d'une app
+  - id: activites
+    title: Activités
+  - id: cycle-de-vie
+    title: Cycle de vie
+  - id: ressources
+    title: Ressources
+  - id: manifeste
+    title: Manifeste
+- level: 2
+  title: Pratiquer
+  skills:
+  - id: jetpack-compose-composables
+    title: 'Jetpack Compose : composables'
+  - id: etat
+    title: État
+  - id: recomposition
+    title: Recomposition
+  - id: listes
+    title: Listes
+- level: 3
+  title: Approfondir
+  skills:
+  - id: viewmodel
+    title: ViewModel
+  - id: navigation
+    title: Navigation
+  - id: coroutines-sur-android
+    title: Coroutines sur Android
+  - id: persistance-room-datastore
+    title: Persistance (Room, DataStore)
+- level: 4
+  title: Concevoir
+  skills:
+  - id: architecture-en-couches-et-en
+    title: Architecture en couches et en modules
+  - id: workmanager
+    title: WorkManager
+  - id: tests
+    title: Tests
+  - id: injection-de-dependances
+    title: Injection de dépendances
+- level: 5
+  title: Maîtriser
+  skills:
+  - id: performance-fluidite-demarrage
+    title: Performance (fluidité, démarrage)
+  - id: accessibilite
+    title: Accessibilité
+  - id: publication-et-suivi-en-production
+    title: Publication et suivi en production

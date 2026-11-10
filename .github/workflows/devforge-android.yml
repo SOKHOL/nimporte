@@ -1,0 +1,61 @@
+name: DevForge – app Android
+
+on:
+  push:
+    paths:
+      - "devforge/**"
+      - ".github/workflows/devforge-android.yml"
+  pull_request:
+    paths:
+      - "devforge/**"
+      - ".github/workflows/devforge-android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: devforge-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: devforge/android
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Tests des modules Kotlin (modèle, Markdown, domaine, données)
+        run: ./gradlew --no-daemon :core:model:test :core:markdown:test :core:domain:test :core:data:test
+
+      - name: Compiler l'APK
+        run: ./gradlew --no-daemon :app:assembleDebug
+
+      - name: Renommer l'APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk DevForge.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DevForge-apk
+          path: devforge/android/DevForge.apk
+
+      - name: Publier la pré-version « devforge-latest »
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete devforge-latest --yes --cleanup-tag || true
+          gh release create devforge-latest DevForge.apk \
+            --prerelease \
+            --target "${GITHUB_SHA}" \
+            --title "DevForge — dernière version (${GITHUB_SHA::7})" \
+            --notes "APK construit automatiquement depuis la branche ${GITHUB_REF_NAME}. Sur Android : télécharge DevForge.apk, ouvre-le et autorise l'installation depuis cette source."

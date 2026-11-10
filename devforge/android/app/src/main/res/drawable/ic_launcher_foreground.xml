@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un marteau sur une enclume : DevForge. Zone utile : le cercle central de 66 dp. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- tête du marteau -->
+    <path
+        android:fillColor="#FFE0E6F5"
+        android:pathData="M36,33h30v12h-30z" />
+    <path
+        android:fillColor="#FFE0E6F5"
+        android:pathData="M66,35l6,2v6l-6,2z" />
+    <!-- manche -->
+    <path
+        android:fillColor="#FFFFB74D"
+        android:pathData="M47,45h8v22h-8z" />
+    <!-- enclume -->
+    <path
+        android:fillColor="#FF90A4C8"
+        android:pathData="M32,68h44v6h-8v6h-28v-6h-8z" />
+    <!-- étincelle -->
+    <path
+        android:fillColor="#FFFFD54F"
+        android:pathData="M74,52l2,5l5,2l-5,2l-2,5l-2,-5l-5,-2l5,-2z" />
+</vector>

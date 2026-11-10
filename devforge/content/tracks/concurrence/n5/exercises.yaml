@@ -1,0 +1,156 @@
+exercises:
+  - id: concurrence.n5.cas.parsons-empiler
+    type: parsons
+    title: Empiler sans verrou
+    skills: [sans-verrou]
+    difficulty: 4
+    language: kotlin
+    prompt: |
+      Remets dans l'ordre la fonction `empiler` d'une pile sans verrou, dont le sommet est
+      un `AtomicReference`. Deux lignes sont des pièges.
+    lines:
+      - "fun empiler(valeur: T) {"
+      - "    while (true) {"
+      - "        val actuel = sommet.get()"
+      - "        val nouveau = Noeud(valeur, actuel)"
+      - "        if (sommet.compareAndSet(actuel, nouveau)) return"
+      - "    }"
+      - "}"
+    distractors:
+      - "        sommet.set(nouveau)"
+      - "        synchronized(sommet) { sommet.set(nouveau) }"
+    hints:
+      - Si un autre thread a modifié le sommet entre la lecture et l'écriture, que faut-il faire ?
+    explanation: |
+      On lit le sommet, on prépare le nouveau nœud qui pointe vers lui, puis on tente de le
+      remplacer **seulement s'il n'a pas changé**. Sinon, la boucle recommence avec le
+      nouveau sommet. Un simple `set` écraserait les ajouts des autres threads ; un
+      `synchronized` ferait perdre l'intérêt d'une structure sans verrou.
+
+  - id: concurrence.n5.cas.qcm-aba
+    type: qcm
+    title: Le problème ABA
+    skills: [sans-verrou]
+    difficulty: 4
+    prompt: Qu'est-ce que le problème ABA ?
+    choices:
+      - id: a
+        text: "Un CAS réussit parce que la valeur est revenue à A, alors que la structure a changé entre-temps (A → B → A)."
+        correct: true
+      - id: b
+        text: Deux threads qui prennent deux verrous A et B dans un ordre différent.
+        feedback: C'est un interblocage.
+      - id: c
+        text: Un thread qui ne voit jamais la nouvelle valeur d'une variable.
+        feedback: C'est un problème de visibilité.
+      - id: d
+        text: Une boucle de CAS qui échoue indéfiniment.
+    explanation: |
+      Le CAS compare des valeurs, pas l'historique. Si la valeur A est recyclée (un nœud
+      réutilisé en C, un index…), un thread peut croire que rien n'a changé. Parade :
+      ajouter un numéro de version (`AtomicStampedReference`). Sur la JVM, le ramasse-miettes
+      évite le cas des nœuds recyclés tant qu'ils sont référencés.
+
+  - id: concurrence.n5.contention.qcm-longadder
+    type: qcm
+    title: Le compteur le plus rapide
+    skills: [sans-verrou, concevoir-concurrent]
+    difficulty: 3
+    prompt: |
+      Un serveur compte ses requêtes : chaque thread incrémente le compteur à chaque
+      requête, et un tableau de bord le lit une fois par minute. Quel outil choisir ?
+    choices:
+      - id: a
+        text: "`LongAdder`, qui répartit les incréments sur plusieurs cellules et ne les additionne qu'à la lecture."
+        correct: true
+      - id: b
+        text: "`AtomicLong`, toujours le plus rapide."
+        feedback: Sous forte contention, tous les threads se disputent la même ligne de cache ; mesuré 9 fois plus lent ici.
+      - id: c
+        text: "Un `Long` protégé par `synchronized`."
+      - id: d
+        text: "Un `@Volatile var compteur: Long`."
+        feedback: "`compteur++` n'est pas atomique, même avec `@Volatile`."
+    explanation: |
+      Mesuré pour ce cours, 4 threads × 20 millions d'incréments : 2 149 ms avec
+      `AtomicLong`, 245 ms avec `LongAdder`. Il est fait pour ce cas : beaucoup
+      d'écritures concurrentes, peu de lectures.
+
+  - id: concurrence.n5.acteurs.qcm-principe
+    type: qcm
+    title: Pourquoi un acteur n'a pas besoin de verrou
+    skills: [acteurs]
+    difficulty: 3
+    language: kotlin
+    prompt: Mille coroutines envoient des messages à cet acteur en même temps. Pourquoi `compteur` n'a-t-il besoin d'aucune protection ?
+    code: |
+      val acteur = launch {
+          var compteur = 0
+          for (message in boiteAuxLettres) {
+              when (message) {
+                  Message.Incrementer -> compteur++
+                  is Message.Lire -> message.reponse.complete(compteur)
+              }
+          }
+      }
+    choices:
+      - id: a
+        text: Seule la coroutine de l'acteur touche `compteur`, et elle traite les messages un par un.
+        correct: true
+      - id: b
+        text: "`Channel` rend toutes les variables atomiques."
+      - id: c
+        text: Les coroutines s'exécutent toujours sur un seul thread.
+        feedback: Les expéditeurs tournent ici sur `Dispatchers.Default`, donc sur plusieurs threads.
+      - id: d
+        text: Il en a besoin, ce code est faux.
+        feedback: "Testé pour ce cours : 1 000 × 100 messages donnent exactement 100 000."
+    explanation: |
+      L'état est **confiné** dans l'acteur. Les autres ne le modifient jamais directement :
+      ils envoient des messages, que le canal livre un par un. Ne pas partager, c'est la
+      meilleure synchronisation.
+
+  - id: concurrence.n5.tests.match-outils
+    type: match
+    title: Tester la concurrence
+    skills: [tester-concurrence, barrieres-memoire]
+    difficulty: 3
+    prompt: Relie chaque outil ou notion à son rôle.
+    pairs:
+      - left: jcstress
+        right: Exécute des millions de fois un petit scénario concurrent et liste tous les résultats observés
+      - left: Lincheck
+        right: Vérifie qu'une structure concurrente se comporte comme sa version séquentielle
+      - left: Test de charge
+        right: Fait apparaître les courses et la contention sous un trafic réaliste
+      - left: Barrière mémoire
+        right: Interdit de déplacer certaines lectures et écritures de part et d'autre
+      - left: AtomicStampedReference
+        right: Ajoute un numéro de version pour se protéger du problème ABA
+    explanation: |
+      Un test unitaire classique ne voit qu'un entrelacement parmi des milliards. Les
+      outils spécialisés explorent ces entrelacements ; c'est la seule façon d'avoir
+      confiance dans du code concurrent écrit à la main.
+
+  - id: concurrence.n5.conception.qcm-ordre
+    type: qcm
+    title: La première option
+    skills: [concevoir-concurrent]
+    difficulty: 2
+    prompt: Pour un nouveau composant concurrent, quelle approche un expert essaie-t-il en premier ?
+    choices:
+      - id: a
+        text: Ne rien partager entre les threads (chacun ses données, on combine à la fin).
+        correct: true
+      - id: b
+        text: Un verrou global autour de tout le composant.
+        feedback: "C'est le dernier recours : simple au début, source de contention et d'interblocages ensuite."
+      - id: c
+        text: Un algorithme sans verrou écrit à la main.
+        feedback: Très difficile à rendre correct ; on utilise d'abord ceux du JDK.
+      - id: d
+        text: Des variables `@Volatile` partout.
+    explanation: |
+      L'ordre de préférence : ne rien partager, partager de l'immuable, passer des
+      messages, utiliser les structures concurrentes du JDK, et seulement ensuite des
+      verrous. Chaque étape ajoute de la complexité et des risques.

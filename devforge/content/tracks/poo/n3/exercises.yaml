@@ -1,0 +1,197 @@
+exercises:
+  - id: poo.n3.composition.predict-fragile
+    type: predict-output
+    title: La classe de base fragile
+    skills: [composition-heritage]
+    difficulty: 4
+    language: kotlin
+    prompt: "Qu'affiche ce programme ? (`CompteurSet` est la version par composition, déléguant à un `HashSet`)"
+    code: |
+      class CompteurHashSet<E> : HashSet<E>() {
+          var ajouts = 0
+
+          override fun add(element: E): Boolean {
+              ajouts++
+              return super.add(element)
+          }
+
+          override fun addAll(elements: Collection<E>): Boolean {
+              ajouts += elements.size
+              return super.addAll(elements)
+          }
+      }
+
+      class CompteurSet<E>(private val interne: MutableSet<E> = HashSet()) : MutableSet<E> by interne {
+          var ajouts = 0
+
+          override fun add(element: E): Boolean {
+              ajouts++
+              return interne.add(element)
+          }
+
+          override fun addAll(elements: Collection<E>): Boolean {
+              ajouts += elements.size
+              return interne.addAll(elements)
+          }
+      }
+
+      fun main() {
+          val heritage = CompteurHashSet<String>()
+          heritage.addAll(listOf("a", "b", "c"))
+          val composition = CompteurSet<String>()
+          composition.addAll(listOf("a", "b", "c"))
+          println("${heritage.ajouts} ${composition.ajouts}")
+      }
+    choices:
+      - id: a
+        text: "`6 3`"
+        correct: true
+      - id: b
+        text: "`3 3`"
+        feedback: "En interne, `HashSet.addAll` appelle `add` pour chaque élément : la version héritée compte deux fois."
+      - id: c
+        text: "`6 6`"
+        feedback: "La version par composition appelle `interne.addAll`, qui n'appelle pas notre `add`."
+      - id: d
+        text: "`3 6`"
+    explanation: |
+      La sous-classe dépend d'un détail d'implémentation de `HashSet` (son `addAll` appelle
+      `add`). La composition ne dépend que du contrat de `MutableSet`. Sortie vérifiée.
+      C'est l'exemple célèbre d'*Effective Java*, réécrit en Kotlin.
+
+  - id: poo.n3.solid.match
+    type: match
+    title: Les cinq lettres
+    skills: [solid]
+    difficulty: 2
+    prompt: Relie chaque principe SOLID à sa définition.
+    pairs:
+      - left: Responsabilité unique
+        right: Une classe n'a qu'une seule raison de changer
+      - left: Ouvert/fermé
+        right: On ajoute un comportement sans modifier le code existant
+      - left: Substitution de Liskov
+        right: Une sous-classe peut remplacer son parent sans surprise
+      - left: Ségrégation des interfaces
+        right: Plusieurs petites interfaces plutôt qu'une seule énorme
+      - left: Inversion des dépendances
+        right: Le métier dépend d'abstractions, pas des détails techniques
+    explanation: |
+      Ces principes sont des guides, pas des lois : un expert les applique quand ils
+      réduisent le coût du changement, et sait les ignorer pour un code simple qui ne
+      bougera pas.
+
+  - id: poo.n3.solid.qcm-liskov
+    type: qcm
+    title: Le carré et le rectangle
+    skills: [solid]
+    difficulty: 3
+    prompt: |
+      `Carre` hérite de `Rectangle` et force `largeur == hauteur`. Un code qui fait
+      `r.largeur = 4; r.hauteur = 5` attend une aire de 20, et obtient 25 avec un carré.
+      Quel principe est violé ?
+    choices:
+      - id: a
+        text: La substitution de Liskov.
+        correct: true
+      - id: b
+        text: La responsabilité unique.
+      - id: c
+        text: La ségrégation des interfaces.
+      - id: d
+        text: Aucun, un carré est bien un rectangle.
+        feedback: "En mathématiques oui, mais pas comme objet modifiable : le carré ne tient pas les promesses du rectangle."
+    explanation: |
+      Une sous-classe doit pouvoir remplacer son parent partout sans changer le
+      comportement attendu. Solution : pas d'héritage entre les deux, ou des formes
+      immuables (`Rectangle(4, 5)`, `Carre(4)`) qui implémentent une interface `Forme`.
+
+  - id: poo.n3.solid.review-rapport
+    type: code-review
+    title: "Revue de code : le générateur de rapports"
+    skills: [solid, couplage-cohesion, demeter]
+    difficulty: 3
+    language: kotlin
+    prompt: Trouve au moins 2 problèmes de conception.
+    code: |
+      class GenerateurRapport(private val base: MySqlConnexion) {
+          fun generer(commande: Commande): String {
+              val ville = commande.client.adresse.ville
+              val lignes = base.requete("SELECT * FROM lignes WHERE commande = ${commande.id}")
+              val html = "<h1>Commande ${commande.id}</h1><p>$ville</p>"
+              envoyerParEmail(html, commande.client.email)
+              return html
+          }
+      }
+    issues:
+      - lines: [1]
+        category: conception
+        description: Dépendance directe à `MySqlConnexion` (inversion des dépendances) ; dépendre d'un port `LignesRepository`.
+      - lines: [3]
+        category: conception
+        description: "Chaîne `commande.client.adresse.ville` : violation de la loi de Déméter."
+      - lines: [6]
+        category: conception
+        description: "Générer **et** envoyer par email : deux responsabilités, deux raisons de changer."
+      - lines: [4]
+        category: securite
+        description: Requête construite par concaténation de chaînes ; utiliser une requête paramétrée.
+    min_found: 2
+    explanation: |
+      Une seule classe dépend ici de la base, du HTML, de l'email et de la structure de trois
+      classes. Séparer : un repository (port), un générateur pur (données → HTML), un
+      service d'envoi. Chacun se teste seul et change pour une seule raison.
+
+  - id: poo.n3.immutabilite.predict-lecture-seule
+    type: predict-output
+    title: Lecture seule n'est pas immuable
+    skills: [immutabilite]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val source = mutableListOf(1, 2)
+          val lecture: List<Int> = source
+          source.add(3)
+          println(lecture)
+      }
+    choices:
+      - id: a
+        text: "`[1, 2, 3]`"
+        correct: true
+      - id: b
+        text: "`[1, 2]`"
+        feedback: "`lecture` n'est pas une copie : c'est la même liste, vue en lecture seule."
+      - id: c
+        text: Une erreur de compilation.
+      - id: d
+        text: Une UnsupportedOperationException.
+    explanation: |
+      `List` interdit de modifier **à travers cette référence**, mais la liste sous-jacente
+      reste modifiable par quiconque tient la `MutableList`. Pour une vraie copie
+      immuable : `source.toList()`.
+
+  - id: poo.n3.demeter.qcm
+    type: qcm
+    title: L'accident de train
+    skills: [demeter, couplage-cohesion]
+    difficulty: 2
+    language: kotlin
+    prompt: Quel est le problème de cette ligne ?
+    code: |
+      val ville = commande.client.adresse.ville
+    choices:
+      - id: a
+        text: Elle dépend de la structure interne de trois classes ; si l'une change, ce code casse.
+        correct: true
+      - id: b
+        text: Elle est trop lente.
+      - id: c
+        text: Elle ne compile pas en Kotlin.
+      - id: d
+        text: Aucun problème.
+    explanation: |
+      Loi de Déméter : ne parler qu'à ses amis proches. `commande.villeDeLivraison()`
+      cache le chemin interne : si demain l'adresse de livraison n'est plus celle du
+      client, un seul endroit change.

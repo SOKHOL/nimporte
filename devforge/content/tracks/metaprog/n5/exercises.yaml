@@ -1,0 +1,170 @@
+exercises:
+  - id: metaprog.n5.macros.qcm-c
+    type: qcm
+    title: La macro qui calcule mal
+    skills: [macros]
+    difficulty: 3
+    language: c
+    prompt: Qu'affiche ce programme C ?
+    code: |
+      #include <stdio.h>
+      #define CARRE(x) x * x
+
+      int main(void) {
+          printf("%d\n", CARRE(2 + 3));
+          return 0;
+      }
+    choices:
+      - id: a
+        text: "11"
+        correct: true
+      - id: b
+        text: "25"
+        feedback: "Ce serait le cas si la macro manipulait l'expression ; le préprocesseur C remplace du texte."
+      - id: c
+        text: "10"
+      - id: d
+        text: Une erreur de compilation.
+    explanation: |
+      Le préprocesseur remplace `x` par le **texte** `2 + 3` : on obtient `2 + 3 * 2 + 3`,
+      soit 2 + 6 + 3 = 11. Sortie vérifiée. La macro Rust équivalente affiche 25, car elle
+      capture une expression entière.
+
+  - id: metaprog.n5.macros.predict-rust
+    type: predict-output
+    title: La macro qui calcule bien
+    skills: [macros]
+    difficulty: 3
+    language: rust
+    prompt: Qu'affiche ce programme Rust ?
+    code: |
+      macro_rules! carre {
+          ($x:expr) => {
+              $x * $x
+          };
+      }
+
+      fn main() {
+          println!("{}", carre!(2 + 3));
+      }
+    choices:
+      - id: a
+        text: "`25`"
+        correct: true
+      - id: b
+        text: "`11`"
+        feedback: "C'est le résultat de la macro C, qui remplace du texte."
+      - id: c
+        text: "`10`"
+      - id: d
+        text: Une erreur de compilation.
+    explanation: |
+      `$x:expr` capture l'expression `2 + 3` comme un tout dans l'arbre syntaxique :
+      le résultat est `(2 + 3) * (2 + 3)` = 25. Sortie vérifiée avec rustc.
+
+  - id: metaprog.n5.dsl.predict-html
+    type: predict-output
+    title: Un petit DSL
+    skills: [dsl-kotlin]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      @DslMarker
+      annotation class HtmlDsl
+
+      @HtmlDsl
+      class Balise(private val nom: String) {
+          private val enfants = mutableListOf<String>()
+
+          fun texte(contenu: String) { enfants += contenu }
+
+          fun balise(nom: String, contenu: Balise.() -> Unit) {
+              enfants += Balise(nom).apply(contenu).rendu()
+          }
+
+          fun rendu(): String = "<$nom>${enfants.joinToString("")}</$nom>"
+      }
+
+      fun html(contenu: Balise.() -> Unit): String = Balise("html").apply(contenu).rendu()
+
+      fun main() {
+          val page = html {
+              balise("h1") { texte("DevForge") }
+              balise("p") { texte("Forge tes compétences") }
+          }
+          println(page)
+      }
+    choices:
+      - id: a
+        text: "`<html><h1>DevForge</h1><p>Forge tes compétences</p></html>`"
+        correct: true
+      - id: b
+        text: "`<h1>DevForge</h1><p>Forge tes compétences</p>`"
+        feedback: "La fonction `html` enveloppe tout dans une balise `<html>`."
+      - id: c
+        text: "`<html></html>`"
+        feedback: "`apply(contenu)` exécute bien le bloc sur la balise."
+      - id: d
+        text: Une erreur de compilation, car `balise` n'est pas définie dans `main`.
+        feedback: "Dans une lambda avec receveur, `this` est la `Balise` : ses méthodes sont accessibles directement."
+    explanation: |
+      `Balise.() -> Unit` est une lambda avec receveur : dans le bloc, `this` est la balise
+      en construction. `apply(contenu)` exécute le bloc sur la nouvelle balise, puis
+      `rendu()` produit le texte. Sortie vérifiée.
+
+  - id: metaprog.n5.dsl.trous-receveur
+    type: fill-blanks
+    title: La lambda avec receveur
+    skills: [dsl-kotlin]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      Complète la signature pour que, dans le bloc passé à `config`, on puisse appeler
+      `port(8080)` directement, comme une méthode de `Serveur`.
+    code: |
+      class Serveur {
+          var port = 80
+          fun port(valeur: Int) { port = valeur }
+      }
+
+      fun config(bloc: {{1}}.() -> Unit): Serveur = Serveur().{{2}}(bloc)
+
+      val serveur = config { port(8080) }
+    blanks:
+      "1":
+        answers: [Serveur]
+        options: [Serveur, Unit, Any, Int]
+      "2":
+        answers: [apply]
+        options: [apply, let, also, run]
+    explanation: |
+      `Serveur.() -> Unit` : dans le bloc, `this` est un `Serveur`. `apply(bloc)` exécute
+      le bloc sur l'objet et renvoie l'objet lui-même. (`run` exécuterait aussi le bloc
+      avec receveur, mais renverrait le résultat du bloc, ici `Unit`.)
+
+  - id: metaprog.n5.cout.qcm-magie
+    type: qcm
+    title: Faut-il de la magie ?
+    skills: [cout-magie]
+    difficulty: 3
+    multiple: true
+    prompt: Une collègue propose un aspect qui ajoute automatiquement une vérification de droits sur toutes les méthodes d'un package. Quelles questions faut-il se poser ? (plusieurs réponses)
+    choices:
+      - id: a
+        text: Un nouvel arrivant comprendra-t-il pourquoi un appel est refusé, sans connaître l'aspect ?
+        correct: true
+      - id: b
+        text: Que se passe-t-il pour les appels internes, qui contournent le proxy ?
+        correct: true
+      - id: c
+        text: L'erreur de configuration apparaîtra-t-elle à la compilation ou en production ?
+        correct: true
+      - id: d
+        text: Le code sera-t-il plus élégant ?
+        feedback: L'élégance seule ne justifie pas un comportement invisible.
+    explanation: |
+      Pour la sécurité, un comportement invisible est dangereux : un appel interne ou une
+      méthode privée échappe silencieusement à la vérification. Une vérification explicite
+      (ou une annotation vérifiée à la compilation) est souvent plus sûre. La bonne magie
+      est ennuyeuse : prévisible, visible et documentée.

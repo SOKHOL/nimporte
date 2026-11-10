@@ -1,0 +1,97 @@
+exercises:
+  - id: jvm.n5.langages.qcm-data-class
+    type: qcm
+    title: Ce que génère une data class
+    skills: [langages-jvm]
+    difficulty: 3
+    multiple: true
+    language: kotlin
+    prompt: "Pour `data class Point(val x: Int, val y: Int)`, quelles méthodes le compilateur Kotlin génère-t-il ? (plusieurs réponses)"
+    code: |
+      data class Point(val x: Int, val y: Int)
+    choices:
+      - id: a
+        text: "`equals`, `hashCode` et `toString`"
+        correct: true
+      - id: b
+        text: "`component1()` et `component2()`"
+        correct: true
+      - id: c
+        text: "`copy(int, int)`"
+        correct: true
+      - id: d
+        text: "`setX(int)` et `setY(int)`"
+        feedback: "Les propriétés sont des `val` : il n'y a que des getters."
+    explanation: |
+      Sortie réelle de `javap -p` : constructeur, `getX`/`getY`, `component1`/`component2`
+      (pour `val (x, y) = point`), `copy` et `copy$default`, `toString`, `hashCode`,
+      `equals`. La classe est `final` : on ne peut pas hériter d'une data class.
+
+  - id: jvm.n5.graalvm.qcm-native
+    type: qcm
+    title: Quand compiler en natif ?
+    skills: [graalvm]
+    difficulty: 3
+    prompt: Dans quel cas une image native GraalVM est-elle le meilleur choix ?
+    choices:
+      - id: a
+        text: Une fonction serverless qui démarre à chaque requête et doit répondre en quelques millisecondes.
+        correct: true
+      - id: b
+        text: Un serveur qui tourne des semaines et doit atteindre le débit maximal.
+        feedback: Là, le JIT, guidé par le profil réel, donne généralement la meilleure performance de pointe.
+      - id: c
+        text: Une application qui charge des plugins inconnus au moment du build.
+        feedback: "L'image native suppose un « monde fermé » : tout le code doit être connu au build."
+      - id: d
+        text: Une application qui utilise massivement la réflexion sans configuration.
+    explanation: |
+      L'image native démarre en quelques dizaines de millisecondes et consomme moins de
+      mémoire. Elle est idéale pour ce qui démarre souvent et vit peu. Pour un service de
+      longue durée, la JVM classique et son JIT restent excellents.
+
+  - id: jvm.n5.graalvm.qcm-monde-ferme
+    type: qcm
+    title: Le monde fermé
+    skills: [graalvm]
+    difficulty: 4
+    prompt: |
+      Une application Spring compilée en image native plante au démarrage :
+      une classe chargée par réflexion est introuvable. Pourquoi ?
+    choices:
+      - id: a
+        text: L'analyse du build n'a pas vu cette classe utilisée ; elle n'a pas été incluse. Il faut la déclarer (métadonnées de réflexion).
+        correct: true
+      - id: b
+        text: GraalVM ne supporte pas Spring.
+        feedback: Spring Boot supporte les images natives, avec des métadonnées générées à l'avance.
+      - id: c
+        text: La classe a été supprimée par le ramasse-miettes.
+      - id: d
+        text: Il manque une option -Xmx.
+    explanation: |
+      Native Image ne garde que le code atteignable d'après une analyse statique. Ce qui
+      n'est utilisé que par réflexion, proxy dynamique ou chargement de ressource doit
+      être déclaré dans des fichiers de configuration. Les frameworks modernes génèrent
+      ces déclarations au build.
+
+  - id: jvm.n5.ffm.match
+    type: match
+    title: Natif et mémoire
+    skills: [ffm, langages-jvm, specification-jvm]
+    difficulty: 3
+    prompt: Relie chaque élément à son rôle.
+    pairs:
+      - left: JNI
+        right: L'ancienne interface native, qui demande du code C de liaison
+      - left: API Foreign Function & Memory
+        right: Appeler du C directement depuis Java ou Kotlin, depuis Java 22
+      - left: Arena
+        right: Libérer toute une zone de mémoire native à la fin d'un bloc
+      - left: Java Virtual Machine Specification
+        right: Le texte de référence sur le bytecode et le chargement des classes
+      - left: Graal
+        right: Un compilateur JIT écrit en Java, utilisable à la place de C2
+    explanation: |
+      FFM remplace JNI : plus de code C de liaison, des accès mémoire vérifiés, et des
+      arènes pour libérer la mémoire native au bon moment, comme le RAII.

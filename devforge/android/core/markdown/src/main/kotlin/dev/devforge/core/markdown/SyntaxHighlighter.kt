@@ -23,9 +23,31 @@ object SyntaxHighlighter {
         "do", "done", "echo", "export", "java", "kubectl", "docker", "git",
     )
 
+    private val cKeywords = setOf(
+        "int", "char", "void", "long", "short", "unsigned", "signed", "float", "double", "struct",
+        "const", "static", "return", "if", "else", "for", "while", "do", "sizeof", "NULL",
+        "typedef", "enum", "switch", "case", "break", "continue", "free", "malloc",
+    )
+    private val rustKeywords = setOf(
+        "fn", "let", "mut", "impl", "struct", "enum", "trait", "match", "pub", "use", "mod",
+        "self", "Self", "for", "in", "if", "else", "loop", "while", "return", "move", "ref",
+        "as", "where", "true", "false", "unsafe", "dyn", "Box", "Rc", "Vec", "String",
+    )
+    private val pythonKeywords = setOf(
+        "def", "class", "import", "from", "return", "if", "elif", "else", "for", "in", "while",
+        "None", "True", "False", "del", "pass", "with", "as", "lambda", "not", "and", "or", "is",
+        "try", "except", "finally", "raise", "yield",
+    )
+
     fun tokenize(code: String, language: String?): List<Token> {
         val hashComments = language in setOf("bash", "dockerfile", "yaml", "python", "text")
-        val keywords = if (language in setOf("bash", "dockerfile")) shellKeywords else kotlinKeywords
+        val keywords = when (language) {
+            "bash", "dockerfile" -> shellKeywords
+            "c" -> cKeywords
+            "rust" -> rustKeywords
+            "python" -> pythonKeywords
+            else -> kotlinKeywords
+        }
         val tokens = mutableListOf<Token>()
         var i = 0
 

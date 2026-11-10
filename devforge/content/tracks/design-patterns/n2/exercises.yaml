@@ -1,0 +1,197 @@
+exercises:
+  - id: design-patterns.n2.match-problemes
+    type: match
+    title: Sept patterns, sept problèmes
+    skills: [abstract-factory, builder, prototype, adapter, decorator, facade, proxy]
+    difficulty: 3
+    prompt: Relie chaque pattern au problème qu'il résout.
+    pairs:
+      - left: Abstract Factory
+        right: Créer des familles d'objets cohérents (thème clair ou sombre) sans connaître leurs classes
+      - left: Builder
+        right: Construire pas à pas un objet aux nombreux paramètres optionnels
+      - left: Prototype
+        right: Créer un objet en copiant un modèle existant
+      - left: Adapter
+        right: Utiliser une vieille bibliothèque dont l'interface ne correspond pas à la nôtre
+      - left: Decorator
+        right: Ajouter compression, chiffrement et journalisation à un flux, dans n'importe quel ordre
+      - left: Facade
+        right: Offrir un seul point d'entrée simple à un sous-système de dix classes
+      - left: Proxy
+        right: Ne charger une grosse image qu'au moment où on l'affiche
+    explanation: |
+      Les trois premiers concernent la **création** des objets, les quatre suivants leur
+      **assemblage**. Reconnaître le problème est plus important que connaître le diagramme.
+
+  - id: design-patterns.n2.prototype.predict-copie
+    type: predict-output
+    title: Une copie pas si indépendante
+    skills: [prototype]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      data class Equipe(val nom: String, val membres: MutableList<String>)
+
+      fun main() {
+          val a = Equipe("A", mutableListOf("Ada"))
+          val b = a.copy(nom = "B")
+          b.membres += "Linus"
+          println(a.membres)
+      }
+    choices:
+      - id: a
+        text: "`[Ada, Linus]`"
+        correct: true
+      - id: b
+        text: "`[Ada]`"
+        feedback: "`copy()` copie la **référence** vers la liste, pas la liste elle-même."
+      - id: c
+        text: "`[Linus]`"
+      - id: d
+        text: Une erreur, car `membres` est un `val`.
+        feedback: "`val` interdit de changer la référence, pas de modifier la liste qu'elle désigne."
+    explanation: |
+      `copy()` fait une copie **superficielle** : les deux équipes partagent la même
+      `MutableList`. Solutions : des propriétés immuables (`List<String>`), ou copier
+      explicitement (`a.copy(membres = a.membres.toMutableList())`). Sortie vérifiée.
+
+  - id: design-patterns.n2.decorator.predict-ordre
+    type: predict-output
+    title: L'ordre des décorateurs
+    skills: [decorator]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun interface Texte {
+          fun rendu(): String
+      }
+
+      class Brut(private val contenu: String) : Texte {
+          override fun rendu() = contenu
+      }
+
+      class Prefixe(private val texte: Texte) : Texte {
+          override fun rendu() = "> " + texte.rendu()
+      }
+
+      class Tronque(private val texte: Texte) : Texte {
+          override fun rendu() = texte.rendu().take(5)
+      }
+
+      fun main() {
+          println(Tronque(Prefixe(Brut("DevForge"))).rendu())
+          println(Prefixe(Tronque(Brut("DevForge"))).rendu())
+      }
+    choices:
+      - id: a
+        text: "`> Dev` / `> DevFo`"
+        correct: true
+      - id: b
+        text: "`> DevFo` / `> DevFo`"
+        feedback: Dans la première ligne, la troncature s'applique **après** l'ajout du préfixe.
+      - id: c
+        text: "`> Dev` / `> Dev`"
+      - id: d
+        text: "`DevFo` / `> DevFo`"
+    explanation: |
+      Chaque décorateur appelle celui qu'il enveloppe, puis transforme le résultat. Dans la
+      première ligne, on préfixe (`> DevForge`) puis on tronque à 5 caractères (`> Dev`).
+      Dans la seconde, on tronque (`DevFo`) puis on préfixe (`> DevFo`). Sortie vérifiée.
+
+  - id: design-patterns.n2.builder.qcm-kotlin
+    type: qcm
+    title: Faut-il un Builder ?
+    skills: [builder]
+    difficulty: 2
+    language: kotlin
+    prompt: Pour construire cette `Requete` avec seulement l'URL et le délai, faut-il écrire un Builder en Kotlin ?
+    code: |
+      data class Requete(
+          val url: String,
+          val methode: String = "GET",
+          val delaiMs: Long = 5_000,
+          val entetes: Map<String, String> = emptyMap(),
+      )
+    choices:
+      - id: a
+        text: "Non : `Requete(\"https://devforge.dev\", delaiMs = 2_000)` suffit grâce aux paramètres nommés et par défaut."
+        correct: true
+      - id: b
+        text: Oui, c'est obligatoire dès qu'il y a plus de trois paramètres.
+      - id: c
+        text: Oui, sinon l'objet n'est pas immuable.
+        feedback: Les `val` le rendent déjà immuable.
+      - id: d
+        text: Non, il faut utiliser `apply` sur un objet vide.
+    explanation: |
+      Le Builder compense, en Java, l'absence de paramètres nommés et par défaut. En Kotlin,
+      on le garde pour l'interopérabilité avec Java ou pour une construction réellement
+      progressive, souvent sous forme de DSL (`buildList { }`).
+
+  - id: design-patterns.n2.structure.qcm-confusion
+    type: qcm
+    title: Lequel est-ce ?
+    skills: [adapter, decorator, proxy, facade]
+    difficulty: 3
+    language: kotlin
+    prompt: Quel pattern ce code met-il en œuvre ?
+    code: |
+      interface Paiement { fun payer(centimes: Long) }
+
+      class AdaptateurAncienneBanque(private val banque: AncienneBanque) : Paiement {
+          override fun payer(centimes: Long) = banque.effectuerVirement(centimes / 100.0, "EUR")
+      }
+    choices:
+      - id: a
+        text: Adapter, car l'objet enveloppé a une interface différente de celle exposée.
+        correct: true
+      - id: b
+        text: Decorator, car un objet en enveloppe un autre.
+        feedback: Un décorateur expose la **même** interface que l'objet enveloppé.
+      - id: c
+        text: Proxy, car il contrôle l'accès à la banque.
+        feedback: Un proxy expose lui aussi la même interface que l'objet réel.
+      - id: d
+        text: Facade, car il simplifie la banque.
+    explanation: |
+      Les quatre patterns enveloppent quelque chose ; la différence est dans l'intention et
+      l'interface. Adapter : interface **différente**, il traduit. Decorator et Proxy :
+      interface **identique**, ils ajoutent ou contrôlent. Facade : une interface **nouvelle**
+      et plus simple, devant tout un sous-système.
+
+  - id: design-patterns.n2.abstract-factory.trous
+    type: fill-blanks
+    title: Une famille cohérente
+    skills: [abstract-factory]
+    difficulty: 2
+    language: kotlin
+    prompt: Complète pour que l'écran ne dépende que de l'abstraction, et obtienne toujours des composants du même thème.
+    code: |
+      interface FabriqueUi {
+          fun bouton(texte: String): Bouton
+          fun champ(): Champ
+      }
+
+      class FabriqueSombre : {{1}} {
+          override fun bouton(texte: String) = BoutonSombre(texte)
+          override fun champ() = ChampSombre()
+      }
+
+      class EcranConnexion(private val ui: {{2}}) {
+          val valider = ui.bouton("Valider")
+          val email = ui.champ()
+      }
+    blanks:
+      "1":
+        answers: [FabriqueUi]
+        options: [FabriqueUi, Bouton, EcranConnexion, Any]
+      "2":
+        answers: [FabriqueUi]
+        options: [FabriqueUi, FabriqueSombre, BoutonSombre, Champ]
+    explanation: |
+      `EcranConnexion` reçoit une `FabriqueUi` et ne connaît aucun composant concret :
+      passer au thème clair, c'est fournir une autre fabrique, sans toucher à l'écran.
+      Recevoir `FabriqueSombre` couplerait de nouveau l'écran à un thème.

@@ -1,0 +1,184 @@
+exercises:
+  - id: poo.n2.surcharge.predict-animal
+    type: predict-output
+    title: Surcharge ou redéfinition ?
+    skills: [surcharge-redefinition, polymorphisme]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      open class Animal {
+          open fun cri() = "..."
+      }
+
+      class Chien : Animal() {
+          override fun cri() = "Ouaf"
+      }
+
+      fun decrire(a: Animal) = "un animal"
+      fun decrire(c: Chien) = "un chien"
+
+      fun main() {
+          val a: Animal = Chien()
+          println(a.cri())
+          println(decrire(a))
+      }
+    choices:
+      - id: a
+        text: "`Ouaf` / `un animal`"
+        correct: true
+      - id: b
+        text: "`Ouaf` / `un chien`"
+        feedback: La surcharge est choisie à la compilation, d'après le type déclaré de `a` (`Animal`).
+      - id: c
+        text: "`...` / `un animal`"
+        feedback: La redéfinition est choisie à l'exécution, d'après l'objet réel (un `Chien`).
+      - id: d
+        text: "`...` / `un chien`"
+    explanation: |
+      `cri()` est redéfinie : liaison dynamique, l'objet réel répond `Ouaf`. `decrire` est
+      surchargée : le compilateur choisit la version d'après le type déclaré `Animal`.
+      Sortie vérifiée en exécutant le programme.
+
+  - id: poo.n2.egalite.predict-hashcode
+    type: predict-output
+    title: Égaux mais introuvables
+    skills: [equals-hashcode]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Email(val valeur: String) {
+          override fun equals(other: Any?) = other is Email && other.valeur == valeur
+      }
+
+      fun main() {
+          val ensemble = hashSetOf(Email("ada@devforge.dev"))
+          println(Email("ada@devforge.dev") == Email("ada@devforge.dev"))
+          println(Email("ada@devforge.dev") in ensemble)
+      }
+    choices:
+      - id: a
+        text: "`true` / `false`"
+        correct: true
+      - id: b
+        text: "`true` / `true`"
+        feedback: "Le HashSet cherche d'abord par `hashCode`, qui n'est pas redéfini."
+      - id: c
+        text: "`false` / `false`"
+        feedback: "`equals` est bien redéfini et compare les valeurs."
+      - id: d
+        text: "`false` / `true`"
+    explanation: |
+      `==` appelle `equals` : `true`. Mais le `HashSet` cherche dans la case du `hashCode`,
+      qui reste celui de `Any` (lié à l'identité) : il ne trouve rien. Règle : redéfinir
+      `equals` impose de redéfinir `hashCode` ; ou utiliser une `data class`.
+
+  - id: poo.n2.egalite.predict-cle-modifiee
+    type: predict-output
+    title: La clé modifiée
+    skills: [equals-hashcode]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      data class Point(var x: Int, var y: Int)
+
+      fun main() {
+          val p = Point(1, 2)
+          val ensemble = hashSetOf(p)
+          p.x = 10
+          println(p in ensemble)
+          println(ensemble.size)
+      }
+    choices:
+      - id: a
+        text: "`false` / `1`"
+        correct: true
+      - id: b
+        text: "`true` / `1`"
+        feedback: "Le hashCode de `p` a changé : le HashSet le cherche dans une autre case."
+      - id: c
+        text: "`false` / `0`"
+        feedback: L'objet est toujours dans l'ensemble, seulement introuvable.
+      - id: d
+        text: "`true` / `2`"
+    explanation: |
+      Le `hashCode` d'une `data class` dépend de ses propriétés. Après `p.x = 10`, l'objet
+      est rangé dans la case de son **ancien** hashCode et cherché dans celle du nouveau.
+      Les clés de `Set` et de `Map` doivent être immuables : des `val`.
+
+  - id: poo.n2.abstraction.qcm-interface
+    type: qcm
+    title: Interface ou classe abstraite ?
+    skills: [abstraction, interfaces]
+    difficulty: 2
+    prompt: |
+      Tu modélises des moyens de paiement (carte, virement, portefeuille). Chacun sait
+      payer et rembourser, sans état commun. Que choisis-tu ?
+    choices:
+      - id: a
+        text: Une interface `MoyenDePaiement`, implémentée par chaque moyen.
+        correct: true
+      - id: b
+        text: Une classe abstraite `MoyenDePaiement` dont chaque moyen hérite.
+        feedback: Rien à partager comme état ; une classe abstraite empêcherait d'hériter d'autre chose.
+      - id: c
+        text: Une seule classe avec un `when` sur le type.
+        feedback: Chaque nouveau moyen obligerait à modifier cette classe.
+      - id: d
+        text: Une data class avec un champ type.
+    explanation: |
+      Une interface décrit un contrat (« sait payer ») sans imposer d'arbre d'héritage. Une
+      classe peut implémenter plusieurs interfaces, mais hériter d'une seule classe. On
+      réserve la classe abstraite au partage réel d'état ou de code.
+
+  - id: poo.n2.heritage.trous-open
+    type: fill-blanks
+    title: Ouvrir l'héritage
+    skills: [heritage, polymorphisme]
+    difficulty: 1
+    language: kotlin
+    prompt: Complète pour que `Rectangle` hérite de `Forme` et fournisse sa propre aire.
+    code: |
+      {{1}} class Forme {
+          abstract fun aire(): Double
+          fun decrire() = "aire = ${aire()}"
+      }
+
+      class Rectangle(val l: Double, val h: Double) : Forme() {
+          {{2}} fun aire() = l * h
+      }
+    blanks:
+      "1":
+        answers: [abstract]
+        options: [abstract, open, final, data]
+      "2":
+        answers: [override]
+        options: [override, open, abstract, private]
+    explanation: |
+      Une classe qui déclare une méthode `abstract` doit être `abstract` (elle est alors
+      implicitement ouverte). La sous-classe fournit l'implémentation avec `override`.
+      `decrire()` appelle `aire()` de façon polymorphe : c'est l'aire du `Rectangle` qui
+      est calculée.
+
+  - id: poo.n2.concepts.match
+    type: match
+    title: Les mots de la POO
+    skills: [heritage, polymorphisme, surcharge-redefinition, interfaces]
+    difficulty: 2
+    prompt: Relie chaque notion à sa définition.
+    pairs:
+      - left: Redéfinition (override)
+        right: Une sous-classe remplace une méthode de son parent ; choix à l'exécution
+      - left: Surcharge
+        right: Plusieurs fonctions de même nom avec des paramètres différents ; choix à la compilation
+      - left: Interface
+        right: Un contrat de comportements qu'une classe s'engage à fournir
+      - left: Classe abstraite
+        right: Une classe incomplète, avec de l'état ou du code partagé, qu'on ne peut pas instancier
+      - left: Polymorphisme
+        right: Manipuler des objets de classes différentes à travers un même type
+    explanation: |
+      Ce vocabulaire revient partout : dans les design patterns, les frameworks et les
+      entretiens techniques.

@@ -1,0 +1,123 @@
+exercises:
+  - id: metaprog.n4.techniques.match
+    type: match
+    title: Qui fait quoi ?
+    skills: [generation-code, plugins-compilateur, agents-java, manipulation-bytecode]
+    difficulty: 3
+    prompt: Relie chaque outil à la technique qu'il utilise.
+    pairs:
+      - left: Room et Hilt
+        right: Génération de nouveaux fichiers à la compilation (KSP)
+      - left: Jetpack Compose
+        right: Plugin du compilateur qui réécrit les fonctions annotées
+      - left: Un outil de supervision (APM)
+        right: Agent Java qui modifie le bytecode au chargement des classes
+      - left: Mockito
+        right: Génération de classes à l'exécution avec ByteBuddy
+      - left: ASM
+        right: Lecture et écriture de bytecode instruction par instruction
+    explanation: |
+      Plus on intervient tôt (compilation), plus c'est rapide et vérifié. Plus on
+      intervient tard (chargement, exécution), plus c'est flexible, mais coûteux et
+      difficile à déboguer.
+
+  - id: metaprog.n4.serialisation.predict-defaut
+    type: predict-output
+    title: Le champ qui manque
+    skills: [plugins-compilateur]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import kotlinx.serialization.Serializable
+      import kotlinx.serialization.json.Json
+      import kotlinx.serialization.encodeToString
+
+      @Serializable
+      data class Utilisateur(val nom: String, val niveau: Int = 1)
+
+      fun main() {
+          println(Json.encodeToString(Utilisateur("Ada")))
+      }
+    choices:
+      - id: a
+        text: "`{\"nom\":\"Ada\"}`"
+        correct: true
+      - id: b
+        text: "`{\"nom\":\"Ada\",\"niveau\":1}`"
+        feedback: "Par défaut, `encodeDefaults` vaut `false` : une valeur égale à sa valeur par défaut n'est pas écrite."
+      - id: c
+        text: "`Utilisateur(nom=Ada, niveau=1)`"
+        feedback: C'est le `toString()` de la data class, pas du JSON.
+      - id: d
+        text: Une erreur, car il faut appeler la réflexion pour lire les propriétés.
+    explanation: |
+      Le plugin du compilateur a généré `Utilisateur$$serializer`, qui écrit les champs
+      sans aucune réflexion. Les valeurs par défaut sont omises, sauf avec
+      `Json { encodeDefaults = true }`. Piège classique quand un autre service attend le
+      champ. Sortie vérifiée en exécutant le programme.
+
+  - id: metaprog.n4.agents.qcm-premain
+    type: qcm
+    title: Le rôle d'un agent
+    skills: [agents-java]
+    difficulty: 3
+    prompt: Qu'est-ce qu'un agent Java lancé avec `-javaagent:agent.jar` peut faire que le code de l'application ne peut pas faire ?
+    choices:
+      - id: a
+        text: Modifier le bytecode de chaque classe au moment où la JVM la charge, avant même le main.
+        correct: true
+      - id: b
+        text: Lire la mémoire des autres processus.
+      - id: c
+        text: Désactiver le ramasse-miettes.
+      - id: d
+        text: Compiler le code en natif.
+    explanation: |
+      `premain` s'exécute avant `main` et reçoit un objet `Instrumentation`. Avec un
+      `ClassFileTransformer`, l'agent voit passer le bytecode de chaque classe chargée et
+      peut le réécrire : c'est ainsi que les outils de supervision mesurent chaque appel
+      sans toucher au code source.
+
+  - id: metaprog.n4.ksp.qcm-lire
+    type: qcm
+    title: Comprendre la magie
+    skills: [generation-code]
+    difficulty: 2
+    prompt: Room génère l'implémentation de ton `@Dao`. Où la lire pour comprendre ce que fait vraiment une requête ?
+    choices:
+      - id: a
+        text: "Dans le dossier de génération du build (`build/generated/ksp/…`)."
+        correct: true
+      - id: b
+        text: Nulle part, elle n'existe qu'en mémoire à l'exécution.
+        feedback: C'est le cas d'un proxy ; KSP, lui, écrit de vrais fichiers source.
+      - id: c
+        text: Dans la documentation de Room uniquement.
+      - id: d
+        text: Il faut décompiler l'APK.
+    explanation: |
+      KSP écrit du code source Kotlin ou Java ordinaire, compilé avec le tien. Le lire est
+      la meilleure façon de comprendre (et de déboguer) une bibliothèque qui génère du code.
+
+  - id: metaprog.n4.choix.qcm-pourquoi-compilation
+    type: qcm
+    title: Le bon moment
+    skills: [generation-code, manipulation-bytecode]
+    difficulty: 3
+    prompt: Pourquoi Hilt génère-t-il son graphe d'injection à la compilation, alors que Spring l'assemble par réflexion à l'exécution ?
+    choices:
+      - id: a
+        text: Sur Android, le démarrage rapide, la taille de l'app et la compatibilité avec R8 comptent beaucoup ; les erreurs sont aussi détectées au build.
+        correct: true
+      - id: b
+        text: Parce que la réflexion n'existe pas sur Android.
+      - id: c
+        text: Parce que Spring est plus ancien.
+      - id: d
+        text: Il n'y a aucune différence pratique.
+    explanation: |
+      La réflexion au démarrage coûte du temps et se marie mal avec l'obfuscation. Générer
+      le code à la compilation rend le démarrage plus rapide et transforme une erreur de
+      configuration en erreur de compilation. Spring s'oriente d'ailleurs aussi vers la
+      génération à l'avance pour les images natives.

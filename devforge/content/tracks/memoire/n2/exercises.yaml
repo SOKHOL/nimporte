@@ -1,0 +1,249 @@
+exercises:
+  - id: memoire.n2.bugs.bug-dupliquer
+    type: find-bug
+    title: Un octet de trop
+    skills: [allocation-manuelle, bugs-memoire]
+    difficulty: 3
+    language: c
+    prompt: AddressSanitizer signale un `heap-buffer-overflow` dans cette fonction. Touche la ligne qui en est la cause.
+    code: |
+      #include <stdlib.h>
+      #include <string.h>
+
+      char *dupliquer(const char *source) {
+          char *copie = malloc(strlen(source));
+          strcpy(copie, source);
+          return copie;
+      }
+    bug_lines: [5]
+    hints:
+      - "Combien d'octets occupe la chaîne \"DevForge\" en mémoire, en comptant tout ?"
+    explanation: |
+      `strlen` ne compte pas le caractère de fin `'\0'`. Pour « DevForge », il faut 9 octets
+      et on n'en alloue que 8 : `strcpy` (ligne 6) écrit un octet hors de la zone, mais
+      l'erreur est commise ligne 5. Correction : `malloc(strlen(source) + 1)`.
+
+  - id: memoire.n2.bugs.qcm-use-after-free
+    type: qcm
+    title: Lire après avoir rendu
+    skills: [bugs-memoire]
+    difficulty: 2
+    language: c
+    prompt: Que se passe-t-il à l'exécution de ce programme ?
+    code: |
+      char *nom = malloc(16);
+      strcpy(nom, "DevForge");
+      free(nom);
+      printf("%s\n", nom);
+    choices:
+      - id: a
+        text: "Comportement indéfini : il peut afficher DevForge, du charabia, ou planter. AddressSanitizer signale un heap-use-after-free."
+        correct: true
+      - id: b
+        text: Il affiche toujours DevForge, car free n'efface pas la mémoire.
+        feedback: Ça arrive souvent, et c'est ce qui rend ce bug si traître, mais rien ne le garantit.
+      - id: c
+        text: Le compilateur refuse ce code.
+        feedback: Le compilateur C ne suit pas la durée de vie des allocations ; c'est ce que fait Rust.
+      - id: d
+        text: Il affiche toujours une chaîne vide.
+    explanation: |
+      Après `free`, la zone peut être réutilisée à tout moment par l'allocateur. Lire dedans
+      est un use-after-free : un des bugs les plus exploités par les attaquants, car on
+      peut parfois y faire placer des données choisies.
+
+  - id: memoire.n2.bugs.qcm-valgrind
+    type: qcm
+    title: Le rapport de valgrind
+    skills: [bugs-memoire, allocation-manuelle]
+    difficulty: 2
+    language: c
+    prompt: |
+      Ce programme appelle `journaliser` 1 000 fois. valgrind affiche
+      `definitely lost: 16,000 bytes in 1,000 blocks`. Que s'est-il passé ?
+    code: |
+      void journaliser(const char *message) {
+          char *copie = malloc(strlen(message) + 1);
+          strcpy(copie, message);
+          /* ... écrit la copie dans un fichier ... */
+      }
+    choices:
+      - id: a
+        text: Chaque appel alloue 16 octets qui ne sont jamais libérés (il manque free).
+        correct: true
+      - id: b
+        text: Un dépassement de tampon de 16 octets.
+        feedback: "Le `+ 1` est bien là : la taille est correcte."
+      - id: c
+        text: Une double libération répétée 1 000 fois.
+      - id: d
+        text: valgrind se trompe, la mémoire est rendue à la fin du programme.
+        feedback: Elle est rendue au système à la fin du processus, mais un serveur, lui, ne s'arrête pas.
+    explanation: |
+      `definitely lost` = des blocs devenus inaccessibles sans avoir été libérés : une
+      fuite. 1 000 appels × 16 octets (le message de 15 octets + son `'\0'`). Dans un
+      serveur qui tourne des semaines, c'est un crash garanti. Correction : `free(copie)`
+      à la fin de la fonction.
+
+  - id: memoire.n2.bugs.match
+    type: match
+    title: Les bugs mémoire
+    skills: [bugs-memoire]
+    difficulty: 1
+    prompt: Relie chaque bug à sa description.
+    pairs:
+      - left: Fuite
+        right: De la mémoire allouée n'est jamais libérée
+      - left: Use-after-free
+        right: On lit ou écrit une zone déjà libérée
+      - left: Double libération
+        right: On appelle free deux fois sur le même pointeur
+      - left: Dépassement de tampon
+        right: On écrit au-delà de la taille allouée
+      - left: Pointeur nul
+        right: On suit un pointeur qui ne désigne aucune zone
+    explanation: |
+      Ces bugs n'existent pas (ou presque) dans les langages à ramasse-miettes ou en Rust
+      sûr. Mais ils restent la première source de failles critiques dans les logiciels
+      écrits en C et C++.
+
+  - id: memoire.n2.comptage.predict-cycle
+    type: predict-output
+    title: Le cycle et le compteur
+    skills: [comptage-references]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme Python ?
+    code: |
+      import gc
+      import weakref
+
+      gc.disable()
+
+      class Noeud:
+          pass
+
+      a = Noeud()
+      b = Noeud()
+      a.voisin = b
+      b.voisin = a
+      sonde = weakref.ref(a)
+
+      del a, b
+      print(sonde() is None)
+      gc.collect()
+      print(sonde() is None)
+    choices:
+      - id: a
+        text: "`False` / `True`"
+        correct: true
+      - id: b
+        text: "`True` / `True`"
+        feedback: Avec le comptage seul, chaque nœud garde un compteur à 1 grâce à l'autre.
+      - id: c
+        text: "`False` / `False`"
+        feedback: "`gc.collect()` lance le détecteur de cycles, même quand le passage automatique est désactivé."
+      - id: d
+        text: "`True` / `False`"
+    explanation: |
+      Après `del`, chaque nœud est encore référencé par l'autre : le comptage de références
+      ne peut pas les libérer (`False`). Le détecteur de cycles de Python, lancé par
+      `gc.collect()`, trouve ce cycle inaccessible et le libère (`True`). Sortie vérifiée.
+
+  - id: memoire.n2.ownership.qcm-deplacement
+    type: qcm
+    title: À qui appartient la chaîne ?
+    skills: [ownership]
+    difficulty: 2
+    language: rust
+    prompt: Que se passe-t-il quand on compile ce programme Rust ?
+    code: |
+      fn main() {
+          let a = String::from("DevForge");
+          let b = a;
+          println!("{} {}", a, b);
+      }
+    choices:
+      - id: a
+        text: "Erreur de compilation : `a` a été déplacée dans `b`, on ne peut plus l'utiliser."
+        correct: true
+      - id: b
+        text: "Il affiche `DevForge DevForge`."
+        feedback: Ce serait le cas en Kotlin ou en Java, où `b = a` copie une référence partagée.
+      - id: c
+        text: Il plante à l'exécution avec une double libération.
+        feedback: C'est justement ce que le compilateur empêche.
+      - id: d
+        text: "Il affiche `DevForge` puis une chaîne vide."
+    explanation: |
+      En Rust, `let b = a` **déplace** la propriété. Le compilateur répond
+      `error[E0382]: borrow of moved value: a`. Sans cette règle, `a` et `b` libéreraient
+      la même mémoire à la fin de `main`. Pour garder les deux : `let b = a.clone();`.
+
+  - id: memoire.n2.ownership.qcm-push
+    type: qcm
+    title: Pourquoi Rust refuse
+    skills: [ownership, bugs-memoire]
+    difficulty: 4
+    language: rust
+    prompt: Rust refuse de compiler ce code (`cannot borrow v as mutable because it is also borrowed as immutable`). Quel bug évite-t-il ?
+    code: |
+      let mut v = vec![1, 2, 3];
+      let premier = &v[0];
+      v.push(4);
+      println!("{}", premier);
+    choices:
+      - id: a
+        text: "`push` peut réallouer le tableau ailleurs : `premier` pointerait vers une zone libérée (use-after-free)."
+        correct: true
+      - id: b
+        text: Un dépassement d'entier.
+      - id: c
+        text: Une condition de course entre deux threads.
+        feedback: Il n'y a qu'un thread ici ; la règle protège même le code séquentiel.
+      - id: d
+        text: Aucun, Rust est simplement trop strict.
+    explanation: |
+      Quand un vecteur est plein, `push` alloue un tableau plus grand, y copie les éléments
+      et libère l'ancien. Une référence vers l'ancien emplacement devient pendante. En C++,
+      ce code compile et provoque un use-after-free ; Rust l'interdit avant l'exécution.
+
+  - id: memoire.n2.raii.predict-drop
+    type: predict-output
+    title: L'ordre des destructions
+    skills: [raii]
+    difficulty: 2
+    language: rust
+    prompt: Qu'affiche ce programme Rust ?
+    code: |
+      struct Fichier { nom: String }
+
+      impl Drop for Fichier {
+          fn drop(&mut self) {
+              println!("fermeture de {}", self.nom);
+          }
+      }
+
+      fn main() {
+          let _a = Fichier { nom: String::from("a.txt") };
+          {
+              let _b = Fichier { nom: String::from("b.txt") };
+              println!("fin du bloc");
+          }
+          println!("fin de main");
+      }
+    choices:
+      - id: a
+        text: "`fin du bloc` / `fermeture de b.txt` / `fin de main` / `fermeture de a.txt`"
+        correct: true
+      - id: b
+        text: "`fin du bloc` / `fin de main` / `fermeture de b.txt` / `fermeture de a.txt`"
+        feedback: "`_b` est libéré dès la fin de son bloc, pas à la fin du programme."
+      - id: c
+        text: "`fin du bloc` / `fin de main` / `fermeture de a.txt` / `fermeture de b.txt`"
+      - id: d
+        text: "`fin du bloc` / `fin de main`"
+        feedback: "`drop` est appelé automatiquement à la fin de la portée."
+    explanation: |
+      RAII : chaque valeur est libérée à la fin de **sa** portée. `_b` meurt à la fin du bloc
+      intérieur, `_a` à la fin de `main`. Ressources fermées au bon moment, sans oubli.

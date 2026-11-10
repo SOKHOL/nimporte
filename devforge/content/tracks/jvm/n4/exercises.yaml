@@ -1,0 +1,198 @@
+exercises:
+  - id: jvm.n4.outils.match-commandes
+    type: match
+    title: La bonne commande jcmd
+    skills: [outils-jdk]
+    difficulty: 2
+    prompt: Relie chaque besoin à la commande à lancer sur la JVM en marche.
+    pairs:
+      - left: L'application est figée, CPU à 0 %
+        right: jcmd <pid> Thread.print
+      - left: Trouver ce qui remplit la mémoire
+        right: jcmd <pid> GC.heap_dump /tmp/tas.hprof
+      - left: Vérifier les options réellement appliquées
+        right: jcmd <pid> VM.flags
+      - left: Enregistrer une minute d'activité détaillée
+        right: jcmd <pid> JFR.start duration=60s filename=rec.jfr
+    explanation: |
+      `jcmd` regroupe les anciens `jstack`, `jmap` et `jinfo`, et pilote Flight Recorder.
+      Tout se fait sur la JVM en marche, sans redémarrage.
+
+  - id: jvm.n4.outils.qcm-jstat
+    type: qcm
+    title: Lire jstat
+    skills: [outils-jdk]
+    difficulty: 3
+    language: text
+    prompt: |
+      Tu lances `jstat -gcutil <pid> 60000` pendant une heure. Voici une ligne toutes les
+      20 minutes. Que conclus-tu ?
+    code: |
+        S0     S1     E      O      M     YGC    FGC
+         -   100.00  40.12  35.20  95.70  1520     0
+         -   100.00  12.80  58.90  95.71  3044     1
+         -   100.00  77.45  81.30  95.71  4570     3
+    choices:
+      - id: a
+        text: "La vieille génération (O) ne fait que monter malgré les collectes complètes (FGC) : fuite probable."
+        correct: true
+      - id: b
+        text: L'eden (E) varie beaucoup, c'est le signe d'une fuite.
+        feedback: L'eden se remplit et se vide en permanence, c'est normal.
+      - id: c
+        text: La metaspace (M) est à 95 %, c'est elle le problème.
+        feedback: Elle est stable ; un fort pourcentage d'utilisation de l'espace réservé est courant.
+      - id: d
+        text: Tout va bien, il n'y a presque pas de collectes complètes.
+    explanation: |
+      Ce qui survit aux collectes s'accumule dans la vieille génération. Si elle monte
+      d'heure en heure, même après des collectes complètes, des objets restent accessibles
+      sans raison. Étape suivante : un heap dump (`jcmd <pid> GC.heap_dump`) et Eclipse MAT.
+
+  - id: jvm.n4.jfr.qcm-production
+    type: qcm
+    title: Flight Recorder en production ?
+    skills: [jfr]
+    difficulty: 2
+    prompt: Peut-on laisser Java Flight Recorder actif en permanence sur un serveur de production ?
+    choices:
+      - id: a
+        text: Oui, son coût est de l'ordre de 1 % avec la configuration par défaut.
+        correct: true
+      - id: b
+        text: Non, il divise les performances par deux.
+      - id: c
+        text: Seulement sur une JVM en mode debug.
+      - id: d
+        text: Non, il faut un agent payant pour l'activer.
+        feedback: JFR est intégré et gratuit dans OpenJDK depuis Java 11.
+    explanation: |
+      JFR a été conçu pour la production : il écrit dans des tampons circulaires et
+      échantillonne. On peut le garder actif et extraire les dernières minutes au moment
+      d'un incident (`jcmd <pid> JFR.dump`).
+
+  - id: jvm.n4.conteneurs.scenario-oomkilled
+    type: scenario
+    title: Tué sans un mot
+    skills: [jvm-conteneurs, options-jvm]
+    difficulty: 4
+    prompt: |
+      Ton service Kotlin tourne dans Kubernetes avec une limite de 2 Go. Il redémarre
+      plusieurs fois par jour. Mène l'enquête.
+    start: debut
+    nodes:
+      debut:
+        text: |
+          ```
+          $ kubectl describe pod api-7c9d…
+              Last State:  Terminated
+                Reason:    OOMKilled
+                Exit Code: 137
+          ```
+          Aucune `OutOfMemoryError` dans les logs Java. Que fais-tu ?
+        options:
+          - text: Je regarde les options de la JVM et la mémoire totale du processus, pas seulement le tas.
+            next: options
+            points: 3
+          - text: J'ajoute -XX:+HeapDumpOnOutOfMemoryError pour obtenir un heap dump.
+            next: pas-de-dump
+            points: 1
+            feedback: Bonne habitude, mais ici la JVM ne lève aucune OutOfMemoryError.
+      pas-de-dump:
+        text: Le pod est encore tué, et aucun heap dump n'est produit. Pourquoi ?
+        options:
+          - text: C'est le noyau qui tue le processus quand il dépasse la limite du conteneur, avant que la JVM ne s'en aperçoive.
+            next: options
+            points: 2
+      options:
+        text: |
+          Les options de démarrage contiennent `-Xmx2g`, la limite du conteneur est 2 Go,
+          et le service utilise 400 threads. Quelle est la cause la plus probable ?
+        options:
+          - text: Le tas peut occuper toute la limite, alors que les piles des threads, la metaspace, le code cache et les buffers directs s'ajoutent par-dessus.
+            next: correction
+            points: 3
+          - text: Une fuite de mémoire dans le code.
+            next: fausse-piste
+            points: 0
+            feedback: Une fuite donnerait une OutOfMemoryError Java ; ici la JVM ne manque jamais de tas.
+      fausse-piste:
+        text: Un heap dump pris juste avant un redémarrage montre un tas occupé à 900 Mo, sans objet suspect. Et maintenant ?
+        options:
+          - text: Je compare la mémoire totale du processus à la limite, en comptant tout ce qui n'est pas le tas.
+            next: correction
+            points: 1
+      correction:
+        text: Comment corriges-tu ?
+        options:
+          - text: "Remplacer -Xmx2g par -XX:MaxRAMPercentage=75 et surveiller la mémoire totale du processus (Native Memory Tracking si besoin)."
+            next: resolu
+            points: 3
+          - text: Supprimer toute option de mémoire et laisser les valeurs par défaut.
+            next: trop-petit
+            points: 1
+            feedback: Par défaut, le tas ne prendrait que 25 % des 2 Go, soit 512 Mo.
+      resolu:
+        ending: success
+        text: "✅ Le tas est plafonné à 1,5 Go, il reste de la place pour le reste. Plus aucun OOMKilled depuis une semaine."
+      trop-petit:
+        ending: partial
+        text: "🟡 Plus d'OOMKilled… mais le tas est limité à 512 Mo, et des OutOfMemoryError apparaissent aux heures de pointe."
+    explanation: |
+      Un `OOMKilled` (code 137), c'est le noyau qui tue le processus quand sa mémoire
+      **totale** dépasse la limite du conteneur. Le tas n'en est qu'une partie : chaque
+      thread a sa pile, et il y a la metaspace, le code cache, les buffers directs, la
+      mémoire du GC. On règle le tas en pourcentage (`MaxRAMPercentage`, 70-80 %) et on
+      laisse de la marge pour le reste.
+
+  - id: jvm.n4.jit.qcm-escape
+    type: qcm
+    title: Un objet par tour de boucle
+    skills: [optimisations-jit]
+    difficulty: 4
+    language: kotlin
+    prompt: |
+      Cette boucle tourne 100 millions de fois. Avec les options par défaut, combien de
+      pauses du ramasse-miettes provoque-t-elle, une fois le code compilé par le JIT ?
+    code: |
+      for (i in 0 until n) {
+          val p = Point(i, i + 1)
+          total += p.x + p.y
+      }
+    choices:
+      - id: a
+        text: Aucune, car l'escape analysis supprime l'allocation.
+        correct: true
+      - id: b
+        text: Des dizaines, car 100 millions d'objets sont créés.
+        feedback: C'est ce qui se passe avec -XX:-DoEscapeAnalysis (18 pauses mesurées).
+      - id: c
+        text: Une seule, à la fin de la boucle.
+      - id: d
+        text: Ça dépend uniquement de la taille du tas.
+    explanation: |
+      Mesuré pour ce cours : 31 ms et 0 pause par défaut ; 343 ms et 18 pauses sans
+      escape analysis. Le JIT voit que `p` ne sort pas de la boucle et garde ses champs
+      dans des registres : aucun objet n'est créé.
+
+  - id: jvm.n4.conteneurs.qcm-tas-defaut
+    type: qcm
+    title: Le tas par défaut
+    skills: [jvm-conteneurs]
+    difficulty: 3
+    prompt: Sans option de mémoire, quelle taille maximale de tas une JVM récente choisit-elle dans un conteneur limité à 4 Go ?
+    choices:
+      - id: a
+        text: 1 Go, soit 25 % de la mémoire disponible.
+        correct: true
+      - id: b
+        text: 4 Go, toute la mémoire du conteneur.
+      - id: c
+        text: 256 Mo, une valeur fixe.
+      - id: d
+        text: La moitié de la mémoire de la machine hôte, en ignorant le conteneur.
+        feedback: C'était le cas avant Java 10 ; aujourd'hui la JVM lit les limites du conteneur.
+    explanation: |
+      `MaxRAMPercentage` vaut 25 par défaut (vérifié : 3,3 Go de tas maximum sur une
+      machine de 16 Go). Prudent pour une machine partagée, mais trop faible pour un
+      conteneur qui n'exécute qu'une seule JVM : on le monte généralement à 70-80 %.

@@ -1,0 +1,136 @@
+exercises:
+  - id: memoire.n5.caches.qcm-lignes-colonnes
+    type: qcm
+    title: Lignes ou colonnes ?
+    skills: [caches-cpu]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      `m` est une matrice 4096 × 4096 (`Array<IntArray>`). Les deux fonctions calculent la
+      même somme. Laquelle est la plus rapide ?
+    code: |
+      fun parLignes(m: Array<IntArray>): Long {
+          var total = 0L
+          for (i in 0 until N) for (j in 0 until N) total += m[i][j]
+          return total
+      }
+
+      fun parColonnes(m: Array<IntArray>): Long {
+          var total = 0L
+          for (j in 0 until N) for (i in 0 until N) total += m[i][j]
+          return total
+      }
+    choices:
+      - id: a
+        text: parLignes, de loin, car elle lit la mémoire dans l'ordre où elle est rangée.
+        correct: true
+      - id: b
+        text: parColonnes, car elle fait moins de calculs d'indices.
+      - id: c
+        text: Aucune différence, elles font exactement les mêmes opérations.
+        feedback: Même nombre d'opérations, mais pas du tout la même utilisation du cache.
+      - id: d
+        text: Ça dépend uniquement du ramasse-miettes.
+    explanation: |
+      Mesuré pour ce cours : 8 ms par lignes, 178 ms par colonnes. Par lignes, chaque ligne
+      de cache de 64 octets sert pour 16 entiers et le processeur anticipe les lectures. Par
+      colonnes, chaque accès saute 16 Ko plus loin et va chercher en mémoire vive.
+
+  - id: memoire.n5.faux-partage.qcm-compteurs
+    type: qcm
+    title: Deux compteurs indépendants
+    skills: [faux-partage]
+    difficulty: 4
+    prompt: |
+      Deux threads incrémentent chacun **leur propre** compteur dans un `AtomicLongArray`.
+      Avec les cases 0 et 1, le programme prend 3,1 s ; avec les cases 0 et 16, 0,97 s.
+      Pourquoi ?
+    choices:
+      - id: a
+        text: Les cases 0 et 1 sont dans la même ligne de cache de 64 octets, que les deux cœurs se disputent à chaque écriture.
+        correct: true
+      - id: b
+        text: AtomicLongArray verrouille tout le tableau à chaque incrément.
+        feedback: Il n'y a pas de verrou global ; chaque case est mise à jour indépendamment.
+      - id: c
+        text: Le ramasse-miettes déplace le tableau pendant le calcul.
+      - id: d
+        text: Les cases d'indice élevé sont toujours plus rapides.
+    explanation: |
+      C'est le faux partage : les cœurs synchronisent leurs caches par lignes entières. Une
+      écriture sur la case 0 invalide la ligne dans le cache de l'autre cœur, qui doit la
+      récupérer pour écrire la case 1, et ainsi de suite. Avec 128 octets d'écart, chaque
+      compteur a sa propre ligne. Mesures réelles, sur une machine à 4 cœurs.
+
+  - id: memoire.n5.disposition.qcm-tableaux
+    type: qcm
+    title: Des objets ou des tableaux ?
+    skills: [disposition-objets, caches-cpu]
+    difficulty: 3
+    prompt: |
+      Un moteur physique met à jour 10 millions de particules à chaque image. Quelle
+      représentation est la plus rapide à parcourir sur la JVM ?
+    choices:
+      - id: a
+        text: "Plusieurs DoubleArray (xs, ys, vitesses…), une case par particule."
+        correct: true
+      - id: b
+        text: "Une List<Particule>, avec un objet par particule."
+        feedback: Chaque élément est une référence vers un objet placé ailleurs sur le tas ; le parcours saute d'adresse en adresse.
+      - id: c
+        text: "Une Map<Int, Particule>."
+      - id: d
+        text: Aucune différence, le JIT optimise tout.
+    explanation: |
+      Des tableaux primitifs sont contigus en mémoire : le processeur les lit à pleine
+      vitesse et les anticipe. Une liste d'objets oblige à suivre des références vers des
+      objets dispersés (*pointer chasing*). C'est l'organisation « structure de tableaux »
+      des moteurs de jeu et des bases analytiques.
+
+  - id: memoire.n5.allocateurs.match
+    type: match
+    title: Le bon allocateur
+    skills: [allocateurs]
+    difficulty: 3
+    prompt: Relie chaque allocateur à son principe.
+    pairs:
+      - left: Arène
+        right: Avance un pointeur à chaque allocation et libère tout d'un coup
+      - left: Pool
+        right: Recycle des blocs de taille fixe
+      - left: Slab
+        right: Un pool par taille d'objet courante, dans le noyau
+      - left: TLAB de la JVM
+        right: Une zone d'allocation réservée à chaque thread, sans verrou
+      - left: malloc généraliste
+        right: Gère des blocs de toutes tailles, au cas par cas
+    explanation: |
+      Plus un allocateur connaît la durée de vie et la taille des objets, plus il peut être
+      rapide. La TLAB de la JVM est une arène par thread : allouer y coûte quelques
+      instructions.
+
+  - id: memoire.n5.fragmentation.qcm
+    type: qcm
+    title: De la place, mais pas assez
+    skills: [fragmentation]
+    difficulty: 2
+    prompt: |
+      Un programme en C a 100 Mo de mémoire libre au total, mais une allocation de 10 Mo
+      échoue. Quel est le problème ?
+    choices:
+      - id: a
+        text: "La fragmentation externe : la mémoire libre est éparpillée en trous de moins de 10 Mo."
+        correct: true
+      - id: b
+        text: Une fuite de mémoire.
+        feedback: Avec une fuite, il ne resterait pas 100 Mo libres.
+      - id: c
+        text: La fragmentation interne.
+        feedback: Elle gaspille de l'espace à l'intérieur des blocs, mais n'empêche pas une grande allocation.
+      - id: d
+        text: Le ramasse-miettes n'est pas passé.
+        feedback: Le C n'a pas de ramasse-miettes.
+    explanation: |
+      Une allocation demande un bloc **contigu**. Les ramasse-miettes qui compactent (G1,
+      ZGC) règlent ce problème en déplaçant les objets ; en C, c'est impossible, car des
+      pointeurs désignent chaque bloc.

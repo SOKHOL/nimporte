@@ -73,6 +73,14 @@ class MarkdownTest {
     }
 
     @Test
+    fun `coloration syntaxique rust et python`() {
+        assertTrue(Token("fn", TokenKind.KEYWORD) in SyntaxHighlighter.tokenize("fn main() {}", "rust"))
+        val python = SyntaxHighlighter.tokenize("def f(): # note", "python")
+        assertTrue(Token("def", TokenKind.KEYWORD) in python)
+        assertEquals(Token("# note", TokenKind.COMMENT), python.last())
+    }
+
+    @Test
     fun `coloration syntaxique dockerfile`() {
         val tokens = SyntaxHighlighter.tokenize("# build\nFROM gradle:8 AS build", "dockerfile")
         assertEquals(Token("# build", TokenKind.COMMENT), tokens.first())

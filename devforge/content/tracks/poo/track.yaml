@@ -1,0 +1,84 @@
+id: poo
+title: Programmation orientée objet
+description: >
+  Penser en objets : modéliser un domaine, protéger l'état, abstraire,
+  et écrire du code qui résiste au changement.
+
+levels:
+  - level: 1
+    title: Objets et classes
+    skills:
+      - id: classes-objets
+        title: Classes et objets
+      - id: constructeurs
+        title: Constructeurs et initialisation
+      - id: proprietes-methodes
+        title: Propriétés et méthodes
+      - id: encapsulation
+        title: Encapsulation et visibilité
+      - id: egalite-identite
+        title: Égalité et identité
+    boss:
+      id: poo.n1.boss
+      title: "Boss : le gardien des objets"
+      exercises:
+        - poo.n1.classes-objets.qcm-combien
+        - poo.n1.egalite.predict-data-class
+        - poo.n1.encapsulation.qcm-invariant
+        - poo.n1.encapsulation.bug-liste-exposee
+        - poo.n1.constructeurs.trous-init
+        - poo.n1.methodes.parsons-compte
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 2
+    title: Héritage et polymorphisme
+    skills:
+      - id: heritage
+        title: Héritage et classes ouvertes
+      - id: polymorphisme
+        title: Polymorphisme et redéfinition
+      - id: abstraction
+        title: Classes abstraites
+      - id: interfaces
+        title: Interfaces
+      - id: surcharge-redefinition
+        title: Surcharge ou redéfinition
+      - id: equals-hashcode
+        title: Contrat equals / hashCode
+
+  - level: 3
+    title: Concevoir des objets solides
+    skills:
+      - id: composition-heritage
+        title: Préférer la composition à l'héritage
+      - id: solid
+        title: Les principes SOLID
+      - id: demeter
+        title: Loi de Déméter
+      - id: couplage-cohesion
+        title: Couplage et cohésion
+      - id: immutabilite
+        title: Objets immuables et value objects
+
+  - level: 4
+    title: Modéliser un domaine
+    skills:
+      - id: uml
+        title: UML (classes et séquences)
+      - id: modelisation
+        title: Modéliser un domaine métier
+      - id: invariants-contrats
+        title: Invariants et programmation par contrat
+      - id: lsp-avance
+        title: Substitution de Liskov en profondeur
+
+  - level: 5
+    title: Au-delà de la POO
+    skills:
+      - id: traits-mixins
+        title: Traits, mixins et délégation
+      - id: prototypes
+        title: Programmation par prototypes
+      - id: critique-poo
+        title: Quand ne pas utiliser la POO

@@ -1,0 +1,64 @@
+id: devops
+title: DevOps, conteneurs et CI/CD
+description: >
+  Livrer souvent et sans peur : conteneurs, intégration et déploiement
+  continus, infrastructure as code, Kubernetes, GitOps.
+
+levels:
+  - level: 1
+    title: Culture DevOps
+    skills:
+      - id: culture
+        title: Culture et cycle de vie DevOps
+      - id: environnements
+        title: Environnements (dev, staging, prod)
+      - id: twelve-factor
+        title: Les 12 facteurs
+
+  - level: 2
+    title: Conteneurs
+    skills:
+      - id: docker-images
+        title: Images et Dockerfile
+      - id: docker-couches
+        title: Couches et cache de build
+      - id: docker-securite
+        title: Images sûres (non-root, secrets, taille)
+      - id: compose
+        title: Docker Compose
+
+  - level: 3
+    title: Intégration et déploiement continus
+    skills:
+      - id: ci
+        title: Pipelines d'intégration continue
+      - id: cd
+        title: Déploiement continu et artefacts
+      - id: strategies-deploiement
+        title: Rolling, blue/green, canary
+      - id: feature-flags
+        title: Feature flags
+
+  - level: 4
+    title: Infrastructure et orchestration
+    skills:
+      - id: terraform
+        title: Infrastructure as Code (Terraform)
+      - id: ansible
+        title: Gestion de configuration (Ansible)
+      - id: kubernetes
+        title: Kubernetes (pods, deployments, services)
+      - id: kubernetes-debug
+        title: Diagnostiquer dans Kubernetes
+      - id: helm
+        title: Helm
+
+  - level: 5
+    title: Plateformes
+    skills:
+      - id: gitops
+        title: GitOps (Argo CD)
+      - id: platform-engineering
+        title: Platform engineering
+      - id: supply-chain
+        title: Sécurité de la chaîne logicielle (SBOM, signature)

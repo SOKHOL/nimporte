@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Carte des parcours DevForge (curriculum.yaml)",
+  "type": "object",
+  "required": ["ranks", "domains", "tracks"],
+  "additionalProperties": false,
+  "properties": {
+    "ranks": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["level", "name", "verb", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "level": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "name": { "type": "string", "minLength": 1 },
+          "verb": { "type": "string", "minLength": 1 },
+          "description": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "domains": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/slug" },
+          "title": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "tracks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "domain", "requires", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "$ref": "#/$defs/slug" },
+          "title": { "type": "string", "minLength": 1 },
+          "domain": { "$ref": "#/$defs/slug" },
+          "requires": {
+            "type": "array",
+            "items": { "type": "string", "pattern": "^[a-z0-9-]+@[1-5]$" }
+          },
+          "status": { "enum": ["pilot", "planned"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }
+  }
+}

@@ -1,0 +1,88 @@
+exercises:
+  - id: architecture.n3.hexagonale.qcm-dependances
+    type: qcm
+    title: Le sens des dépendances
+    skills: [hexagonale, clean-architecture]
+    difficulty: 2
+    prompt: Dans une architecture hexagonale, dans quel sens vont les dépendances du code ?
+    choices:
+      - id: a
+        text: Des adaptateurs (UI, base de données, API) vers le domaine. Le domaine ne dépend de rien d'extérieur.
+        correct: true
+      - id: b
+        text: Du domaine vers la base de données, car le domaine a besoin de lire ses données.
+        feedback: "C'est l'inverse : le domaine définit un port (interface), la base l'implémente."
+      - id: c
+        text: De l'interface utilisateur vers la base de données, en passant par le domaine.
+        feedback: C'est l'architecture en couches classique, où le métier dépend de la persistance.
+      - id: d
+        text: Dans les deux sens, tant qu'on passe par des interfaces.
+    explanation: |
+      Le domaine est au centre et définit des **ports** (interfaces) : « j'ai besoin
+      d'enregistrer une tentative ». Les **adaptateurs** (Room, Ktor, Compose…)
+      implémentent ou appellent ces ports. Résultat : on peut tester tout le métier
+      sans Android ni base de données, et changer de technologie sans toucher au métier.
+
+  - id: architecture.n3.hexagonale.review-cas-usage
+    type: code-review
+    title: "Revue de code : un cas d'usage trop bavard"
+    skills: [hexagonale, clean-architecture, ddd-tactique]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      Ce cas d'usage est censé faire partie du **domaine** de DevForge.
+      Trouve au moins 3 problèmes.
+    code: |
+      class TerminerExercice(
+          private val dao: AttemptDao,       // Room
+          private val context: Context,      // Android
+      ) {
+          fun executer(exerciceId: String, correct: Boolean) {
+              dao.insert(AttemptEntity(exerciceId, correct, System.currentTimeMillis()))
+              if (correct) {
+                  val prefs = context.getSharedPreferences("xp", Context.MODE_PRIVATE)
+                  val xp = prefs.getInt("xp", 0) + 10
+                  prefs.edit().putInt("xp", xp).apply()
+              }
+          }
+      }
+    issues:
+      - lines: [2, 6]
+        category: conception
+        description: |
+          Le domaine dépend directement de Room. Il devrait dépendre d'un port
+          `AttemptRepository` qu'il définit lui-même, implémenté par un adaptateur Room.
+      - lines: [3, 8]
+        category: conception
+        description: |
+          Dépendance au framework Android dans le domaine : impossible à tester
+          en JVM pur, impossible à réutiliser ailleurs. Port `XpStore` à la place.
+      - lines: [6]
+        category: test
+        description: "`System.currentTimeMillis()` : l'heure n'est pas injectable, les tests ne sont pas déterministes. Injecter une `Clock`."
+      - lines: [9, 10]
+        category: bug
+        description: "Lire puis réécrire l'XP n'est pas atomique : deux validations simultanées peuvent perdre de l'XP."
+      - lines: [9]
+        category: lisibilite
+        description: "XP en dur (`10`) : la règle métier (XP selon la difficulté) est noyée dans de la plomberie."
+    min_found: 3
+    explanation: |
+      Version hexagonale :
+
+      ```kotlin
+      class TerminerExercice(
+          private val tentatives: AttemptRepository, // port
+          private val xp: XpStore,                   // port
+          private val horloge: Clock,
+          private val regles: ReglesXp,
+      ) {
+          suspend fun executer(exercice: Exercice, correct: Boolean) {
+              tentatives.enregistrer(Tentative(exercice.id, correct, horloge.instant()))
+              if (correct) xp.ajouter(regles.pour(exercice))
+          }
+      }
+      ```
+
+      Le domaine ne connaît plus ni Room ni Android : il se teste avec des fakes,
+      en quelques millisecondes.

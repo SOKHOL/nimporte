@@ -1,0 +1,75 @@
+exercises:
+  - id: system-design.n4.url-shortener
+    type: design-challenge
+    title: Concevoir un raccourcisseur d'URL
+    skills: [url-shortener]
+    difficulty: 4
+    xp: 150
+    prompt: |
+      Conçois un service qui transforme une URL longue en lien court
+      (`dvf.io/aZ3kP9q`) et redirige vers l'URL d'origine.
+
+      Prends 30 minutes : fais un schéma (papier ou outil), puis compare ta
+      réponse à la grille et à la solution de référence.
+    requirements:
+      - Créer un lien court à partir d'une URL longue.
+      - Rediriger un lien court vers l'URL d'origine.
+      - Expiration optionnelle des liens.
+      - Statistiques de clics par lien.
+    constraints:
+      - 100 millions de nouveaux liens par mois.
+      - 100 lectures pour 1 écriture.
+      - Redirection en moins de 50 ms (p99).
+      - Disponibilité 99,9 %.
+      - Conservation des liens pendant 5 ans.
+    rubric:
+      - criterion: "Estimation de la charge : ~40 écritures/s, ~4 000 lectures/s, quelques To sur 5 ans."
+        points: 2
+        hint: 100 millions par mois ÷ 2,6 millions de secondes dans un mois.
+      - criterion: "Génération des codes courts : base62 sur 7 caractères, sans collision (compteur distribué, plages d'identifiants ou hachage + vérification)."
+        points: 2
+        hint: Combien de combinaisons avec 62 caractères possibles sur 7 positions ?
+      - criterion: "Stockage clé-valeur (ou SQL indexé sur le code court), choix justifié."
+        points: 1
+      - criterion: "Cache des liens les plus consultés (ex. Redis) devant la base."
+        points: 2
+        hint: Le trafic suit une loi de puissance, quelques liens concentrent l'essentiel des clics.
+      - criterion: "Redirection 302 (et non 301) pour pouvoir compter les clics, compromis expliqué."
+        points: 1
+      - criterion: "Comptage des clics asynchrone (file de messages) pour ne pas ralentir la redirection."
+        points: 1
+      - criterion: "Disponibilité : services sans état derrière un load balancer, base répliquée."
+        points: 1
+      - criterion: "Abus : rate limiting à la création, détection des URL malveillantes."
+        points: 1
+    reference_solution: |
+      **Estimations.** 100 M liens/mois ÷ 2,6 M s ≈ **40 écritures/s** ; × 100 ≈ **4 000 lectures/s**
+      (pic ×3 ≈ 12 000/s). Sur 5 ans : 6 milliards de liens × ~500 octets ≈ **3 To**.
+
+      **Codes courts.** 62⁷ ≈ 3,5 × 10¹² combinaisons : largement assez pour 6 × 10⁹ liens.
+      Chaque instance d'API réserve une plage d'identifiants (ex. 1 000 000 à la fois) auprès
+      d'un compteur central, puis encode l'identifiant en base62 : aucune collision, pas de
+      requête au compteur à chaque création.
+
+      **Architecture.**
+
+      ```mermaid
+      flowchart LR
+        C[Client] --> LB[Load balancer]
+        LB --> API[API sans état ×N]
+        API --> R[(Redis : code → URL)]
+        API --> DB[(Base clé-valeur répliquée)]
+        API -- clic --> Q[[File de messages]]
+        Q --> W[Worker statistiques] --> S[(Base analytique)]
+      ```
+
+      **Redirection.** Lecture dans Redis, puis dans la base en cas d'absence. Réponse `302`,
+      car un `301` serait mis en cache par le navigateur et les clics suivants seraient perdus
+      pour les statistiques.
+
+      **Compromis.** Base clé-valeur : simple et scalable, mais requêtes analytiques
+      difficiles, d'où une base séparée pour les statistiques, alimentée par la file.
+    explanation: |
+      Il n'y a pas une seule bonne réponse en system design : ce qui compte, c'est
+      de **partir des chiffres**, d'identifier le chemin critique (ici la redirection,
+      qui représente 99 % du trafic) et de **justifier chaque compromis**.

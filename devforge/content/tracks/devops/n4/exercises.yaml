@@ -1,0 +1,115 @@
+exercises:
+  - id: devops.n4.incident-crashloop
+    type: scenario
+    title: "Astreinte : 3 h du matin"
+    skills: [kubernetes-debug, kubernetes]
+    difficulty: 3
+    language: bash
+    prompt: |
+      Tu es d'astreinte. Ton téléphone sonne. Résous l'incident en un minimum
+      d'étapes : chaque décision compte.
+    start: alerte
+    nodes:
+      alerte:
+        text: |
+          🚨 03:12 — L'API `devforge-api` ne répond plus.
+
+          ```
+          $ kubectl get pods
+          NAME                           READY   STATUS             RESTARTS   AGE
+          devforge-api-7d9f8c6b5-x2k4p   0/1     CrashLoopBackOff   6          9m
+          ```
+
+          Que fais-tu en premier ?
+        options:
+          - text: Je supprime le pod pour qu'il soit recréé.
+            next: suppression
+            points: 0
+            feedback: Le pod sera recréé… et plantera de la même façon.
+          - text: "Je lis les logs du dernier crash : `kubectl logs <pod> --previous`"
+            next: logs
+            points: 3
+            feedback: "Bon réflexe : `--previous` montre les logs du conteneur qui vient de planter."
+          - text: J'augmente le nombre de réplicas à 5.
+            next: replicas
+            points: 0
+            feedback: "5 pods qui plantent au lieu d'un : le problème n'est pas la charge."
+
+      suppression:
+        text: Le nouveau pod repasse en `CrashLoopBackOff` au bout de 30 secondes. Et maintenant ?
+        options:
+          - text: Je lis les logs du dernier crash.
+            next: logs
+            points: 2
+
+      replicas:
+        text: Les 5 pods sont en `CrashLoopBackOff` et le canal #incidents s'affole. Et maintenant ?
+        options:
+          - text: Je reviens à 1 réplica et je lis les logs du dernier crash.
+            next: logs
+            points: 1
+
+      logs:
+        text: |
+          ```
+          Exception in thread "main" java.lang.IllegalStateException: DATABASE_URL manquante
+              at devforge.ConfigKt.loadConfig(Config.kt:12)
+          ```
+
+          Le dernier déploiement date de 03:05. Quelle est l'hypothèse la plus probable ?
+        options:
+          - text: La base de données est en panne.
+            next: fausse-piste-bdd
+            points: 0
+            feedback: Le message dit que la *variable* est absente, pas que la base est injoignable.
+          - text: Le déploiement de 03:05 a cassé la configuration (variable d'environnement absente).
+            next: diagnostic
+            points: 3
+
+      fausse-piste-bdd:
+        text: |
+          La base répond (`pg_isready` OK) et les autres services l'utilisent sans
+          problème. Que regardes-tu ?
+        options:
+          - text: Ce qui a changé dans le déploiement de 03:05.
+            next: diagnostic
+            points: 1
+
+      diagnostic:
+        text: |
+          `kubectl describe deployment devforge-api` montre que la variable
+          `DATABASE_URL`, lue auparavant depuis le secret `api-db`, a disparu du
+          manifeste dans le dernier commit.
+
+          Comment rétablis-tu le service **le plus vite possible** ?
+        options:
+          - text: "`kubectl rollout undo deployment/devforge-api`, puis je corrige le manifeste dans Git."
+            next: resolu
+            points: 3
+            feedback: "D'abord rétablir le service (rollback), ensuite corriger la cause proprement."
+          - text: Je corrige le manifeste, j'ouvre une PR et j'attends la CI (15 minutes).
+            next: resolu-lent
+            points: 1
+            feedback: Correct, mais le service reste en panne pendant ce temps.
+          - text: "J'ajoute la variable à la main avec `kubectl edit`."
+            next: derive
+            points: 1
+            feedback: "Ça marche, mais la prod ne correspond plus à Git : le prochain déploiement recassera tout."
+
+      resolu:
+        ending: success
+        text: |
+          ✅ Service rétabli en 2 minutes. Dernière étape : le post-mortem
+          (chronologie, cause, actions : test de démarrage en CI, validation des manifestes).
+      resolu-lent:
+        ending: partial
+        text: 🟡 Service rétabli après 20 minutes de panne. Un rollback aurait évité 18 minutes d'interruption.
+      derive:
+        ending: partial
+        text: 🟡 Service rétabli, mais la prod a dérivé de Git. En GitOps, Git est la seule source de vérité.
+    explanation: |
+      La démarche type face à un `CrashLoopBackOff` :
+      1. **Observer** avant d'agir : `kubectl logs --previous`, `kubectl describe pod`.
+      2. **Chercher ce qui a changé** : un incident suit très souvent un déploiement.
+      3. **Rétablir d'abord** (rollback), **corriger ensuite** (dans Git, avec revue et CI).
+      4. **Apprendre** : un post-mortem sans blâme et des actions pour que ça ne se reproduise pas.

@@ -1,0 +1,148 @@
+# Carte de tous les parcours de DevForge.
+#
+# - requires : liste de "parcours@niveau". Le niveau 1 du parcours se débloque
+#   quand tous les prérequis sont atteints (ex. "poo@2" = niveau 2 de POO validé).
+# - status   : "pilot" = le parcours a un dossier dans tracks/ avec du contenu ;
+#              "planned" = prévu, pas encore rédigé.
+# - domain   : axe du radar de compétences affiché dans le profil.
+
+ranks:
+  - level: 1
+    name: Novice
+    verb: découvrir
+    description: Reconnaître et définir les concepts.
+  - level: 2
+    name: Apprenti
+    verb: appliquer
+    description: Utiliser les concepts sur des cas simples et guidés.
+  - level: 3
+    name: Compagnon
+    verb: analyser
+    description: Choisir la bonne solution, la justifier, détecter les problèmes.
+  - level: 4
+    name: Expert
+    verb: concevoir
+    description: Concevoir des solutions complètes et arbitrer des compromis.
+  - level: 5
+    name: Maître
+    verb: transmettre
+    description: Maîtriser les cas limites, enseigner, innover.
+
+domains:
+  - id: code
+    title: Code
+  - id: conception
+    title: Conception
+  - id: architecture
+    title: Architecture
+  - id: ops
+    title: Ops
+  - id: data
+    title: Data
+  - id: securite
+    title: Sécurité
+  - id: humain
+    title: Collaboration
+
+tracks:
+  - id: fondations
+    title: Fondations de la programmation
+    domain: code
+    requires: []
+    status: planned
+
+  - id: git
+    title: Git et collaboration
+    domain: ops
+    requires: []
+    status: planned
+
+  - id: linux
+    title: Linux et shell
+    domain: ops
+    requires: []
+    status: planned
+
+  - id: algo
+    title: Algorithmes et structures de données
+    domain: code
+    requires: [fondations@1]
+    status: planned
+
+  - id: poo
+    title: Programmation orientée objet
+    domain: conception
+    requires: [fondations@1]
+    status: pilot
+
+  - id: fonctionnel
+    title: Programmation fonctionnelle et concurrence
+    domain: code
+    requires: [fondations@2]
+    status: planned
+
+  - id: clean-code
+    title: Clean code, refactoring et tests
+    domain: code
+    requires: [poo@1]
+    status: planned
+
+  - id: design-patterns
+    title: Design patterns
+    domain: conception
+    requires: [poo@2]
+    status: pilot
+
+  - id: bdd
+    title: Bases de données
+    domain: data
+    requires: [fondations@1]
+    status: planned
+
+  - id: reseau-web
+    title: Réseau, web et API
+    domain: architecture
+    requires: [fondations@1, linux@1]
+    status: planned
+
+  - id: architecture
+    title: Architecture logicielle
+    domain: architecture
+    requires: [design-patterns@2, clean-code@2]
+    status: pilot
+
+  - id: system-design
+    title: System design
+    domain: architecture
+    requires: [architecture@2, bdd@2, reseau-web@2]
+    status: pilot
+
+  - id: devops
+    title: DevOps, conteneurs et CI/CD
+    domain: ops
+    requires: [linux@2, git@2]
+    status: pilot
+
+  - id: cloud
+    title: Cloud
+    domain: ops
+    requires: [devops@2, reseau-web@2]
+    status: planned
+
+  - id: sre
+    title: Observabilité et SRE
+    domain: ops
+    requires: [devops@3, linux@2]
+    status: planned
+
+  - id: securite
+    title: Sécurité
+    domain: securite
+    requires: [reseau-web@2, bdd@1]
+    status: planned
+
+  - id: carriere
+    title: Carrière et collaboration
+    domain: humain
+    requires: []
+    status: planned

@@ -1,0 +1,25 @@
+exercises:
+  - id: system-design.n1.estimations.qcm-rps
+    type: qcm
+    title: Calcul à la louche
+    skills: [estimations]
+    difficulty: 1
+    prompt: |
+      Un service reçoit **100 millions de requêtes par jour**.
+      Environ combien de requêtes par seconde en moyenne ?
+    choices:
+      - id: a
+        text: environ 100 / s
+      - id: b
+        text: environ 1 000 / s
+        correct: true
+      - id: c
+        text: environ 10 000 / s
+      - id: d
+        text: environ 100 000 / s
+    hints:
+      - Une journée compte 86 400 secondes, soit à peu près 100 000.
+    explanation: |
+      1 jour ≈ 86 400 s ≈ 10⁵ s, donc 10⁸ / 10⁵ = **10³ ≈ 1 000 requêtes/s** en moyenne.
+      Pour dimensionner, on prévoit le **pic**, souvent 2 à 5 fois la moyenne.
+      Retiens ce raccourci : 1 million par jour ≈ 12 par seconde.

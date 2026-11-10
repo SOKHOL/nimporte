@@ -1,0 +1,104 @@
+id: design-patterns
+title: Design patterns
+description: >
+  Les 23 patterns du Gang of Four, les patterns d'entreprise et de résilience,
+  les anti-patterns, et surtout : savoir quand NE PAS utiliser un pattern.
+
+levels:
+  - level: 1
+    title: Les premiers patterns
+    skills:
+      - id: pourquoi-patterns
+        title: Pourquoi des patterns ?
+      - id: singleton
+        title: Singleton
+      - id: factory-method
+        title: Factory Method
+      - id: strategy
+        title: Strategy
+      - id: observer
+        title: Observer
+    boss:
+      id: design-patterns.n1.boss
+      title: "Boss : le premier quatuor"
+      exercises:
+        - design-patterns.n1.match-probleme
+        - design-patterns.n1.strategy.review-primes
+        - design-patterns.n1.strategy.trous-livraison
+        - design-patterns.n1.observer.qcm-stateflow
+        - design-patterns.n1.singleton.qcm-anti-pattern
+        - design-patterns.n1.observer.predict-ecouteurs
+      pass_ratio: 0.8
+      time_limit_min: 12
+
+  - level: 2
+    title: Créer et assembler
+    skills:
+      - id: abstract-factory
+        title: Abstract Factory
+      - id: builder
+        title: Builder
+      - id: prototype
+        title: Prototype
+      - id: adapter
+        title: Adapter
+      - id: decorator
+        title: Decorator
+      - id: facade
+        title: Facade
+      - id: proxy
+        title: Proxy
+
+  - level: 3
+    title: Comportements et structures avancées
+    skills:
+      - id: command
+        title: Command
+      - id: state
+        title: State
+      - id: template-method
+        title: Template Method
+      - id: chain-of-responsibility
+        title: Chain of Responsibility
+      - id: iterator
+        title: Iterator
+      - id: mediator
+        title: Mediator
+      - id: composite
+        title: Composite
+      - id: bridge
+        title: Bridge
+      - id: flyweight
+        title: Flyweight
+
+  - level: 4
+    title: Patterns rares et patterns d'entreprise
+    skills:
+      - id: visitor
+        title: Visitor
+      - id: memento
+        title: Memento
+      - id: interpreter
+        title: Interpreter
+      - id: repository-uow
+        title: Repository et Unit of Work
+      - id: injection-dependances
+        title: Injection de dépendances et IoC
+      - id: specification
+        title: Specification
+      - id: null-object
+        title: Null Object
+      - id: anti-patterns
+        title: Anti-patterns (God object, spaghetti, golden hammer…)
+
+  - level: 5
+    title: Patterns en situation réelle
+    skills:
+      - id: patterns-frameworks
+        title: Les patterns dans les frameworks (Spring, Android, OkHttp)
+      - id: integration-patterns
+        title: Patterns d'intégration (EIP)
+      - id: resilience-patterns
+        title: Résilience (Circuit Breaker, Retry, Bulkhead, Timeout)
+      - id: sur-ingenierie
+        title: Éviter la sur-ingénierie

@@ -1,0 +1,68 @@
+id: system-design
+title: System design
+description: >
+  Concevoir des systèmes qui tiennent la charge : estimer, mettre en cache,
+  répartir, répliquer, découper, et assumer les compromis.
+
+levels:
+  - level: 1
+    title: Le vocabulaire de l'échelle
+    skills:
+      - id: latence-debit
+        title: Latence, débit, disponibilité
+      - id: scalabilite
+        title: Scalabilité verticale et horizontale
+      - id: estimations
+        title: Estimations à la louche
+
+  - level: 2
+    title: Les briques de base
+    skills:
+      - id: load-balancing
+        title: Répartition de charge
+      - id: cache
+        title: Cache (stratégies et invalidation)
+      - id: cdn
+        title: CDN
+      - id: replication
+        title: Réplication de bases de données
+      - id: stateless
+        title: Services sans état
+
+  - level: 3
+    title: Distribuer
+    skills:
+      - id: messages
+        title: Files de messages et asynchrone
+      - id: idempotence
+        title: Idempotence
+      - id: sharding
+        title: Partitionnement (sharding)
+      - id: cap
+        title: Théorème CAP et cohérence éventuelle
+
+  - level: 4
+    title: Études de cas
+    skills:
+      - id: url-shortener
+        title: Raccourcisseur d'URL
+      - id: news-feed
+        title: Fil d'actualité
+      - id: chat
+        title: Messagerie instantanée
+      - id: rate-limiter
+        title: Rate limiter
+      - id: notifications
+        title: Système de notifications
+
+  - level: 5
+    title: Systèmes distribués avancés
+    skills:
+      - id: consensus
+        title: Consensus (Raft, Paxos)
+      - id: horloges
+        title: Horloges et ordre des événements
+      - id: sagas
+        title: Transactions distribuées et sagas
+      - id: multi-region
+        title: Multi-région

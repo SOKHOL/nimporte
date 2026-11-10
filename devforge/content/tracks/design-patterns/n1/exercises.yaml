@@ -1,0 +1,208 @@
+exercises:
+  - id: design-patterns.n1.match-probleme
+    type: match
+    title: Le bon pattern pour le bon problème
+    skills: [singleton, factory-method, strategy, observer]
+    difficulty: 1
+    prompt: Relie chaque pattern au problème qu'il résout.
+    pairs:
+      - left: Strategy
+        right: Choisir à l'exécution entre plusieurs façons de calculer des frais de port
+      - left: Observer
+        right: Mettre à jour l'écran de profil automatiquement quand l'XP change
+      - left: Singleton
+        right: Garantir une seule instance d'un registre de configuration partagé
+      - left: Factory Method
+        right: Laisser chaque sous-classe décider quel type de document elle crée
+    explanation: |
+      - **Strategy** encapsule des algorithmes interchangeables.
+      - **Observer** notifie des abonnés quand un état change.
+      - **Singleton** garantit une instance unique (à utiliser avec parcimonie).
+      - **Factory Method** délègue la création d'un objet aux sous-classes.
+
+  - id: design-patterns.n1.strategy.review-primes
+    type: code-review
+    title: "Revue de code : le calcul des primes"
+    skills: [strategy]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      Un collègue te demande une revue de code. Touche chaque ligne qui pose
+      problème et indique la catégorie. Il faut trouver au moins 2 problèmes.
+    code: |
+      class CalculateurPrime {
+          fun prime(employe: Employe): Double {
+              if (employe.type == "DEV") {
+                  return employe.salaire * 0.10
+              } else if (employe.type == "MANAGER") {
+                  return employe.salaire * 0.15 + 1000
+              } else if (employe.type == "STAGIAIRE") {
+                  return 300.0
+              }
+              return 0.0
+          }
+      }
+    issues:
+      - lines: [3, 5, 7]
+        category: conception
+        description: |
+          Chaîne de conditions sur le type : chaque nouveau type d'employé oblige
+          à modifier cette classe (principe ouvert/fermé violé). Une stratégie de
+          prime par type (ou du polymorphisme) règle le problème.
+      - lines: [3, 5, 7]
+        category: bug
+        description: |
+          Types en chaînes de caractères : une faute de frappe (`"Dev"`) compile
+          sans erreur et donne une prime fausse. Préférer une `enum` ou une `sealed class`.
+      - lines: [10]
+        category: bug
+        description: Un type inconnu donne silencieusement 0 € de prime au lieu de signaler une erreur.
+      - lines: [2]
+        category: bug
+        description: "`Double` pour de l'argent : erreurs d'arrondi. Préférer des centimes en `Long` ou `BigDecimal`."
+    min_found: 2
+    hints:
+      - Que faut-il modifier dans cette classe le jour où on ajoute le type « ALTERNANT » ?
+    explanation: |
+      Le problème principal est la **conception** : la logique de chaque type est
+      enfermée dans une seule méthode. Avec Strategy :
+
+      ```kotlin
+      fun interface RegleDePrime { fun prime(salaire: Long): Long }
+      enum class TypeEmploye(val regle: RegleDePrime) {
+          DEV({ it / 10 }),
+          MANAGER({ it * 15 / 100 + 100_000 }),
+          STAGIAIRE({ 30_000 }),
+      }
+      ```
+
+      Ajouter un type = ajouter une ligne, sans toucher au reste.
+
+  - id: design-patterns.n1.strategy.trous-livraison
+    type: fill-blanks
+    title: Implémenter Strategy
+    skills: [strategy]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Complète le code pour que `Express` soit une stratégie de livraison, et que
+      `Commande` ne dépende **que de l'abstraction**.
+    code: |
+      fun interface StrategieLivraison {
+          fun frais(poidsKg: Int): Long
+      }
+
+      object Express : {{1}} {
+          {{2}} fun frais(poidsKg: Int): Long = 999 + 50L * poidsKg
+      }
+
+      class Commande(private val livraison: StrategieLivraison) {
+          fun total(prixArticles: Long, poidsKg: Int): Long =
+              prixArticles + {{3}}.frais(poidsKg)
+      }
+    blanks:
+      "1":
+        answers: [StrategieLivraison]
+        options: [StrategieLivraison, Commande, Any, Express]
+      "2":
+        answers: [override]
+        options: [override, open, abstract, private]
+      "3":
+        answers: [livraison]
+        options: [livraison, Express, this, StrategieLivraison]
+    explanation: |
+      `Express` implémente l'interface et **redéfinit** (`override`) sa méthode.
+      `Commande` appelle `livraison.frais(...)` : elle ne sait pas quelle stratégie
+      elle utilise. Écrire `Express.frais(...)` compilerait aussi, mais `Commande`
+      serait de nouveau couplée à une classe concrète.
+
+  - id: design-patterns.n1.observer.qcm-stateflow
+    type: qcm
+    title: Observer au quotidien
+    skills: [observer]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Dans une app Android moderne, le ViewModel expose l'état de l'écran et
+      l'interface se met à jour à chaque changement. Quel outil de
+      `kotlinx.coroutines` met en œuvre le pattern **Observer** ?
+    choices:
+      - id: a
+        text: "`StateFlow`"
+        correct: true
+      - id: b
+        text: "`object` (déclaration d'objet)"
+      - id: c
+        text: "`sealed class`"
+      - id: d
+        text: "`data class`"
+    explanation: |
+      Un `StateFlow` garde une valeur courante et prévient tous ses collecteurs
+      (les observateurs) à chaque changement : c'est Observer, avec en plus la
+      gestion du cycle de vie et de la concurrence.
+
+  - id: design-patterns.n1.singleton.qcm-anti-pattern
+    type: qcm
+    title: Le Singleton, ami ou ennemi ?
+    skills: [singleton]
+    difficulty: 2
+    prompt: Pourquoi le Singleton est-il souvent considéré comme un anti-pattern ? (plusieurs réponses)
+    multiple: true
+    choices:
+      - id: a
+        text: Il introduit un état global caché, difficile à isoler dans les tests.
+        correct: true
+      - id: b
+        text: Le code qui l'utilise dépend d'une classe concrète plutôt que d'une abstraction.
+        correct: true
+      - id: c
+        text: Il est impossible à écrire en Kotlin.
+        feedback: "Au contraire : `object` crée un singleton en une ligne."
+      - id: d
+        text: Il consomme forcément beaucoup de mémoire.
+        feedback: Une seule instance, c'est plutôt économe.
+    explanation: |
+      Le problème n'est pas l'instance unique, c'est l'**accès global** : n'importe
+      quel code peut l'appeler, ce qui cache les dépendances et rend les tests
+      dépendants les uns des autres. Préfère une instance unique **injectée**
+      (via l'injection de dépendances) : même bénéfice, sans l'état global.
+
+  - id: design-patterns.n1.observer.predict-ecouteurs
+    type: predict-output
+    title: Les écouteurs
+    skills: [observer]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Bouton {
+          private val ecouteurs = mutableListOf<(String) -> Unit>()
+          fun surClic(ecouteur: (String) -> Unit) { ecouteurs += ecouteur }
+          fun cliquer() = ecouteurs.forEach { it("clic") }
+      }
+
+      fun main() {
+          val bouton = Bouton()
+          var compteur = 0
+          bouton.surClic { compteur++ }
+          bouton.surClic { println("$it n°$compteur") }
+          bouton.cliquer()
+          bouton.cliquer()
+      }
+    choices:
+      - id: a
+        text: "`clic n°1` puis `clic n°2`"
+        correct: true
+      - id: b
+        text: "`clic n°0` puis `clic n°1`"
+      - id: c
+        text: "`clic n°2` puis `clic n°2`"
+      - id: d
+        text: "`clic n°1` seulement"
+    hints:
+      - Les écouteurs sont appelés dans l'ordre où ils ont été ajoutés.
+    explanation: |
+      À chaque clic, les observateurs sont notifiés **dans l'ordre d'abonnement** :
+      le premier incrémente `compteur`, puis le second l'affiche. Premier clic → 1,
+      second clic → 2. Si on inversait les deux `surClic`, on obtiendrait 0 puis 1 :
+      dépendre de l'ordre des observateurs est fragile.

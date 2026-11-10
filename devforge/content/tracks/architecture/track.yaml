@@ -1,0 +1,60 @@
+id: architecture
+title: Architecture logicielle
+description: >
+  Organiser le code pour qu'il reste simple à faire évoluer : couches,
+  architecture hexagonale, Clean Architecture, DDD, CQRS, microservices.
+
+levels:
+  - level: 1
+    title: Séparer les responsabilités
+    skills:
+      - id: couches
+        title: Architecture en couches
+      - id: separation-responsabilites
+        title: Séparation des responsabilités
+      - id: mvc
+        title: MVC
+
+  - level: 2
+    title: Structurer une application
+    skills:
+      - id: mvvm-mvi
+        title: MVVM et MVI
+      - id: di-architecture
+        title: Injection de dépendances à l'échelle d'une app
+      - id: modularisation
+        title: Modularisation
+      - id: principes-packages
+        title: Principes de cohésion et de couplage des modules
+
+  - level: 3
+    title: Le domaine au centre
+    skills:
+      - id: hexagonale
+        title: Architecture hexagonale (ports et adaptateurs)
+      - id: clean-architecture
+        title: Clean Architecture
+      - id: ddd-tactique
+        title: DDD tactique (entités, value objects, agrégats, événements)
+
+  - level: 4
+    title: Systèmes qui grandissent
+    skills:
+      - id: ddd-strategique
+        title: DDD stratégique (bounded contexts, context mapping)
+      - id: cqrs-event-sourcing
+        title: CQRS et event sourcing
+      - id: monolithe-microservices
+        title: Monolithe modulaire ou microservices
+      - id: adr
+        title: Documenter les décisions (ADR)
+
+  - level: 5
+    title: Architecture évolutive
+    skills:
+      - id: fitness-functions
+        title: Fitness functions et architecture évolutive
+      - id: strangler-fig
+        title: Migrer un legacy (strangler fig)
+      - id: conway
+        title: Loi de Conway et Team Topologies

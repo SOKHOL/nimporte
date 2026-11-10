@@ -1,0 +1,181 @@
+exercises:
+  - id: poo.n1.classes-objets.qcm-combien
+    type: qcm
+    title: Combien d'objets ?
+    skills: [classes-objets, egalite-identite]
+    difficulty: 1
+    language: kotlin
+    prompt: Combien d'objets `Chien` existent en mémoire après ces trois lignes ?
+    code: |
+      val a = Chien("Rex")
+      val b = a
+      val c = Chien("Rex")
+    choices:
+      - id: a
+        text: "1"
+      - id: b
+        text: "2"
+        correct: true
+      - id: c
+        text: "3"
+    hints:
+      - Combien de fois le constructeur `Chien(...)` est-il appelé ?
+    explanation: |
+      `val b = a` ne crée pas d'objet : `b` est une deuxième **référence** vers
+      le même objet que `a`. Il y a deux appels au constructeur, donc deux objets,
+      même s'ils ont le même nom.
+
+  - id: poo.n1.egalite.predict-data-class
+    type: predict-output
+    title: Égaux ou identiques ?
+    skills: [egalite-identite]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Point(val x: Int, val y: Int)
+      data class PointData(val x: Int, val y: Int)
+
+      fun main() {
+          println(Point(1, 2) == Point(1, 2))
+          println(PointData(1, 2) == PointData(1, 2))
+          println(PointData(1, 2) === PointData(1, 2))
+      }
+    choices:
+      - id: a
+        text: "`false` / `true` / `false`"
+        correct: true
+      - id: b
+        text: "`true` / `true` / `true`"
+      - id: c
+        text: "`false` / `true` / `true`"
+      - id: d
+        text: "`true` / `true` / `false`"
+    hints:
+      - "`==` appelle `equals()`. Quelle classe redéfinit `equals()` automatiquement ?"
+      - "`===` compare les références : est-ce le même objet en mémoire ?"
+    explanation: |
+      - `==` appelle `equals()`. Une classe normale hérite de l'`equals()` de `Any`,
+        qui compare les références : deux objets distincts → `false`.
+      - Une `data class` génère `equals()` à partir des propriétés du constructeur → `true`.
+      - `===` compare toujours les références : deux appels au constructeur, deux
+        objets distincts → `false`.
+
+  - id: poo.n1.encapsulation.qcm-invariant
+    type: qcm
+    title: Qui protège l'invariant ?
+    skills: [encapsulation]
+    difficulty: 1
+    language: kotlin
+    prompt: |
+      La règle « le solde n'est jamais négatif » doit toujours être vraie.
+      Quelle déclaration de `solde` permet à la classe `CompteBancaire` de la **garantir** ?
+    choices:
+      - id: a
+        text: "`var solde: Long = 0`"
+        feedback: N'importe quel code peut écrire `compte.solde = -50`.
+      - id: b
+        text: "`var solde: Long = 0` suivi de `private set`"
+        correct: true
+        feedback: Lecture publique, écriture réservée à la classe, qui valide chaque modification.
+      - id: c
+        text: "`val solde: Long = 0`"
+        feedback: Le solde ne pourrait plus jamais changer, même lors d'un dépôt.
+      - id: d
+        text: "`protected var solde: Long = 0`"
+        feedback: L'extérieur ne peut même plus lire le solde, et une sous-classe pourrait le rendre négatif.
+    explanation: |
+      Encapsuler, c'est réserver la modification de l'état à l'objet lui-même.
+      Avec `private set`, toute modification passe par `deposer()` et `retirer()`,
+      qui vérifient la règle. C'est ce qui permet de garantir un **invariant**.
+
+  - id: poo.n1.encapsulation.bug-liste-exposee
+    type: find-bug
+    title: La fuite
+    skills: [encapsulation]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Un article vide ne doit jamais entrer dans le panier. Pourtant, on en trouve
+      en production. Touche la ligne responsable.
+    code: |
+      class Panier {
+          private val _articles = mutableListOf<String>()
+          val articles: MutableList<String> = _articles
+
+          fun ajouter(article: String) {
+              require(article.isNotBlank()) { "Article vide" }
+              _articles.add(article)
+          }
+      }
+    bug_lines: [3]
+    hints:
+      - Existe-t-il un moyen d'ajouter un article sans passer par `ajouter()` ?
+    explanation: |
+      La ligne 3 expose la liste interne **modifiable** : `panier.articles.add("")`
+      contourne complètement la validation de `ajouter()`.
+
+      Correction : `val articles: List<String> get() = _articles.toList()`.
+      La copie empêche aussi un appelant de reconvertir la liste en `MutableList`.
+
+  - id: poo.n1.constructeurs.trous-init
+    type: fill-blanks
+    title: Un utilisateur toujours valide
+    skills: [constructeurs, proprietes-methodes]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Complète la classe : `email` doit devenir une propriété qui ne change plus
+      jamais après la création, et un email sans `@` doit être refusé dès la construction.
+    code: |
+      class Utilisateur(
+          {{1}} email: String,
+          nom: String,
+      ) {
+          val nom: String = nom.trim()
+
+          {{2}} {
+              require("@" in email) { "Email invalide" }
+          }
+      }
+    blanks:
+      "1":
+        answers: [val]
+        options: [val, var, fun, private]
+      "2":
+        answers: [init]
+        options: [init, constructor, static, companion]
+    hints:
+      - "Quel mot-clé déclare une propriété en lecture seule directement dans le constructeur ?"
+      - "Quel bloc s'exécute à chaque construction de l'objet ?"
+    explanation: |
+      - `val` dans le constructeur primaire crée une propriété en lecture seule.
+        Sans `val`/`var`, `email` ne serait qu'un paramètre, invisible après la construction.
+      - Le bloc `init` s'exécute à chaque création : c'est l'endroit idéal pour
+        valider les arguments et garantir qu'aucun objet invalide n'existe.
+
+  - id: poo.n1.methodes.parsons-compte
+    type: parsons
+    title: Remettre le programme dans l'ordre
+    skills: [proprietes-methodes, encapsulation]
+    difficulty: 1
+    language: kotlin
+    prompt: |
+      Avec la classe `CompteBancaire` de la leçon, remets les lignes dans l'ordre
+      pour que le programme affiche `Solde : 70`. Attention, deux lignes sont des pièges.
+    lines:
+      - "fun main() {"
+      - "    val compte = CompteBancaire()"
+      - "    compte.deposer(100)"
+      - "    compte.retirer(30)"
+      - "    println(\"Solde : ${compte.solde}\")"
+      - "}"
+    distractors:
+      - "    compte.solde = 70"
+      - "    val compte = CompteBancaire(70)"
+    hints:
+      - Peut-on retirer de l'argent d'un compte vide ?
+    explanation: |
+      On crée le compte, on dépose **avant** de retirer (sinon `check` lève
+      « Solde insuffisant »), puis on affiche. `compte.solde = 70` ne compile pas
+      (`private set`), et `CompteBancaire` n'a pas de constructeur avec un solde initial.

@@ -1,0 +1,101 @@
+exercises:
+  - id: devops.n2.couches.qcm-cache
+    type: qcm
+    title: L'ordre des couches
+    skills: [docker-couches]
+    difficulty: 2
+    language: dockerfile
+    prompt: |
+      Pourquoi copie-t-on le fichier des dépendances et les installe-t-on
+      **avant** de copier le reste du code source ?
+    code: |
+      FROM python:3.12-slim
+      WORKDIR /app
+      COPY requirements.txt .
+      RUN pip install --no-cache-dir -r requirements.txt
+      COPY . .
+      CMD ["python", "main.py"]
+    choices:
+      - id: a
+        text: Pour que la couche des dépendances reste en cache tant que `requirements.txt` ne change pas.
+        correct: true
+      - id: b
+        text: Parce que Docker refuse de copier plusieurs fichiers dans une même instruction.
+      - id: c
+        text: Pour que l'image finale soit plus petite.
+        feedback: La taille est la même ; c'est le temps de build qui change.
+      - id: d
+        text: Parce que `pip` doit tourner avant que le code existe, sinon il plante.
+    explanation: |
+      Chaque instruction crée une couche. Docker réutilise une couche tant que ses
+      entrées n'ont pas changé, **et** que toutes les couches précédentes viennent
+      du cache. Le code change à chaque commit, les dépendances rarement : en les
+      installant d'abord, un build après une simple modification de code prend
+      quelques secondes au lieu de plusieurs minutes.
+
+  - id: devops.n2.securite.bug-secret
+    type: find-bug
+    title: Une image qui en dit trop
+    skills: [docker-securite]
+    difficulty: 2
+    language: dockerfile
+    prompt: Cette image est publiée sur un registre. Touche la ligne qui pose un problème de sécurité.
+    code: |
+      FROM python:3.12-slim
+      WORKDIR /app
+      COPY requirements.txt .
+      RUN pip install --no-cache-dir -r requirements.txt
+      ENV API_KEY=changeme-super-secret
+      COPY . .
+      CMD ["python", "main.py"]
+    bug_lines: [5]
+    hints:
+      - Que voit quelqu'un qui lance `docker inspect` ou `docker history` sur l'image ?
+    explanation: |
+      Un secret écrit dans le Dockerfile est gravé dans l'image : n'importe qui
+      ayant accès à l'image le lit avec `docker inspect` ou `docker history`.
+      Les secrets se passent **à l'exécution** (variables d'environnement injectées
+      par l'orchestrateur, secrets Kubernetes, coffre-fort), jamais au build.
+
+  - id: devops.n2.images.trous-multi-stage
+    type: fill-blanks
+    title: Le build multi-étapes
+    skills: [docker-images, docker-securite]
+    difficulty: 3
+    language: dockerfile
+    prompt: |
+      Complète ce Dockerfile multi-étapes pour une application Kotlin (projet
+      Gradle nommé `app`) : on compile dans une image lourde, on exécute dans une
+      image légère, et pas en `root`.
+    code: |
+      # Étape 1 : compilation
+      FROM gradle:8-jdk21 {{1}} build
+      WORKDIR /src
+      COPY . .
+      RUN gradle installDist --no-daemon
+
+      # Étape 2 : exécution
+      FROM eclipse-temurin:21-jre
+      WORKDIR /app
+      COPY {{2}} /src/build/install/app/ ./
+      USER {{3}}
+      CMD ["./bin/app"]
+    blanks:
+      "1":
+        answers: [AS]
+        options: [AS, FROM, TO, NAME]
+      "2":
+        answers: ["--from=build"]
+        options: ["--from=build", "--stage=build", "build:", "../build"]
+      "3":
+        answers: ["1000"]
+        options: ["1000", root, admin, sudo]
+    hints:
+      - "La première étape doit porter un nom pour être référencée plus tard."
+      - "Un UID numérique suffit pour l'instruction `USER`."
+    explanation: |
+      - `AS build` nomme l'étape de compilation.
+      - `COPY --from=build` ne récupère que le résultat compilé : Gradle, le JDK
+        et le code source restent dans l'étape 1 et ne finissent pas dans l'image.
+      - `USER 1000` exécute l'application avec un utilisateur non privilégié :
+        si l'application est compromise, l'attaquant n'est pas `root` dans le conteneur.

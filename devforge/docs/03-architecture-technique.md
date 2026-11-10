@@ -247,7 +247,7 @@ Faire le *threat model* de ce composant est un excellent exercice du parcours S�
 
 | Étape | Outils |
 |---|---|
-| CI de l'app | GitHub Actions : lint, tests unitaires, tests UI, validation du contenu, build de l'APK |
+| CI de l'app | GitHub Actions : validation du contenu, tests unitaires, build de l'APK, **test de fumée sur émulateur Android**, puis publication de l'APK en pré-version (`.github/workflows/devforge-android.yml`) |
 | Distribution | APK signé → Firebase App Distribution (tests) → Google Play (piste interne, puis production) |
 | CI/CD du backend | image Docker → registre → déploiement |
 | Hébergement | d'abord Docker Compose sur une petite VM ; ensuite k3s/Kubernetes + Helm + Argo CD |

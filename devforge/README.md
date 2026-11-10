@@ -12,8 +12,9 @@
    depuis ton téléphone Android.
 2. Télécharge `DevForge.apk`, ouvre-le, et autorise l'installation depuis cette source
    quand Android le demande.
-3. Chaque push sur la branche reconstruit l'APK : une nouvelle version s'installe
-   par-dessus l'ancienne, sans perdre ta progression.
+3. Chaque push sur la branche reconstruit l'APK et le teste sur un émulateur Android
+   avant de le publier. Une nouvelle version s'installe par-dessus l'ancienne, sans
+   perdre ta progression.
 
 Ce que fait l'app : carte des 31 parcours, leçons, sessions d'exercices (9 types),
 boss chronométrés qui valident un niveau, révisions espacées (boîtes de Leitner),

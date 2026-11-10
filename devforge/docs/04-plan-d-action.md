@@ -122,7 +122,8 @@ serveur, sécurité (threat model du runner).
 | P1-11 ✅ | Composants des 9 types d'exercices (Parsons au toucher, avec annulation) | 1 |
 | P1-12 ✅ | XP, niveaux, boss, série quotidienne, révisions, défi du jour | 1 |
 | P1-13 ✅ | Écran profil avec radar | 1 |
-| P1-14 | Tests UI Compose des parcours critiques ; ktlint et detekt en CI | 1 |
+| P1-14 ✅ | Test de fumée Compose sur émulateur en CI (l'APK n'est publié que s'il passe) | 1 |
+| P1-15 | ktlint et detekt en CI ; tests Compose de chaque type d'exercice | 1 |
 
 ## Rythme hebdomadaire conseillé
 

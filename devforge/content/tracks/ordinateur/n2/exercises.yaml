@@ -1,0 +1,112 @@
+exercises:
+  - id: ordinateur.n2.edition-liens.qcm-undefined
+    type: qcm
+    title: Undefined reference
+    skills: [compilation-edition-liens]
+    difficulty: 3
+    language: bash
+    prompt: "Chaque fichier se compile sans erreur avec `gcc -c`, mais la dernière commande échoue. À quelle étape, et pourquoi ?"
+    code: |
+      $ gcc -c principal.c          # OK
+      $ gcc principal.o -o programme
+      undefined reference to `somme'
+    choices:
+      - id: a
+        text: "À l'édition de liens : principal.o utilise le symbole somme (U), mais aucun fichier objet fourni ne le définit (il manque somme.o)."
+        correct: true
+      - id: b
+        text: "À la compilation : la fonction somme est mal écrite."
+        feedback: "La compilation de principal.c a réussi ; elle n'a besoin que de la déclaration de somme."
+      - id: c
+        text: "Au chargement : la bibliothèque C est absente."
+      - id: d
+        text: "Au préprocesseur : un #include manque."
+    explanation: |
+      Sorties réelles : `nm principal.o` affiche `U somme` ; avec `gcc somme.o principal.o`,
+      le programme affiche 42.
+
+  - id: ordinateur.n2.assembleur.qcm
+    type: qcm
+    title: Lire trois lignes d'assembleur
+    skills: [assembleur]
+    difficulty: 3
+    language: text
+    prompt: "Voici le code x86-64 réellement produit par gcc pour une fonction C à deux paramètres entiers. Que calcule-t-elle ?"
+    code: |
+      somme:
+      	endbr64
+      	leal	(%rdi,%rsi), %eax
+      	ret
+    choices:
+      - id: a
+        text: "La somme de ses deux arguments (arrivés dans rdi et rsi), renvoyée dans eax."
+        correct: true
+      - id: b
+        text: L'adresse mémoire du premier argument.
+        feedback: "leal calcule une adresse… que le compilateur détourne ici pour faire une addition en une instruction."
+      - id: c
+        text: Le produit de ses deux arguments.
+      - id: d
+        text: Rien, elle renvoie toujours 0.
+    explanation: |
+      Sur Linux x86-64, les premiers arguments entiers passent par rdi, rsi, rdx… et le
+      résultat revient dans eax/rax. `leal (rdi, rsi), eax` calcule rdi + rsi.
+
+  - id: ordinateur.n2.composants.match
+    type: match
+    title: Les ordres de grandeur
+    skills: [composants]
+    difficulty: 2
+    prompt: Relie chaque composant à son temps d'accès typique.
+    pairs:
+      - left: Un registre du processeur
+        right: Un cycle (moins d'une nanoseconde)
+      - left: Le cache L1
+        right: Environ 1 ns
+      - left: La mémoire vive
+        right: Environ 100 ns
+      - left: Un SSD
+        right: Quelques dizaines de microsecondes
+      - left: Un disque dur mécanique
+        right: Plusieurs millisecondes
+    explanation: |
+      Chaque niveau est environ dix à mille fois plus lent que le précédent : c'est pourquoi
+      les caches et la localité des données comptent tant.
+
+  - id: ordinateur.n2.edition-liens.match
+    type: match
+    title: Les étapes de la construction
+    skills: [compilation-edition-liens]
+    difficulty: 3
+    prompt: Relie chaque action à l'étape qui l'effectue.
+    pairs:
+      - left: "Remplacer #include <stdio.h> par le contenu du fichier"
+        right: Préprocesseur
+      - left: Transformer le C en code machine dans un fichier .o
+        right: Compilation
+      - left: Relier l'appel à somme à sa définition dans un autre fichier
+        right: Édition de liens
+      - left: Charger libc.so.6 en mémoire au lancement
+        right: Chargement (par ld-linux)
+    explanation: |
+      `ldd programme` liste réellement `libc.so.6` et le chargeur `ld-linux-x86-64.so.2`.
+
+  - id: ordinateur.n2.composants.qcm-statique
+    type: qcm
+    title: Un exécutable dans un conteneur vide
+    skills: [compilation-edition-liens]
+    difficulty: 4
+    prompt: "Pourquoi un programme Go compilé en statique fonctionne-t-il dans une image Docker `scratch` (vide), alors qu'un programme C classique échoue ?"
+    choices:
+      - id: a
+        text: "Le binaire statique contient tout ce dont il a besoin ; le programme C classique dépend de bibliothèques partagées (libc.so.6) et du chargeur, absents de l'image vide."
+        correct: true
+      - id: b
+        text: Go n'a pas besoin de système d'exploitation.
+      - id: c
+        text: "L'image scratch contient seulement l'environnement Go."
+      - id: d
+        text: Le C ne fonctionne pas dans Docker.
+    explanation: |
+      Un exécutable dynamique a besoin de ses bibliothèques au chargement. On peut aussi
+      compiler un programme C en statique (`gcc -static`), comme dans le parcours DevOps.

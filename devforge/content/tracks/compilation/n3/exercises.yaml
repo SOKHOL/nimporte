@@ -1,0 +1,123 @@
+exercises:
+  - id: compilation.n3.portee.predict-lexicale
+    type: predict-output
+    title: Lexicale ou dynamique ?
+    skills: [portee]
+    difficulty: 3
+    language: text
+    prompt: "Qu'affiche ce programme Mini, qui utilise la portée lexicale ?"
+    code: |
+      soit n = 1;
+      soit f = fn() => n * 2;
+      soit g = fn(n) => f() + n;
+      afficher(g(10));
+    choices:
+      - id: a
+        text: "`12`"
+        correct: true
+      - id: b
+        text: "`30`"
+        feedback: "Ce serait la portée dynamique : f lirait le n de son appelant g (10)."
+      - id: c
+        text: "`20`"
+      - id: d
+        text: "Une erreur : n est défini deux fois."
+    explanation: |
+      f a été créée dans l'environnement global, où n vaut 1 : f() vaut 2, et g(10) vaut
+      2 + 10 = 12. Sortie vérifiée avec l'interpréteur de Mini.
+
+  - id: compilation.n3.fermetures.predict-boucle
+    type: predict-output
+    title: Les fermetures créées dans une boucle
+    skills: [fermetures]
+    difficulty: 4
+    language: python
+    prompt: Qu'affiche ce programme Python ?
+    code: |
+      fonctions = []
+      for i in range(3):
+          fonctions.append(lambda: i * 10)
+      print([f() for f in fonctions])
+
+      fixees = [lambda i=i: i * 10 for i in range(3)]
+      print([f() for f in fixees])
+    choices:
+      - id: a
+        text: "`[20, 20, 20]` puis `[0, 10, 20]`"
+        correct: true
+      - id: b
+        text: "`[0, 10, 20]` puis `[0, 10, 20]`"
+        feedback: "Les fermetures capturent la variable i, pas sa valeur au moment de la création."
+      - id: c
+        text: "`[20, 20, 20]` puis `[20, 20, 20]`"
+        feedback: "La valeur par défaut est évaluée à la création : elle fige la valeur de i."
+      - id: d
+        text: "Une erreur : i n'existe plus après la boucle."
+    explanation: |
+      Les trois lambdas partagent le même environnement, où i vaut 2 à la fin de la boucle.
+      Le paramètre par défaut `i=i` copie la valeur à la création. Kotlin évite ce piège :
+      la variable de `for` est nouvelle à chaque tour. Sortie vérifiée.
+
+  - id: compilation.n3.fermetures.find-bug
+    type: find-bug
+    title: L'interpréteur qui a perdu ses fermetures
+    skills: [fermetures, portee]
+    difficulty: 4
+    language: python
+    prompt: "Avec cet interpréteur, `soit ajouteur = fn(n) => fn(x) => x + n; afficher(ajouteur(10)(5));` échoue sur « variable inconnue : n ». Touche la ligne fautive."
+    code: |
+      def evaluer(n, env):
+          if isinstance(n, Fonction):
+              return Fermeture(n.parametres, n.corps, env)
+          if isinstance(n, Appel):
+              f = evaluer(n.fonction, env)
+              args = [evaluer(a, env) for a in n.arguments]
+              local = Environnement(env)
+              for p, a in zip(f.parametres, args):
+                  local.definir(p, a)
+              return evaluer(f.corps, local)
+    bug_lines: [7]
+    explanation: |
+      Le nouvel environnement doit avoir pour parent celui de la fermeture (`f.env`), pas
+      celui de l'appelant : c'est la différence entre portée lexicale et dynamique. Ici, n
+      vivait dans l'environnement de l'appel à ajouteur, déjà terminé.
+
+  - id: compilation.n3.interpreteur.qcm-lenteur
+    type: qcm
+    title: Pourquoi l'interpréteur d'arbre est lent
+    skills: [interpreteur]
+    difficulty: 3
+    prompt: "fib(22) prend 105,8 ms dans l'interpréteur d'arbre de Mini contre 1,49 ms en Python. Quelle est la cause principale ?"
+    choices:
+      - id: a
+        text: "Chaque opération repasse par des tests de type de nœud, des appels récursifs et des recherches de noms dans une chaîne de dictionnaires."
+        correct: true
+      - id: b
+        text: "L'analyseur lexical est relancé à chaque appel."
+        feedback: "Le texte est analysé une seule fois ; c'est l'exécution qui coûte."
+      - id: c
+        text: "Le GC de Python s'exécute à chaque addition."
+      - id: d
+        text: "Les nombres de Mini sont stockés sous forme de texte."
+    explanation: |
+      D'où les étapes suivantes : compiler vers un bytecode compact (niveau 4), résoudre les
+      noms à l'avance, et pour les vraies VM, compiler à la volée (JIT).
+
+  - id: compilation.n3.concepts.match
+    type: match
+    title: Les notions de l'exécution
+    skills: [interpreteur, portee, fermetures]
+    difficulty: 2
+    prompt: Relie chaque notion à sa définition.
+    pairs:
+      - left: Environnement
+        right: Table nom → valeur avec un lien vers un parent
+      - left: Masquage
+        right: Un paramètre cache une variable de même nom plus externe
+      - left: Fermeture
+        right: Code d'une fonction plus l'environnement de sa création
+      - left: Portée dynamique
+        right: Les noms libres sont cherchés chez l'appelant
+    explanation: |
+      Les environnements capturés par des fermetures doivent vivre sur le tas, puisqu'ils
+      survivent à l'appel qui les a créés.

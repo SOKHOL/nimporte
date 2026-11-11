@@ -1,0 +1,114 @@
+exercises:
+  - id: compilation.n1.bytecode.predict-dis
+    type: predict-output
+    title: Le bytecode de Python
+    skills: [interprete-compile]
+    difficulty: 3
+    language: python
+    prompt: "Ce programme affiche les noms des instructions de bytecode d'une fonction. Quelles instructions apparaissent, dans l'ordre (en ignorant RESUME) ?"
+    code: |
+      import dis
+
+      def ttc(ht):
+          return ht * 1.2
+
+      print([i.opname for i in dis.get_instructions(ttc) if i.opname != "RESUME"])
+    choices:
+      - id: a
+        text: "`['LOAD_FAST', 'LOAD_CONST', 'BINARY_OP', 'RETURN_VALUE']`"
+        correct: true
+      - id: b
+        text: "`['MUL', 'RETURN']`"
+        feedback: "Python est une machine à pile : il faut d'abord empiler les deux opérandes."
+      - id: c
+        text: "`['LOAD_CONST', 'LOAD_FAST', 'BINARY_OP', 'RETURN_VALUE']`"
+        feedback: "Les opérandes sont empilés dans l'ordre de l'expression : ht, puis 1.2."
+      - id: d
+        text: "Une erreur : Python n'a pas de bytecode."
+    explanation: |
+      Empiler ht, empiler 1.2, multiplier les deux valeurs du sommet, renvoyer. Sortie
+      vérifiée avec Python 3.13 (les noms d'instructions changent légèrement d'une version à
+      l'autre).
+
+  - id: compilation.n1.grammaires.qcm-priorite
+    type: qcm
+    title: La priorité vient de la grammaire
+    skills: [grammaires]
+    difficulty: 3
+    language: text
+    prompt: "Avec cette grammaire, comment se lit `10 - 4 - 3` et que vaut-il ?"
+    code: |
+      somme   = produit { ( "+" | "-" ) produit } ;
+      produit = unaire { ( "*" | "/" ) unaire } ;
+    choices:
+      - id: a
+        text: "(10 - 4) - 3 = 3 : la boucle de somme construit l'arbre de gauche à droite."
+        correct: true
+      - id: b
+        text: "10 - (4 - 3) = 9"
+        feedback: "Ce serait une associativité à droite ; la répétition { … } accumule à gauche."
+      - id: c
+        text: "Une erreur : la grammaire est ambiguë."
+      - id: d
+        text: "Ça dépend de l'interpréteur."
+    explanation: |
+      Résultat réel avec l'analyseur de Mini : `10-4-3` donne 3. La structure de la grammaire
+      fixe à la fois la priorité (* avant +) et l'associativité (de gauche à droite).
+
+  - id: compilation.n1.etapes.parsons
+    type: parsons
+    title: Les étapes d'un compilateur
+    skills: [etapes]
+    difficulty: 2
+    language: text
+    prompt: Remets dans l'ordre les étapes d'un compilateur.
+    lines:
+      - "Analyse lexicale : des caractères aux jetons"
+      - "Analyse syntaxique : des jetons à l'arbre syntaxique"
+      - "Analyse sémantique : noms, portées et types"
+      - "Représentation intermédiaire et optimisations"
+      - "Génération du bytecode ou du code machine"
+    distractors:
+      - "Exécution du programme pour deviner son type"
+    explanation: |
+      Le frontal comprend le langage et signale les erreurs ; le dorsal optimise et produit
+      le code. LLVM partage le dorsal entre de nombreux langages.
+
+  - id: compilation.n1.interprete.match
+    type: match
+    title: Comment chaque langage s'exécute
+    skills: [interprete-compile]
+    difficulty: 2
+    prompt: Relie chaque langage à son mode d'exécution habituel.
+    pairs:
+      - left: Rust
+        right: Compilation anticipée en code machine
+      - left: Kotlin sur Android et serveur
+        right: Bytecode exécuté par une machine virtuelle avec JIT
+      - left: JavaScript dans Chrome
+        right: Compilé à la volée par le moteur V8
+      - left: Python (CPython)
+        right: Bytecode interprété par une machine virtuelle
+    explanation: |
+      Les frontières sont floues : Android compile aussi le bytecode à l'avance (ART), et
+      PyPy ajoute un JIT à Python.
+
+  - id: compilation.n1.grammaires.qcm-ambigu
+    type: qcm
+    title: Le sinon pendant
+    skills: [grammaires]
+    difficulty: 3
+    prompt: "Pourquoi l'instruction « si a alors si b alors x sinon y » pose-t-elle problème dans certaines grammaires ?"
+    choices:
+      - id: a
+        text: "Elle est ambiguë : le sinon peut appartenir au premier ou au second si ; il faut une règle (le plus proche) ou une syntaxe qui l'empêche (accolades, fin de bloc)."
+        correct: true
+      - id: b
+        text: "Parce qu'il est interdit d'imbriquer deux si."
+      - id: c
+        text: "Parce qu'il manque un point-virgule."
+      - id: d
+        text: "Parce que x et y n'ont pas le même type."
+    explanation: |
+      C'est le « dangling else ». C et Java rattachent le sinon au si le plus proche ; Mini
+      l'évite en exigeant toujours un sinon.

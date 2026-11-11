@@ -1,0 +1,122 @@
+exercises:
+  - id: compilation.n5.optimisations.predict-zero
+    type: predict-output
+    title: Pourquoi x * 0.0 n'est pas 0
+    skills: [optimisations]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import math
+
+      valeurs = [3.0, -5.0, math.inf, math.nan]
+      print([v * 0.0 for v in valeurs])
+      print(all(v * 0.0 == 0.0 for v in valeurs))
+    choices:
+      - id: a
+        text: "`[0.0, -0.0, nan, nan]` puis `False`"
+        correct: true
+      - id: b
+        text: "`[0.0, 0.0, 0.0, 0.0]` puis `True`"
+        feedback: "L'infini et NaN multipliés par zéro donnent NaN."
+      - id: c
+        text: "`[0.0, -0.0, nan, nan]` puis `True`"
+        feedback: "NaN n'est égal à rien, pas même à lui-même. (-0.0 == 0.0 est vrai, lui.)"
+      - id: d
+        text: "Une erreur sur math.inf * 0.0."
+    explanation: |
+      C'est pourquoi clang en -O2 garde `fmul double %0, 0.0` pour un double, mais remplace
+      `x * 0` par `ret i32 0` pour un entier. -ffast-math autorise le remplacement, au prix de
+      résultats différents pour NaN. Sortie vérifiée.
+
+  - id: compilation.n5.optimisations.find-bug
+    type: find-bug
+    title: L'optimisation qui change le programme
+    skills: [optimisations]
+    difficulty: 4
+    language: python
+    prompt: "Ces règles de simplification s'appliquent aux entiers de Mini (x est une expression sans effet de bord, dont l'évaluation ne peut pas échouer). L'une d'elles change le comportement de certains programmes. Touche-la."
+    code: |
+      def simplifier(op, g, d):
+          if op == "*" and d == Nombre(1): return g
+          if op == "+" and d == Nombre(0): return g
+          if op == "*" and d == Nombre(0): return Nombre(0)
+          if op == "-" and g == d: return Nombre(0)
+          if op == "/" and g == d: return Nombre(1)
+          return Binaire(op, g, d)
+    bug_lines: [6]
+    explanation: |
+      Si x vaut 0, `x / x` est une division par zéro : le programme d'origine échoue, la
+      version optimisée affiche 1. Une optimisation doit préserver le sens dans tous les cas,
+      erreurs comprises. Les quatre autres règles sont justes pour des entiers sans effet de
+      bord.
+
+  - id: compilation.n5.ssa.qcm-phi
+    type: qcm
+    title: Le nœud phi
+    skills: [ssa-llvm]
+    difficulty: 4
+    language: text
+    prompt: "Dans cette IR LLVM réelle (forme SSA), que signifie la ligne phi ?"
+    code: |
+      for.cond:
+        %total.0 = phi i32 [ 0, %entry ], [ %add, %for.inc ]
+        %i.0     = phi i32 [ 1, %entry ], [ %inc, %for.inc ]
+        %cmp = icmp sle i32 %i.0, %n
+        br i1 %cmp, label %for.body, label %for.end
+    choices:
+      - id: a
+        text: "%total.0 vaut 0 si l'on arrive depuis le bloc entry, et %add si l'on arrive depuis for.inc (le tour précédent)."
+        correct: true
+      - id: b
+        text: "%total.0 est la somme de 0 et de %add."
+      - id: c
+        text: "C'est une instruction exécutée par le processeur pour choisir au hasard."
+        feedback: "phi n'existe pas en machine : il disparaît à l'allocation des registres."
+      - id: d
+        text: "%total.0 peut être modifiée plusieurs fois dans la boucle."
+        feedback: "En SSA, chaque nom n'a qu'une seule définition."
+    explanation: |
+      SSA donne une seule définition par nom ; les phi réunissent les versions aux jonctions
+      du flot de contrôle. Cela rend sûres la propagation et le déplacement de code.
+
+  - id: compilation.n5.son-langage.match
+    type: match
+    title: Choisir la bonne forme de langage
+    skills: [son-langage]
+    difficulty: 3
+    prompt: Relie chaque besoin à la solution la plus raisonnable.
+    pairs:
+      - left: Une dizaine de paramètres d'une application
+        right: Un fichier de configuration
+      - left: Décrire des écrans ou un build dans le code, avec l'IDE et les types
+        right: Un DSL interne (builders Kotlin)
+      - left: Des règles de tarification écrites par des non-développeurs
+        right: Un DSL externe avec analyseur et messages clairs
+      - left: Un nouveau langage généraliste rapide sur plusieurs processeurs
+        right: Un compilateur qui produit l'IR de LLVM
+    explanation: |
+      Du plus léger au plus lourd. Dans tous les cas, l'outillage (erreurs, documentation,
+      LSP) coûte plus que le cœur du langage.
+
+  - id: compilation.n5.optimisations.qcm-passes
+    type: qcm
+    title: Des passes qui se nourrissent
+    skills: [optimisations, ssa-llvm]
+    difficulty: 3
+    prompt: "Sur le programme de la leçon, le repliement seul réduit le bytecode de 22 à 14 instructions, et avec la propagation des constantes on tombe à 2. Pourquoi un tel écart ?"
+    choices:
+      - id: a
+        text: "La propagation remplace debug par faux : la condition devient constante, la branche morte disparaît, et le repliement peut tout calculer."
+        correct: true
+      - id: b
+        text: "La propagation supprime l'instruction afficher."
+      - id: c
+        text: "Le repliement seul est défectueux."
+      - id: d
+        text: "La propagation exécute le programme pendant la compilation."
+        feedback: "Elle ne fait que substituer des valeurs connues ; seules des expressions constantes sont calculées."
+    explanation: |
+      Les passes ouvrent des occasions les unes aux autres : c'est pourquoi les compilateurs
+      les enchaînent en boucle, et pourquoi l'inlining, qui expose les constantes de
+      l'appelant, est si important.

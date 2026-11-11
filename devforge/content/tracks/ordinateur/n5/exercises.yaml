@@ -1,0 +1,103 @@
+exercises:
+  - id: ordinateur.n5.simd.qcm
+    type: qcm
+    title: Sept fois plus rapide sans changer le code
+    skills: [simd]
+    difficulty: 3
+    language: c
+    prompt: "Cette boucle prend 324 ms compilée avec -O3 -fno-tree-vectorize, et 47 ms avec -O3 -march=native. Qu'est-ce qui explique l'écart ?"
+    code: |
+      for (int i = 0; i < N; i++) c[i] = a[i] * b[i] + c[i];
+    choices:
+      - id: a
+        text: "La vectorisation : avec AVX, une instruction traite 8 flottants à la fois (registres ymm de 256 bits)."
+        correct: true
+      - id: b
+        text: "-march=native fait tourner le processeur plus vite."
+      - id: c
+        text: "Le compilateur supprime la boucle."
+        feedback: "Le résultat est identique dans les deux cas (c[10] = 2,5e6) : le calcul est bien fait."
+      - id: d
+        text: "La boucle s'exécute sur plusieurs cœurs."
+        feedback: "Non, un seul cœur ; c'est le parallélisme à l'intérieur de chaque instruction."
+    explanation: |
+      Mesure réelle : 324 ms contre 47 ms ; le code optimisé contient des instructions
+      `vmulps` sur des registres `ymm`.
+
+  - id: ordinateur.n5.speculation.qcm-spectre
+    type: qcm
+    title: Spectre
+    skills: [pipeline-speculation]
+    difficulty: 4
+    prompt: "Sur quoi repose l'attaque Spectre ?"
+    choices:
+      - id: a
+        text: "L'exécution spéculative annulée laisse des traces dans les caches ; en mesurant les temps d'accès, on en déduit des données qu'on n'avait pas le droit de lire."
+        correct: true
+      - id: b
+        text: "Un bug dans le code de Linux."
+      - id: c
+        text: "Un mot de passe trop faible du BIOS."
+      - id: d
+        text: "Un débordement de tampon dans le navigateur."
+    explanation: |
+      Une attaque par canal auxiliaire : elle n'exploite pas un bug logiciel classique, mais
+      un effet de bord physique d'une optimisation matérielle.
+
+  - id: ordinateur.n5.multicoeur.match
+    type: match
+    title: Le bon processeur pour le travail
+    skills: [multicoeur-gpu, simd]
+    difficulty: 3
+    prompt: Relie chaque travail au matériel ou à la technique la plus adaptée.
+    pairs:
+      - left: Entraîner un réseau de neurones (multiplications de matrices énormes)
+        right: Un GPU
+      - left: Servir des requêtes web aux logiques variées et branchues
+        right: Plusieurs cœurs de CPU
+      - left: Appliquer la même opération à un grand tableau de nombres
+        right: Les instructions SIMD
+      - left: Un serveur à deux processeurs dont la JVM accède à la mémoire de l'autre
+        right: Une attention à NUMA (affinité mémoire)
+    explanation: |
+      Le CPU vise la latence de calculs complexes ; le GPU le débit de calculs réguliers ; le
+      SIMD accélère chaque cœur ; NUMA rappelle que toute la mémoire n'est pas à la même
+      distance.
+
+  - id: ordinateur.n5.pipeline.parsons
+    type: parsons
+    title: Le chemin d'une instruction
+    skills: [pipeline-speculation]
+    difficulty: 3
+    language: text
+    prompt: Remets dans l'ordre les étapes classiques du pipeline d'un processeur.
+    lines:
+      - Chercher l'instruction en mémoire (fetch)
+      - La décoder (decode)
+      - L'exécuter (execute)
+      - Accéder à la mémoire si besoin (memory)
+      - Écrire le résultat dans un registre (write-back)
+    distractors:
+      - Demander au noyau la permission d'exécuter l'instruction
+    explanation: |
+      Plusieurs instructions sont en même temps à des étapes différentes, comme sur une
+      chaîne de montage. Le noyau n'intervient pas instruction par instruction.
+
+  - id: ordinateur.n5.multicoeur.qcm-gpu
+    type: qcm
+    title: Le GPU plus lent que le CPU
+    skills: [multicoeur-gpu]
+    difficulty: 4
+    prompt: "Additionner deux petits tableaux de 1 000 nombres est plus lent sur le GPU que sur le CPU. Pourquoi ?"
+    choices:
+      - id: a
+        text: "Le transfert des données vers la mémoire du GPU et le lancement du calcul coûtent plus que le calcul lui-même, minuscule."
+        correct: true
+      - id: b
+        text: "Les GPU ne savent pas additionner."
+      - id: c
+        text: "Les GPU sont toujours plus lents que les CPU."
+      - id: d
+        text: "Il faudrait plus de cœurs GPU."
+    explanation: |
+      Le GPU brille sur d'énormes calculs réguliers, où le coût des transferts est amorti.

@@ -1,0 +1,79 @@
+exercises:
+  - id: ordinateur.n3.processus.match
+    type: match
+    title: Processus, thread, noyau
+    skills: [noyau-processus, interruptions]
+    difficulty: 3
+    prompt: Relie chaque propriété à ce qui la possède.
+    pairs:
+      - left: Un espace mémoire isolé des autres programmes
+        right: Un processus
+      - left: Partage la mémoire de son processus avec ses voisins
+        right: Un thread
+      - left: S'exécute en mode privilégié et gère le matériel
+        right: Le noyau
+      - left: La porte d'entrée contrôlée vers les services du noyau
+        right: Un appel système
+    explanation: |
+      Les threads partagent la mémoire (efficace, mais exposé aux courses) ; les processus
+      l'isolent (robuste et sûr, mais plus coûteux et sans partage direct).
+
+  - id: ordinateur.n3.interruptions.qcm
+    type: qcm
+    title: Qui interrompt le processeur ?
+    skills: [interruptions]
+    difficulty: 3
+    prompt: "Un programme fait une boucle infinie de calcul, sans aucun appel système. Comment le système parvient-il quand même à exécuter les autres programmes sur ce cœur ?"
+    choices:
+      - id: a
+        text: "Le minuteur matériel déclenche régulièrement une interruption ; le noyau reprend la main et l'ordonnanceur peut donner le cœur à un autre thread."
+        correct: true
+      - id: b
+        text: Il n'y parvient pas, le cœur est bloqué jusqu'à la fin de la boucle.
+        feedback: "C'était le cas des systèmes coopératifs anciens ; les systèmes modernes sont préemptifs."
+      - id: c
+        text: Le programme appelle sleep automatiquement.
+      - id: d
+        text: Le compilateur insère des pauses dans la boucle.
+    explanation: |
+      L'ordonnancement préemptif repose sur les interruptions du minuteur. Mesure réelle au
+      repos : 248 interruptions et 221 changements de contexte par seconde.
+
+  - id: ordinateur.n3.demarrage.parsons
+    type: parsons
+    title: Le démarrage d'un serveur Linux
+    skills: [demarrage]
+    difficulty: 2
+    language: text
+    prompt: Remets dans l'ordre les étapes du démarrage.
+    lines:
+      - Le micrologiciel UEFI initialise le matériel et cherche un support de démarrage
+      - Le chargeur d'amorçage (GRUB) charge le noyau en mémoire
+      - Le noyau détecte le matériel et monte l'initramfs
+      - Le noyau lance le premier processus (PID 1, systemd)
+      - systemd démarre les services dans l'ordre de leurs dépendances
+    distractors:
+      - Le conteneur démarre son propre noyau
+    explanation: |
+      Avec Secure Boot, chaque étape vérifie la signature de la suivante. Un conteneur, lui,
+      ne démarre aucun noyau : il partage celui de l'hôte.
+
+  - id: ordinateur.n3.noyau.qcm-mode
+    type: qcm
+    title: Pourquoi deux modes ?
+    skills: [noyau-processus, interruptions]
+    difficulty: 3
+    prompt: "Pourquoi une application ne peut-elle pas écrire directement sur le disque, et doit-elle passer par un appel système ?"
+    choices:
+      - id: a
+        text: "Elle tourne en mode utilisateur, sans accès au matériel ; le noyau, en mode privilégié, vérifie les droits et partage le disque entre tous les programmes."
+        correct: true
+      - id: b
+        text: Parce que le disque est trop lent pour les applications.
+      - id: c
+        text: C'est une limitation de Linux uniquement.
+      - id: d
+        text: Pour économiser de la mémoire.
+    explanation: |
+      La séparation des modes protège les programmes les uns des autres et le système de
+      chacun d'eux ; l'appel système est la porte d'entrée contrôlée.

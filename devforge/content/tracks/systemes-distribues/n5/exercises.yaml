@@ -1,0 +1,115 @@
+exercises:
+  - id: systemes-distribues.n5.crdt.predict-fusion
+    type: predict-output
+    title: Fusionner deux fois
+    skills: [crdt]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme, qui fusionne des compteurs G-Counter ?
+    code: |
+      def fusionner(a, b):
+          return {k: max(a.get(k, 0), b.get(k, 0)) for k in a.keys() | b.keys()}
+
+      r1 = {"a": 3}
+      r2 = {"b": 5}
+      r1["a"] += 1
+      m = fusionner(r1, r2)
+      m2 = fusionner(m, r1)
+      print(sum(m.values()), sum(m2.values()), m == m2)
+    choices:
+      - id: a
+        text: "`9 9 True`"
+        correct: true
+      - id: b
+        text: "`9 13 False`"
+        feedback: "La fusion prend le maximum, elle n'additionne pas : recevoir deux fois r1 ne compte rien en double."
+      - id: c
+        text: "`8 9 False`"
+      - id: d
+        text: "`5 9 False`"
+    explanation: |
+      La fusion est idempotente : refusionner une information déjà reçue ne change rien.
+      C'est ce qui permet au réseau de dupliquer les messages sans dommage. Sortie vérifiée.
+
+  - id: systemes-distribues.n5.split-brain.find-bug
+    type: find-bug
+    title: La vérification du bail qui ne protège rien
+    skills: [split-brain]
+    difficulty: 4
+    language: python
+    prompt: "Ce développeur pense avoir protégé l'écriture contre les pauses du GC grâce à la vérification du bail. Pourtant, des écritures périmées écrasent encore les données. Touche les lignes en cause."
+    code: |
+      def mettre_a_jour(verrou, stockage, donnees):
+          bail = verrou.acquerir(duree=10)
+          if bail.encore_valide():
+              stockage.ecrire(donnees)
+          verrou.relacher(bail)
+    bug_lines: [3, 4]
+    explanation: |
+      Une pause peut survenir entre la vérification et l'écriture : le bail expire, un autre
+      client l'obtient et écrit, puis celui-ci écrase. Le client ne peut pas se protéger
+      seul. Il faut passer le jeton de fencing au stockage (`stockage.ecrire(donnees,
+      jeton=bail.jeton)`), qui refuse tout jeton inférieur au plus grand déjà vu.
+
+  - id: systemes-distribues.n5.crdt.qcm-invariant
+    type: qcm
+    title: Ce qu'un CRDT ne sait pas faire
+    skills: [crdt]
+    difficulty: 4
+    prompt: "Une boutique veut gérer son stock avec un compteur CRDT, décrémenté sans coordination par chaque centre de données. Quel est le problème ?"
+    choices:
+      - id: a
+        text: "Deux centres peuvent vendre le dernier article en même temps : les copies convergent, mais vers un stock de −1. Un CRDT ne garantit pas d'invariant global."
+        correct: true
+      - id: b
+        text: "Les copies risquent de ne jamais converger."
+        feedback: "La convergence est justement garantie par la fusion."
+      - id: c
+        text: "Un CRDT ne sait pas décrémenter."
+        feedback: "Un PN-Counter (positif moins négatif) le fait."
+      - id: d
+        text: "Les CRDT sont trop lents."
+    explanation: |
+      Pour « jamais en dessous de zéro », il faut de la coordination : un consensus, ou
+      répartir à l'avance des quotas de stock entre les centres (réservations d'escrow).
+
+  - id: systemes-distribues.n5.verification.qcm-exploration
+    type: qcm
+    title: Explorer plutôt que tester
+    skills: [verification]
+    difficulty: 3
+    prompt: "Pourquoi explorer tous les états d'un modèle réduit trouve-t-il des bugs que mille exécutions de tests ne trouvent pas ?"
+    choices:
+      - id: a
+        text: "Les bugs distribués dépendent d'entrelacements rares (un bail qui expire pile entre deux étapes) ; l'exploration les essaie tous, dans un modèle assez petit pour être exhaustif."
+        correct: true
+      - id: b
+        text: "Parce que l'exploration s'exécute sur de vraies machines."
+        feedback: "Elle s'exécute sur un modèle, pas sur le vrai système : c'est ce qui la rend exhaustive."
+      - id: c
+        text: "Parce que les tests ne vérifient pas de résultat."
+      - id: d
+        text: "Parce que le modèle est plus rapide que le code."
+    explanation: |
+      L'exploration de la leçon trouve l'écriture périmée en 5 étapes sur 72 états. En
+      largeur, le contre-exemple trouvé est le plus court, donc lisible. Amazon a trouvé avec
+      TLA+ des bugs nécessitant 35 étapes.
+
+  - id: systemes-distribues.n5.articles.match
+    type: match
+    title: Les articles fondateurs
+    skills: [articles-fondateurs]
+    difficulty: 3
+    prompt: Relie chaque article à son apport.
+    pairs:
+      - left: Lamport, 1978
+        right: La relation arrivé-avant et les horloges logiques
+      - left: Dynamo, 2007
+        right: Réplication sans leader, quorums relâchés, versions vectorielles
+      - left: Spanner, 2012
+        right: Des transactions mondiales linéarisables grâce à TrueTime
+      - left: Raft, 2014
+        right: Un algorithme de consensus conçu pour être compréhensible
+    explanation: |
+      Avec FLP (1985), Paxos (1998), les CRDT (2011) et The Tail at Scale (2013), ils
+      couvrent l'essentiel de ce parcours.

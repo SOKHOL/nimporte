@@ -1,0 +1,129 @@
+exercises:
+  - id: systemes-distribues.n2.vectorielles.predict-relation
+    type: predict-output
+    title: Comparer des horloges vectorielles
+    skills: [horloges-logiques, ordre-causal]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme ?
+    code: |
+      def avant(a, b):
+          return all(x <= y for x, y in zip(a, b)) and a != b
+
+      def relation(a, b):
+          if avant(a, b): return "avant"
+          if avant(b, a): return "après"
+          return "concurrents"
+
+      print(relation([2, 1, 0], [2, 2, 1]))
+      print(relation([1, 2, 0], [0, 0, 1]))
+      print(relation([3, 0, 1], [2, 4, 1]))
+      print(relation([4, 2, 2], [1, 2, 0]))
+    choices:
+      - id: a
+        text: "`avant`, `concurrents`, `concurrents`, `après`"
+        correct: true
+      - id: b
+        text: "`avant`, `après`, `avant`, `après`"
+        feedback: "On ne compare pas les sommes : il faut que chaque composante soit inférieure ou égale."
+      - id: c
+        text: "`avant`, `concurrents`, `après`, `après`"
+        feedback: "[3, 0, 1] contre [2, 4, 1] : 3 > 2 mais 0 < 4, les vecteurs sont incomparables."
+      - id: d
+        text: "`concurrents` quatre fois"
+    explanation: |
+      a précède b si chaque composante de a est ≤ celle de b et a ≠ b. Sinon, dans un sens
+      comme dans l'autre, les événements sont concurrents. Sortie vérifiée.
+
+  - id: systemes-distribues.n2.lamport.predict
+    type: predict-output
+    title: Faire avancer une horloge de Lamport
+    skills: [horloges-logiques]
+    difficulty: 2
+    language: python
+    prompt: Qu'affiche ce programme ?
+    code: |
+      def recevoir(local, recu):
+          return max(local, recu) + 1
+
+      a = 0
+      a += 1                      # événement local
+      b = recevoir(5, a)          # B était à 5 et reçoit un message de A
+      a = recevoir(a, b)          # A reçoit la réponse de B
+      print(a, b)
+    choices:
+      - id: a
+        text: "`7 6`"
+        correct: true
+      - id: b
+        text: "`3 2`"
+        feedback: "B était déjà à 5 : il prend le maximum, pas le compteur reçu."
+      - id: c
+        text: "`2 6`"
+      - id: d
+        text: "`6 6`"
+    explanation: |
+      B : max(5, 1) + 1 = 6. A : max(1, 6) + 1 = 7. La réception d'un message fait toujours
+      avancer l'horloge au-delà de celle de l'émetteur, d'où L(envoi) < L(réception).
+      Sortie vérifiée.
+
+  - id: systemes-distribues.n2.physiques.find-bug
+    type: find-bug
+    title: Le délai d'attente qui dure une heure
+    skills: [horloges-physiques]
+    difficulty: 3
+    language: python
+    prompt: "Cette boucle attend qu'un service réponde, au plus 5 secondes. Un jour, elle a attendu plus d'une heure après une correction de l'horloge par NTP. Touche les lignes fautives."
+    code: |
+      def attendre_service(sonder, delai=5.0):
+          debut = time.time()
+          while not sonder():
+              if time.time() - debut > delai:
+                  raise TimeoutError("service injoignable")
+              time.sleep(0.1)
+    bug_lines: [2, 4]
+    explanation: |
+      time.time() est l'horloge murale : si NTP la recule d'une heure, la différence reste
+      négative pendant une heure. Pour mesurer une durée, il faut l'horloge monotone :
+      time.monotonic() en Python, System.nanoTime() en Java et Kotlin.
+
+  - id: systemes-distribues.n2.physiques.qcm-lww
+    type: qcm
+    title: La dernière écriture gagne
+    skills: [horloges-physiques, ordre-causal]
+    difficulty: 3
+    prompt: "Une base réplique les écritures et résout les conflits par « la dernière écriture gagne » selon l'horloge de chaque nœud. Que risque-t-on ?"
+    choices:
+      - id: a
+        text: "Perdre en silence une écriture plus récente, si le nœud qui l'a faite a une horloge en retard."
+        correct: true
+      - id: b
+        text: "Rien : NTP synchronise parfaitement les horloges."
+        feedback: "NTP laisse des écarts de l'ordre de la milliseconde, voire bien plus."
+      - id: c
+        text: "Une erreur de conflit visible par l'utilisateur."
+        feedback: "Justement non : la perte est silencieuse."
+      - id: d
+        text: "Des doublons d'écriture."
+    explanation: |
+      Dans la simulation de la leçon, 50 ms de décalage suffisent à garder l'ancienne adresse.
+      Les versions vectorielles détectent la concurrence et conservent les deux valeurs.
+
+  - id: systemes-distribues.n2.ordre.match
+    type: match
+    title: Les garanties d'ordre
+    skills: [ordre-causal]
+    difficulty: 3
+    prompt: Relie chaque garantie d'ordre à ce qu'elle assure.
+    pairs:
+      - left: FIFO
+        right: Les messages d'un même émetteur arrivent dans l'ordre d'envoi
+      - left: Causal
+        right: Une réponse n'est jamais vue avant sa question
+      - left: Total
+        right: Tous voient tous les messages dans le même ordre
+      - left: Aucun
+        right: Les messages peuvent arriver dans n'importe quel ordre
+    explanation: |
+      L'ordre causal est le plus fort possible sans coordination ; l'ordre total exige un
+      consensus ou un séquenceur unique.

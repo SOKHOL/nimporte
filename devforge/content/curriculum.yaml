@@ -153,7 +153,7 @@ tracks:
     title: Comment fonctionne un ordinateur
     domain: systemes
     requires: [fondations@1]
-    status: planned
+    status: pilot
 
   - id: memoire
     title: Gestion de la mémoire
@@ -189,7 +189,7 @@ tracks:
     title: Langages et compilateurs
     domain: code
     requires: [algo@2, fonctionnel@1]
-    status: planned
+    status: pilot
 
   - id: performance
     title: Performance et optimisation
@@ -207,7 +207,7 @@ tracks:
     title: Systèmes distribués
     domain: architecture
     requires: [system-design@2, concurrence@2]
-    status: planned
+    status: pilot
 
   - id: donnees
     title: Ingénierie des données

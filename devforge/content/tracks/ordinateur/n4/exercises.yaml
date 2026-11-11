@@ -1,0 +1,99 @@
+exercises:
+  - id: ordinateur.n4.pagination.qcm-defauts
+    type: qcm
+    title: Combien de défauts de page ?
+    skills: [pagination]
+    difficulty: 3
+    prompt: "Un programme réserve 400 Mo avec mmap, puis écrit un octet tous les 4 Kio dans toute la zone. Combien de défauts de page provoque-t-il, environ ?"
+    choices:
+      - id: a
+        text: "Environ 102 400 : un par page de 4 Kio, au premier accès ; aucun au moment de la réservation."
+        correct: true
+      - id: b
+        text: "Un seul, au moment du mmap."
+        feedback: "La réservation ne crée aucune page physique ; c'est le premier accès à chaque page qui en demande une."
+      - id: c
+        text: "400 millions, un par octet."
+      - id: d
+        text: "Aucun, la mémoire est déjà réservée."
+    explanation: |
+      Mesure réelle : 0 défaut au mmap, 102 400 défauts mineurs à l'écriture
+      (400 × 1 024 × 1 024 / 4 096 = 102 400).
+
+  - id: ordinateur.n4.entrees-sorties.qcm
+    type: qcm
+    title: Dix mille connexions
+    skills: [entrees-sorties]
+    difficulty: 3
+    prompt: "Un serveur doit garder 10 000 connexions ouvertes, la plupart inactives. Pourquoi une boucle d'événements (ou des threads virtuels) convient-elle mieux qu'un thread système par connexion ?"
+    choices:
+      - id: a
+        text: "Chaque thread système coûte une pile et du travail au noyau ; une boucle d'événements attend toutes les connexions avec epoll dans un seul thread, chaque connexion n'étant qu'un petit objet."
+        correct: true
+      - id: b
+        text: Les threads ne peuvent pas lire le réseau.
+      - id: c
+        text: Une boucle d'événements utilise plusieurs processeurs automatiquement.
+        feedback: "Une boucle d'événements est justement mono-thread ; on en lance une par cœur si besoin."
+      - id: d
+        text: "Il n'y a aucune différence."
+    explanation: |
+      Mesure réelle : 10 000 attentes créées en 1 280 ms avec environ 214 Mo pour les threads,
+      contre 29 ms et 28 Mo avec asyncio.
+
+  - id: ordinateur.n4.stockage.qcm-fsync
+    type: qcm
+    title: Écrit, vraiment ?
+    skills: [stockage]
+    difficulty: 4
+    prompt: "Un programme appelle write() pour enregistrer une commande, reçoit un succès, puis la machine perd son alimentation. La commande est-elle forcément sur le disque ?"
+    choices:
+      - id: a
+        text: "Non : write() copie dans le cache du noyau ; seul fsync() garantit que les données ont atteint le support."
+        correct: true
+      - id: b
+        text: "Oui, write() renvoie succès seulement une fois les données sur le disque."
+      - id: c
+        text: "Oui, si le disque est un SSD."
+      - id: d
+        text: "Non, mais seulement sur les disques durs mécaniques."
+    explanation: |
+      C'est pourquoi les bases font un fsync de leur journal à chaque validation (environ
+      226 µs mesurés pour 4 Kio), et pourquoi grouper les validations accélère tant.
+
+  - id: ordinateur.n4.stockage.match
+    type: match
+    title: HDD ou SSD ?
+    skills: [stockage]
+    difficulty: 2
+    prompt: Relie chaque caractéristique au type de stockage.
+    pairs:
+      - left: "5 à 10 ms pour un accès aléatoire, à cause de la tête mobile"
+        right: Disque dur
+      - left: Des centaines de milliers d'opérations aléatoires par seconde
+        right: SSD NVMe
+      - left: S'use à force d'écritures
+        right: Mémoire flash (SSD)
+      - left: Copie les données en mémoire sans occuper le processeur
+        right: Le DMA
+    explanation: |
+      Le HDD a façonné la conception des bases (lectures séquentielles, LSM-tree) ; le SSD a
+      réduit l'écart, sans supprimer ses contraintes propres.
+
+  - id: ordinateur.n4.pagination.match
+    type: match
+    title: Ce que permet la mémoire virtuelle
+    skills: [pagination]
+    difficulty: 3
+    prompt: Relie chaque mécanisme à ce qu'il permet.
+    pairs:
+      - left: Copy-on-write après un fork
+        right: Créer un processus sans copier toute sa mémoire
+      - left: Bibliothèques partagées
+        right: Une seule copie physique de libc pour tous les processus
+      - left: mmap d'un fichier
+        right: Lire un fichier comme un tableau, chargé à la demande
+      - left: Grandes pages (huge pages)
+        right: Moins de défauts du TLB pour les très grosses mémoires
+    explanation: |
+      Le même mécanisme de pages sert l'isolation, l'économie de mémoire et la performance.

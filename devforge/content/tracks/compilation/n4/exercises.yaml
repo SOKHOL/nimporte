@@ -1,0 +1,136 @@
+exercises:
+  - id: compilation.n4.bytecode.predict-machine
+    type: predict-output
+    title: Exécuter le bytecode à la main
+    skills: [bytecode]
+    difficulty: 4
+    language: text
+    prompt: "La machine à pile de Mini exécute ce bytecode (SAUT_SI_FAUX n dépile une valeur et saute à l'instruction n si elle est fausse). Qu'affiche-t-elle ?"
+    code: |
+      00  EMPILER       7
+      01  RANGER        a
+      02  CHARGER       a
+      03  EMPILER       2
+      04  SUB
+      05  RANGER        b
+      06  CHARGER       a
+      07  CHARGER       b
+      08  INF
+      09  SAUT_SI_FAUX  12
+      10  CHARGER       a
+      11  SAUT          15
+      12  CHARGER       b
+      13  EMPILER       2
+      14  MUL
+      15  AFFICHER
+    choices:
+      - id: a
+        text: "`10`"
+        correct: true
+      - id: b
+        text: "`7`"
+        feedback: "a < b est faux (7 < 5), donc on saute à 12, la branche sinon."
+      - id: c
+        text: "`5`"
+      - id: d
+        text: "`14`"
+    explanation: |
+      a = 7, b = 5 ; 7 < 5 est faux, on saute en 12 : b * 2 = 10. C'est le bytecode réel de
+      `soit a = 7; soit b = a - 2; afficher(si a < b alors a sinon b * 2);`.
+
+  - id: compilation.n4.inference.qcm-deux-fois
+    type: qcm
+    title: Inférer un type générique
+    skills: [inference]
+    difficulty: 4
+    prompt: "Quel type l'inférence donne-t-elle à `soit deux_fois = fn(f, x) => f(f(x));` ?"
+    choices:
+      - id: a
+        text: "`(('a) -> 'a, 'a) -> 'a` : f doit renvoyer le type qu'elle reçoit, puisque son résultat lui est redonné."
+        correct: true
+      - id: b
+        text: "`(('a) -> 'b, 'a) -> 'b`"
+        feedback: "f(x) est passé à f : son résultat 'b doit donc être unifié avec 'a."
+      - id: c
+        text: "`((Int) -> Int, Int) -> Int`"
+        feedback: "Rien n'impose Int : le type le plus général reste générique."
+      - id: d
+        text: "Une erreur : f n'a pas de type déclaré."
+    explanation: |
+      Résultat réel de l'inférence ajoutée à Mini. L'unification lie le type de retour de f à
+      son paramètre, et laisse 'a libre : la fonction est générique.
+
+  - id: compilation.n4.types.match-axes
+    type: match
+    title: Classer les systèmes de types
+    skills: [systemes-types]
+    difficulty: 3
+    prompt: Relie chaque langage à la description de son système de types.
+    pairs:
+      - left: Python
+        right: Dynamique et fort
+      - left: JavaScript
+        right: Dynamique et faible
+      - left: C
+        right: Statique et faible
+      - left: Kotlin
+        right: Statique et fort
+    explanation: |
+      Le moment de la vérification (statique/dynamique) et les conversions implicites
+      (faible/fort) sont deux axes distincts. `1 + "a"` donne "1a" en JavaScript, une erreur
+      en Python.
+
+  - id: compilation.n4.types.predict-python
+    type: predict-output
+    title: Dynamique mais fort
+    skills: [systemes-types]
+    difficulty: 2
+    language: python
+    prompt: Qu'affiche ce programme ?
+    code: |
+      def total(a, b):
+          return a + b
+
+      print(total(2, 3))
+      print(total("2", "3"))
+      try:
+          print(total(2, "3"))
+      except TypeError as e:
+          print(type(e).__name__)
+    choices:
+      - id: a
+        text: "`5`, `23`, `TypeError`"
+        correct: true
+      - id: b
+        text: "`5`, `5`, `5`"
+        feedback: "Python ne convertit pas implicitement les chaînes en nombres."
+      - id: c
+        text: "`5`, `23`, `23`"
+        feedback: "Ce serait JavaScript (typage faible)."
+      - id: d
+        text: "Une erreur avant toute exécution."
+        feedback: "Python vérifie les types à l'exécution, pas avant."
+    explanation: |
+      Les types sont vérifiés à l'exécution (dynamique) mais sans conversion implicite entre
+      nombre et chaîne (fort). Sortie vérifiée.
+
+  - id: compilation.n4.bytecode.parsons
+    type: parsons
+    title: Générer le bytecode
+    skills: [bytecode]
+    difficulty: 3
+    language: text
+    prompt: "Remets dans l'ordre le bytecode de `afficher((9 - 3) / 2);` pour la machine à pile."
+    lines:
+      - "EMPILER 9"
+      - "EMPILER 3"
+      - "SUB"
+      - "EMPILER 2"
+      - "DIV"
+      - "AFFICHER"
+    distractors:
+      - "EMPILER 3 (le résultat déjà calculé)"
+    explanation: |
+      Ordre postfixe : les opérandes, puis l'opération ; SUB dépile 3 puis 9 et empile 6.
+      Sortie réelle : 3. Empiler directement le résultat, c'est le repliement de constantes
+      du niveau 5, pas la génération directe.

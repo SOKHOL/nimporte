@@ -1,0 +1,163 @@
+exercises:
+  - id: systemes-distribues.n4.consensus.predict-majorite
+    type: predict-output
+    title: Combien de pannes tolère un cluster ?
+    skills: [consensus]
+    difficulty: 2
+    language: python
+    prompt: "Pour chaque taille de cluster, ce programme affiche la taille de la majorité et le nombre de pannes tolérées. Qu'affiche-t-il ?"
+    code: |
+      for n in (2, 3, 4, 5):
+          majorite = n // 2 + 1
+          print(n, majorite, n - majorite)
+    choices:
+      - id: a
+        text: "`2 2 0`, `3 2 1`, `4 3 1`, `5 3 2`"
+        correct: true
+      - id: b
+        text: "`2 1 1`, `3 2 1`, `4 2 2`, `5 3 2`"
+        feedback: "La majorité de 4 est 3, pas 2 : avec 2 sur 4, deux moitiés pourraient chacune élire un leader."
+      - id: c
+        text: "`2 2 0`, `3 2 1`, `4 3 2`, `5 3 2`"
+      - id: d
+        text: "`2 2 1`, `3 2 2`, `4 3 2`, `5 3 3`"
+    explanation: |
+      Quatre nœuds ne tolèrent pas plus de pannes que trois, et deux n'en tolèrent aucune :
+      d'où les clusters de 3 ou 5 nœuds pour etcd, ZooKeeper ou Consul. Sortie vérifiée.
+
+  - id: systemes-distribues.n4.consensus.qcm-aleatoire
+    type: qcm
+    title: Pourquoi des délais d'élection aléatoires ?
+    skills: [consensus]
+    difficulty: 3
+    prompt: "Dans la simulation de Raft, avec un délai d'élection fixe de 150 ms pour tous, aucun leader n'est élu en 200 essais. Avec un délai aléatoire entre 150 et 300 ms, un leader est élu à chaque fois. Pourquoi ?"
+    choices:
+      - id: a
+        text: "Avec des délais identiques, tous deviennent candidats ensemble et votent pour eux-mêmes : personne n'a la majorité, et cela recommence. L'aléa laisse un nœud partir en premier."
+        correct: true
+      - id: b
+        text: "150 ms est trop court pour que les messages arrivent."
+        feedback: "Les messages prennent 5 à 15 ms : le délai suffit largement."
+      - id: c
+        text: "L'aléa permet de choisir le nœud le plus rapide."
+      - id: d
+        text: "Raft exige un nombre aléatoire pour signer les votes."
+    explanation: |
+      C'est le « vote partagé » (split vote). L'aléa casse la symétrie, et Raft relance une
+      élection avec un nouveau délai aléatoire en cas d'échec.
+
+  - id: systemes-distribues.n4.exactement.find-bug
+    type: find-bug
+    title: La déduplication qui laisse passer des doublons
+    skills: [exactement-une-fois]
+    difficulty: 4
+    language: python
+    prompt: "Ce consommateur reçoit des messages au moins une fois et veut un effet exactement une fois. Après une panne du consommateur, un client n'a jamais reçu les points d'un achat. Touche la ligne fautive."
+    code: |
+      def traiter(conn, message):
+          cur = conn.cursor()
+          cur.execute("insert into messages_traites values (%s) on conflict do nothing",
+                      (message.id,))
+          if cur.rowcount == 0:
+              return
+          conn.commit()
+          cur.execute("update points set total = total + %s where client = %s",
+                      (message.points, message.client))
+          conn.commit()
+    bug_lines: [7]
+    explanation: |
+      La marque et l'effet sont validés dans deux transactions. Une panne entre les deux
+      laisse le message marqué comme traité sans effet : à la relivraison, il est ignoré, les
+      points sont perdus. Dans l'ordre inverse, ce serait l'effet sans marque, donc un
+      doublon. Il faut un seul commit, après les deux écritures.
+
+  - id: systemes-distribues.n4.transactions.scenario-2pc
+    type: scenario
+    title: Les lignes verrouillées depuis trois heures
+    skills: [transactions-distribuees]
+    difficulty: 4
+    prompt: |
+      Depuis trois heures, toutes les mises à jour du compte d'un gros client échouent sur
+      « lock timeout ». Aucune requête active ne tient de verrou. Votre service de virements
+      utilise PREPARE TRANSACTION, et son coordinateur a redémarré cette nuit.
+    start: debut
+    nodes:
+      debut:
+        text: Que vérifies-tu ?
+        options:
+          - text: "pg_prepared_xacts : une transaction préparée orpheline, laissée par le coordinateur, garde ses verrous même sans connexion."
+            next: trouve
+            points: 3
+          - text: "Je redémarre PostgreSQL pour libérer les verrous."
+            next: redemarrage
+            points: 0
+      redemarrage:
+        ending: failure
+        text: "❌ Une transaction préparée survit au redémarrage : c'est sa promesse. Les verrous sont toujours là."
+      trouve:
+        text: "Tu trouves virement-8812, préparée à 02 h 14. Que fais-tu ?"
+        options:
+          - text: "Consulter le journal de décision du coordinateur : s'il a décidé de valider, COMMIT PREPARED ; sinon ROLLBACK PREPARED, et faire la même chose chez l'autre participant."
+            next: decide
+            points: 3
+          - text: "ROLLBACK PREPARED tout de suite pour débloquer le client."
+            next: annule
+            points: 1
+            feedback: "Si le coordinateur avait décidé de valider, l'autre banque a peut-être déjà validé : le virement serait à moitié fait."
+      annule:
+        ending: partial
+        text: "🟡 Le client est débloqué, mais le virement est peut-être crédité chez l'un et annulé chez l'autre."
+      decide:
+        text: Et pour l'avenir ?
+        options:
+          - text: "Le coordinateur reprend au démarrage les transactions en doute depuis son journal, et une alerte surveille l'âge des transactions préparées."
+            next: resolu
+            points: 3
+          - text: "Rien, c'était exceptionnel."
+            next: rien
+            points: 0
+      rien:
+        ending: partial
+        text: "🟡 Corrigé cette fois, mais le prochain redémarrage du coordinateur recréera le problème."
+      resolu:
+        ending: success
+        text: "✅ Les transactions en doute sont résolues automatiquement, et une transaction bloquée déclenche une alerte en quelques minutes."
+    explanation: |
+      2PC est bloquant : seul le coordinateur connaît la décision. Il doit l'écrire de façon
+      durable et reprendre les transactions en doute à son redémarrage.
+
+  - id: systemes-distribues.n4.transactions.parsons-saga
+    type: parsons
+    title: Une saga de commande qui échoue
+    skills: [transactions-distribuees]
+    difficulty: 3
+    language: text
+    prompt: "La réservation du livreur échoue. Remets dans l'ordre ce que fait l'orchestrateur de la saga depuis le début."
+    lines:
+      - "Réserver le stock (transaction locale du service stock)"
+      - "Débiter la carte (transaction locale du service paiement)"
+      - "Réserver un livreur : échec"
+      - "Compensation : rembourser la carte"
+      - "Compensation : libérer le stock"
+    distractors:
+      - "Annuler les trois transactions d'un seul ROLLBACK global"
+    explanation: |
+      Les compensations s'exécutent dans l'ordre inverse des étapes réussies. Il n'y a pas de
+      rollback global : chaque étape a déjà été validée localement.
+
+  - id: systemes-distribues.n4.exactement.match
+    type: match
+    title: Les garanties de livraison
+    skills: [exactement-une-fois]
+    difficulty: 2
+    prompt: Relie chaque garantie à son comportement en cas de panne du consommateur.
+    pairs:
+      - left: Au plus une fois
+        right: Acquitter avant de traiter ; un message peut être perdu
+      - left: Au moins une fois
+        right: Acquitter après avoir traité ; un message peut être traité deux fois
+      - left: Effet exactement une fois
+        right: Au moins une fois, plus une déduplication dans la même transaction
+    explanation: |
+      Dans l'expérience de la leçon : 121 livraisons pour 100 messages ; 1210 points sans
+      déduplication, 1000 avec.

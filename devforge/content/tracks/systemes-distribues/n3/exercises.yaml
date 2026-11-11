@@ -1,0 +1,143 @@
+exercises:
+  - id: systemes-distribues.n3.quorums.predict-intersection
+    type: predict-output
+    title: Les quorums se croisent-ils ?
+    skills: [quorums]
+    difficulty: 3
+    language: python
+    prompt: "Ce programme vérifie, pour N = 5 répliques, si tout ensemble de W répliques écrites et tout ensemble de R répliques lues ont une réplique en commun. Qu'affiche-t-il ?"
+    code: |
+      from itertools import combinations
+
+      N = 5
+      def toujours_commun(W, R):
+          return all(set(w) & set(r)
+                     for w in combinations(range(N), W)
+                     for r in combinations(range(N), R))
+
+      print(toujours_commun(3, 3), toujours_commun(2, 3), toujours_commun(4, 2))
+    choices:
+      - id: a
+        text: "`True False True`"
+        correct: true
+      - id: b
+        text: "`True True True`"
+        feedback: "2 + 3 = 5 n'est pas strictement supérieur à N = 5 : on peut écrire sur {0, 1} et lire {2, 3, 4}."
+      - id: c
+        text: "`True False False`"
+        feedback: "4 + 2 = 6 > 5 : les ensembles se croisent forcément."
+      - id: d
+        text: "`False False True`"
+    explanation: |
+      L'intersection est garantie si et seulement si W + R > N. Sortie vérifiée par
+      exploration de toutes les combinaisons.
+
+  - id: systemes-distribues.n3.replication.qcm-synchrone
+    type: qcm
+    title: Synchrone, mais encore périmé
+    skills: [replication]
+    difficulty: 4
+    prompt: "Avec PostgreSQL et synchronous_commit = on (réplique synchrone), 12 relectures immédiates sur 1000 étaient encore périmées sur la réplique. Avec remote_apply, aucune. Pourquoi ?"
+    choices:
+      - id: a
+        text: "on attend que la réplique ait écrit le journal sur disque, remote_apply qu'elle l'ait appliqué et rendu visible aux lectures."
+        correct: true
+      - id: b
+        text: "on n'est pas vraiment synchrone."
+        feedback: "Il l'est pour la durabilité : une écriture confirmée n'est pas perdue si le primaire meurt."
+      - id: c
+        text: "La mesure est fausse : une réplique synchrone n'est jamais en retard."
+      - id: d
+        text: "remote_apply désactive le cache de la réplique."
+    explanation: |
+      Durabilité et visibilité sont deux garanties différentes. remote_apply les donne toutes
+      les deux, pour une écriture 2,3 fois plus lente dans la mesure (0,59 ms contre 0,26 ms).
+
+  - id: systemes-distribues.n3.coherence.scenario-pseudo
+    type: scenario
+    title: « J'ai changé mon pseudo et l'ancien s'affiche »
+    skills: [coherence, replication]
+    difficulty: 3
+    prompt: |
+      Ton application écrit sur le primaire PostgreSQL et lit sur deux répliques asynchrones.
+      Le support reçoit des plaintes : après avoir modifié leur profil, des utilisateurs
+      voient l'ancienne version pendant quelques secondes.
+    start: debut
+    nodes:
+      debut:
+        text: Quel est le diagnostic ?
+        options:
+          - text: "Le retard de réplication : l'utilisateur lit sur une réplique qui n'a pas encore appliqué son écriture. Il manque la garantie « lire ses propres écritures »."
+            next: solution
+            points: 3
+          - text: "Un bug de cache dans le navigateur."
+            next: cache
+            points: 0
+      cache:
+        ending: failure
+        text: "❌ Vider le cache ne change rien : la réplique renvoie bien l'ancienne valeur (replay_lag non nul dans pg_stat_replication)."
+      solution:
+        text: Quelle correction choisis-tu ?
+        options:
+          - text: "Lire sur le primaire les données que l'utilisateur a modifiées dans la dernière minute, et sur les répliques le reste."
+            next: resolu
+            points: 3
+          - text: "Passer toutes les répliques en remote_apply."
+            next: synchrone
+            points: 1
+            feedback: "Efficace, mais toutes les écritures ralentissent et se bloquent si une réplique tombe."
+          - text: "Supprimer les répliques."
+            next: supprimer
+            points: 0
+      synchrone:
+        ending: partial
+        text: "🟡 Plus de lecture périmée, mais chaque écriture paie l'aller-retour et dépend de la santé des deux répliques."
+      supprimer:
+        ending: failure
+        text: "❌ Le primaire s'effondre sous la charge de lecture."
+      resolu:
+        ending: success
+        text: "✅ Chacun voit ses propres modifications, et les répliques continuent à absorber la charge de lecture."
+    explanation: |
+      Les garanties de session (lire ses écritures, lectures monotones) suffisent souvent et
+      coûtent bien moins cher qu'une cohérence forte partout.
+
+  - id: systemes-distribues.n3.coherence.match
+    type: match
+    title: Le bon modèle de cohérence
+    skills: [coherence]
+    difficulty: 3
+    prompt: Relie chaque donnée au modèle de cohérence le plus adapté.
+    pairs:
+      - left: Le nombre de vues d'une vidéo
+        right: À terme
+      - left: La dernière place d'un vol
+        right: Linéarisable
+      - left: Les commentaires et leurs réponses
+        right: Causal
+      - left: Le profil que l'utilisateur vient de modifier
+        right: Lire ses propres écritures
+    explanation: |
+      La bonne question : que coûte une lecture périmée ? Un compteur approximatif est sans
+      gravité ; vendre deux fois la même place ne l'est pas.
+
+  - id: systemes-distribues.n3.coherence.qcm-pacelc
+    type: qcm
+    title: CAP ne suffit pas
+    skills: [coherence, quorums]
+    difficulty: 3
+    prompt: "Pourquoi dit-on que le théorème CAP ne guide pas les choix de tous les jours, et que PACELC les décrit mieux ?"
+    choices:
+      - id: a
+        text: "CAP ne parle que des partitions réseau, qui sont rares ; le reste du temps, on choisit en permanence entre latence et cohérence (attendre ou non les répliques)."
+        correct: true
+      - id: b
+        text: "Parce que CAP a été réfuté."
+        feedback: "Il est démontré (Gilbert et Lynch, 2002), mais son champ est étroit."
+      - id: c
+        text: "Parce que PACELC permet d'avoir les trois propriétés à la fois."
+      - id: d
+        text: "Parce que les partitions n'existent plus dans les centres de données modernes."
+    explanation: |
+      Sans partition, attendre une réplique coûte de la latence (0,26 ms contre 0,59 ms sur une
+      seule machine, des dizaines de ms entre régions) : c'est le « E…L…C » de PACELC.

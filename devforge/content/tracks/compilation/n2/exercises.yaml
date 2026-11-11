@@ -1,0 +1,126 @@
+exercises:
+  - id: compilation.n2.lexicale.predict-jetons
+    type: predict-output
+    title: Découper en jetons
+    skills: [analyse-lexicale]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce petit analyseur lexical ? (seule la seconde ligne est demandée)
+    code: |
+      import re
+
+      MOTIF = re.compile(r"\s*(?:(\d+)|([a-z_]+)|(==|[-+*/=();]))")
+
+      def lexer(texte):
+          jetons, pos = [], 0
+          while pos < len(texte):
+              m = MOTIF.match(texte, pos)
+              nombre, nom, symbole = m.groups()
+              jetons.append(("NOMBRE", int(nombre)) if nombre else ("NOM", nom) if nom else ("SYMBOLE", symbole))
+              pos = m.end()
+          return jetons
+
+      print(lexer("soit x = 12 * (y + 3);"))
+      print(len(lexer("a==b")))
+    choices:
+      - id: a
+        text: "`3` (a, ==, b)"
+        correct: true
+      - id: b
+        text: "`4` (a, =, =, b)"
+        feedback: "`==` est testé avant `=` dans l'alternative : c'est la règle du plus long jeton."
+      - id: c
+        text: "`1`"
+      - id: d
+        text: "`2`"
+    explanation: |
+      L'ordre des alternatives compte : `==` avant `=`. La première ligne affiche réellement 11
+      jetons, de `('NOM', 'soit')` à `('SYMBOLE', ';')`. Sortie vérifiée.
+
+  - id: compilation.n2.ast.qcm-arbre
+    type: qcm
+    title: La forme de l'arbre
+    skills: [ast, analyse-syntaxique]
+    difficulty: 3
+    prompt: "Quel est le nœud à la racine de l'arbre syntaxique de `2 + 3 * 4` ?"
+    choices:
+      - id: a
+        text: "Binaire +, avec à gauche Nombre 2 et à droite Binaire * (3, 4)"
+        correct: true
+      - id: b
+        text: "Binaire *, avec à gauche Binaire + (2, 3) et à droite Nombre 4"
+        feedback: "Ce serait l'arbre de (2 + 3) * 4."
+      - id: c
+        text: "Nombre 14, le résultat"
+        feedback: "L'analyseur construit la structure ; le calcul vient plus tard (ou à l'optimisation)."
+      - id: d
+        text: "Une liste plate de cinq jetons"
+    explanation: |
+      Arbre réel produit par Mini : `Binaire +` → `Nombre 2` et `Binaire *` → `Nombre 3`,
+      `Nombre 4`. La priorité est dans la forme de l'arbre.
+
+  - id: compilation.n2.syntaxique.qcm-descente
+    type: qcm
+    title: Pourquoi la multiplication passe avant
+    skills: [analyse-syntaxique]
+    difficulty: 3
+    language: python
+    prompt: "Dans un analyseur par descente récursive, qu'est-ce qui garantit que * est calculé avant + ?"
+    code: |
+      def somme(self):
+          g = self.produit()
+          while self.courant().valeur in ("+", "-"):
+              op = self.courant().valeur; self.i += 1
+              g = Binaire(op, g, self.produit())
+          return g
+    choices:
+      - id: a
+        text: "somme appelle produit pour chacun de ses opérandes : les multiplications sont regroupées en sous-arbres avant que l'addition ne les combine."
+        correct: true
+      - id: b
+        text: "Une table de priorités consultée à l'exécution."
+      - id: c
+        text: "L'ordre alphabétique des opérateurs."
+      - id: d
+        text: "L'analyseur lexical trie les jetons."
+    explanation: |
+      Une fonction par règle de grammaire : la règle la plus « basse » lie le plus fort. Le
+      code ressemble à la grammaire, ce qui le rend facile à écrire.
+
+  - id: compilation.n2.erreurs.match
+    type: match
+    title: Lire les erreurs de l'analyseur
+    skills: [analyse-lexicale, analyse-syntaxique]
+    difficulty: 3
+    prompt: Relie chaque programme Mini à l'erreur réellement produite.
+    pairs:
+      - left: "soit x = (1 + 2;"
+        right: "attendu ')', trouvé ';' à la position 15"
+      - left: "soit = 3;"
+        right: "nom de variable attendu, trouvé '=' à la position 5"
+      - left: "soit y = 4 $ 2;"
+        right: "caractère inattendu '$' à la position 11"
+    explanation: |
+      La première et la deuxième viennent de l'analyseur syntaxique, la troisième de
+      l'analyseur lexical. Garder la position de chaque jeton rend ces messages possibles.
+
+  - id: compilation.n2.ast.qcm-usages
+    type: qcm
+    title: À quoi sert un AST hors des compilateurs ?
+    skills: [ast]
+    difficulty: 2
+    prompt: "Lequel de ces outils travaille directement sur l'arbre syntaxique du code ?"
+    choices:
+      - id: a
+        text: "Un formateur de code (Prettier, ktfmt) : il lit l'arbre et réécrit le code dans un style uniforme."
+        correct: true
+      - id: b
+        text: "Un gestionnaire de versions comme Git."
+        feedback: "Git compare des lignes de texte, pas des arbres."
+      - id: c
+        text: "Un serveur web."
+      - id: d
+        text: "Un système de fichiers."
+    explanation: |
+      Formateurs, linters, refactorings de l'IDE, outils de migration et analyse statique de
+      sécurité parcourent tous l'AST.

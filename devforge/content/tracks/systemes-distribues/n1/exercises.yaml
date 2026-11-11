@@ -1,0 +1,148 @@
+exercises:
+  - id: systemes-distribues.n1.pannes.qcm-delai
+    type: qcm
+    title: Que sait le client après un délai dépassé ?
+    skills: [pannes-partielles]
+    difficulty: 2
+    prompt: "Un client envoie « débiter 30 € » à un service de paiement et n'obtient aucune réponse avant son délai d'attente. Que peut-il en conclure ?"
+    choices:
+      - id: a
+        text: "Rien de sûr : la requête a pu se perdre, le service a pu tomber, ou le débit a pu être fait et la réponse se perdre ou traîner."
+        correct: true
+      - id: b
+        text: "Que le débit n'a pas été fait, puisqu'il n'y a pas eu de réponse."
+        feedback: "C'est l'erreur qui a produit, dans la simulation de la leçon, un virement exécuté trois fois."
+      - id: c
+        text: "Que le service est en panne."
+      - id: d
+        text: "Que le réseau est coupé."
+    explanation: |
+      Les trois histoires sont indiscernables pour le client. D'où les opérations
+      idempotentes, qu'on peut réessayer sans risque.
+
+  - id: systemes-distribues.n1.pannes.find-bug
+    type: find-bug
+    title: La clé d'idempotence qui ne sert à rien
+    skills: [pannes-partielles]
+    difficulty: 4
+    language: python
+    prompt: "Ce client réessaie un paiement après un délai dépassé, avec une clé d'idempotence. Le serveur mémorise bien les clés déjà vues, et pourtant des clients sont encore débités deux fois. Touche la ligne fautive."
+    code: |
+      def payer(client_http, montant):
+          for essai in range(3):
+              cle = str(uuid.uuid4())
+              try:
+                  return client_http.post(
+                      "/paiements",
+                      json={"montant": montant},
+                      headers={"Idempotency-Key": cle},
+                      timeout=2,
+                  )
+              except Timeout:
+                  time.sleep(2 ** essai + random.random())
+          raise EchecPaiement()
+    bug_lines: [3]
+    explanation: |
+      La clé est régénérée à chaque essai : pour le serveur, chaque essai est un nouveau
+      paiement. Elle doit être créée une seule fois, avant la boucle (et idéalement
+      conservée si le client lui-même redémarre).
+
+  - id: systemes-distribues.n1.latence.predict-fan-out
+    type: predict-output
+    title: L'amplification de la latence de queue
+    skills: [latence]
+    difficulty: 3
+    language: python
+    prompt: "Chaque service répond vite dans 99 % des cas. Qu'affiche ce calcul de la proportion de requêtes lentes quand une requête appelle n services en parallèle ?"
+    code: |
+      p_rapide = 0.99
+      for n in (1, 10, 100):
+          print(n, f"{1 - p_rapide ** n:.0%}")
+    choices:
+      - id: a
+        text: "`1 1%`, `10 10%`, `100 63%`"
+        correct: true
+      - id: b
+        text: "`1 1%`, `10 10%`, `100 100%`"
+        feedback: "Les probabilités ne s'additionnent pas : il faut 1 − 0,99ⁿ."
+      - id: c
+        text: "`1 1%`, `10 1%`, `100 1%`"
+        feedback: "La requête attend le plus lent des n appels."
+      - id: d
+        text: "`1 99%`, `10 90%`, `100 37%`"
+    explanation: |
+      Avec 100 appels, la majorité des requêtes subit le p99 d'un service. La simulation de
+      la leçon donne 63,3 % pour une théorie de 63,4 %. Sortie vérifiée.
+
+  - id: systemes-distribues.n1.illusions.match
+    type: match
+    title: Les illusions et leurs conséquences
+    skills: [illusions]
+    difficulty: 2
+    prompt: Relie chaque illusion à la panne qu'elle provoque.
+    pairs:
+      - left: Le réseau est fiable
+        right: Un appel sans délai d'attente bloque un fil pour toujours
+      - left: La latence est nulle
+        right: Une boucle de 500 petits appels transforme une page en 10 secondes
+      - left: La topologie ne change pas
+        right: Une adresse IP codée en dur ne répond plus après un redéploiement
+      - left: Le réseau est sûr
+        right: Des services internes qui se parlent en clair sans authentification
+    explanation: |
+      Les huit illusions de Deutsch et Gosling (1994) restent d'actualité : chaque
+      microservice ajoute des appels réseau là où il y avait des appels de fonction.
+
+  - id: systemes-distribues.n1.latence.scenario-recherche
+    type: scenario
+    title: La page de recherche lente
+    skills: [latence, pannes-partielles]
+    difficulty: 3
+    prompt: |
+      Ta page de recherche interroge en parallèle 50 partitions d'index. Chaque partition
+      répond en 15 ms en médiane, mais la page a un p50 de 400 ms.
+    start: debut
+    nodes:
+      debut:
+        text: Par quoi commences-tu ?
+        options:
+          - text: "Regarder le p99 de chaque partition : avec 50 appels, la page attend le plus lent, donc la médiane de la page reflète la queue des partitions."
+            next: queue
+            points: 3
+          - text: "Optimiser la médiane de chaque partition de 15 à 10 ms."
+            next: mediane
+            points: 0
+      mediane:
+        ending: failure
+        text: "❌ La page ne gagne presque rien : ce n'est pas la médiane des partitions qui la ralentit."
+      queue:
+        text: "Le p99 des partitions est de 400 ms, dû à des pauses du GC. Que fais-tu en premier ?"
+        options:
+          - text: "Envoyer une requête de couverture à une autre réplique si une partition n'a pas répondu après son p95, et garder la première réponse."
+            next: couverture
+            points: 3
+          - text: "Augmenter le délai d'attente de la page à 2 secondes."
+            next: delai
+            points: 0
+            feedback: "Cela supprime des erreurs, pas de la lenteur."
+      delai:
+        ending: failure
+        text: "❌ La page est toujours lente, et elle peut maintenant rester bloquée 2 secondes."
+      couverture:
+        text: "Le p50 de la page tombe à 40 ms pour 5 % de requêtes en plus. Et ensuite ?"
+        options:
+          - text: "Traiter la cause (réglage du GC des partitions) et accepter une réponse partielle si une partition manque après 100 ms."
+            next: resolu
+            points: 3
+          - text: "Rien, c'est réglé."
+            next: partiel
+            points: 1
+      partiel:
+        ending: partial
+        text: "🟡 Mieux, mais la cause reste et coûte 5 % de charge supplémentaire."
+      resolu:
+        ending: success
+        text: "✅ Page rapide, cause traitée, et dégradation contrôlée en cas de partition lente."
+    explanation: |
+      Avec le fan-out, la queue de latence domine. Requêtes de couverture, réponses
+      partielles et chasse aux causes de la queue (The Tail at Scale, 2013).

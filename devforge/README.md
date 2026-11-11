@@ -50,12 +50,13 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 ## Ce qui existe déjà
 
 - La carte des 31 parcours et de leurs prérequis : [`content/curriculum.yaml`](content/curriculum.yaml).
-- 22 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
+- 25 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
   POO, Programmation fonctionnelle, Design patterns, Clean code, Débogage, Performance,
   Architecture, System design, DevOps, SRE, Cloud, Bases de données, Réseau et web, Sécurité,
+  Fonctionnement d'un ordinateur, Langages et compilateurs, Systèmes distribués,
   **Gestion de la mémoire, JVM, Threads et concurrence, Métaprogrammation et AOP**.
-- **124 leçons et 617 exercices**, couvrant 9 types d'exercices, et **110 boss chronométrés,
-  un par niveau**. **Les 22 parcours détaillés sont complets du niveau 1 au niveau 5** :
+- **139 leçons et 692 exercices**, couvrant 9 types d'exercices, et **125 boss chronométrés,
+  un par niveau**. **Les 25 parcours détaillés sont complets du niveau 1 au niveau 5** :
   - fondations : types, boucles, collections, exceptions, complexité, nullabilité,
     génériques, fonctions d'ordre supérieur, apprendre n'importe quel langage ;
   - algorithmes : recherche et tris, piles, files, hachage, fenêtres glissantes, arbres,
@@ -116,7 +117,17 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
   - DevOps : culture et métriques DORA, 12 facteurs, Docker (couches, sécurité, PID 1),
     Compose, CI/CD, stratégies de déploiement, feature flags, Terraform, Ansible,
     Kubernetes et son diagnostic, Helm, GitOps, platform engineering, sécurité de la
-    chaîne logicielle.
+    chaîne logicielle ;
+  - fonctionnement d'un ordinateur : binaire et flottants, encodages, assembleur, édition de
+    liens, noyau et appels système, interruptions, démarrage, pagination, entrées-sorties,
+    stockage, pipeline et prédiction de branchement, SIMD, multicœur et GPU ;
+  - langages et compilateurs : un petit langage, « Mini », construit pas à pas (analyse
+    lexicale et syntaxique, AST, interpréteur, portée et fermetures, types et inférence,
+    bytecode et machine à pile, optimisations), SSA et LLVM, créer son propre langage ;
+  - systèmes distribués : pannes partielles et latence de queue, horloges de Lamport et
+    vectorielles, réplication PostgreSQL et quorums, modèles de cohérence, élection Raft,
+    validation en deux phases et sagas, « exactement une fois », CRDT, split-brain et jetons
+    de fencing, vérification par exploration exhaustive.
 
   Tous les extraits (Kotlin, C, Python, Rust, JavaScript) ont été exécutés pour vérifier les
   réponses attendues, et les sorties citées dans les cours Git, Linux, System design et DevOps
@@ -163,6 +174,6 @@ python -m unittest discover -s devforge/tools -v
 
 ## Prochaine étape
 
-Rédiger les 9 parcours encore à l'état de plan (systèmes distribués, compilateurs,
-fonctionnement d'un ordinateur…), enrichir les parcours existants (plus d'exercices par compétence), puis
+Rédiger les 6 parcours encore à l'état de plan (frameworks, données, Android, IA pour les
+développeurs, maths, carrière), enrichir les parcours existants (plus d'exercices par compétence), puis
 notifications et widget pour le défi du jour. Voir le [plan d'action](docs/04-plan-d-action.md).

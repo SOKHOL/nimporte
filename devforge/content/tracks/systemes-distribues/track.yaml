@@ -1,53 +1,115 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: systemes-distribues
 title: Systèmes distribués
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Ce qui change quand un programme tourne sur plusieurs machines : pannes partielles et
+  latence, horloges et causalité, réplication et quorums, consensus et transactions
+  distribuées, CRDT, split-brain et vérification de modèles. Avec des simulations réelles.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: les-illusions-de-l-informatique
-    title: Les illusions de l'informatique distribuée
-  - id: pannes-partielles
-    title: Pannes partielles
-  - id: latence-reseau
-    title: Latence réseau
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: temps-et-horloges-lamport-horloges
-    title: Temps et horloges (Lamport, horloges vectorielles)
-  - id: ordre-des-evenements
-    title: Ordre des événements
-- level: 3
-  title: Approfondir
-  skills:
-  - id: replication-leader-multi-leader-sans
-    title: Réplication (leader, multi-leader, sans leader)
-  - id: quorums
-    title: Quorums
-  - id: modeles-de-coherence
-    title: Modèles de cohérence
-- level: 4
-  title: Concevoir
-  skills:
-  - id: consensus-raft-paxos
-    title: Consensus (Raft, Paxos)
-  - id: election-de-leader
-    title: Élection de leader
-  - id: 2pc-et-sagas
-    title: 2PC et sagas
-  - id: exactement-une-fois
-    title: « exactement une fois »
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: crdt
-    title: CRDT
-  - id: split-brain
-    title: Split-brain
-  - id: verification-formelle-tla
-    title: Vérification formelle (TLA+)
-  - id: articles-fondateurs-dynamo-spanner
-    title: Articles fondateurs (Dynamo, Spanner)
+  - level: 1
+    title: Penser distribué
+    skills:
+      - id: illusions
+        title: Les illusions de l'informatique distribuée
+      - id: pannes-partielles
+        title: Pannes partielles et délais dépassés
+      - id: latence
+        title: Latence et latence de queue
+    boss:
+      id: systemes-distribues.n1.boss
+      title: "Boss : le délai dépassé"
+      exercises:
+        - systemes-distribues.n1.illusions.match
+        - systemes-distribues.n1.pannes.find-bug
+        - systemes-distribues.n1.latence.predict-fan-out
+        - systemes-distribues.n1.latence.scenario-recherche
+        - systemes-distribues.n1.pannes.qcm-delai
+      pass_ratio: 0.8
+      time_limit_min: 11
+
+  - level: 2
+    title: Le temps
+    skills:
+      - id: horloges-physiques
+        title: Les horloges physiques
+      - id: horloges-logiques
+        title: Horloges de Lamport et horloges vectorielles
+      - id: ordre-causal
+        title: Ordre causal et concurrence
+    boss:
+      id: systemes-distribues.n2.boss
+      title: "Boss : l'horloge vectorielle"
+      exercises:
+        - systemes-distribues.n2.physiques.find-bug
+        - systemes-distribues.n2.vectorielles.predict-relation
+        - systemes-distribues.n2.physiques.qcm-lww
+        - systemes-distribues.n2.ordre.match
+        - systemes-distribues.n2.lamport.predict
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 3
+    title: Répliquer
+    skills:
+      - id: replication
+        title: Réplication avec et sans leader
+      - id: quorums
+        title: Quorums
+      - id: coherence
+        title: Modèles de cohérence
+    boss:
+      id: systemes-distribues.n3.boss
+      title: "Boss : le quorum"
+      exercises:
+        - systemes-distribues.n3.replication.qcm-synchrone
+        - systemes-distribues.n3.quorums.predict-intersection
+        - systemes-distribues.n3.coherence.scenario-pseudo
+        - systemes-distribues.n3.coherence.match
+        - systemes-distribues.n3.coherence.qcm-pacelc
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 4
+    title: Se mettre d'accord
+    skills:
+      - id: consensus
+        title: Consensus et élection de leader (Raft)
+      - id: transactions-distribuees
+        title: Validation en deux phases et sagas
+      - id: exactement-une-fois
+        title: « Exactement une fois »
+    boss:
+      id: systemes-distribues.n4.boss
+      title: "Boss : le consensus"
+      exercises:
+        - systemes-distribues.n4.consensus.qcm-aleatoire
+        - systemes-distribues.n4.transactions.scenario-2pc
+        - systemes-distribues.n4.exactement.find-bug
+        - systemes-distribues.n4.transactions.parsons-saga
+        - systemes-distribues.n4.consensus.predict-majorite
+        - systemes-distribues.n4.exactement.match
+      pass_ratio: 0.8
+      time_limit_min: 13
+
+  - level: 5
+    title: Maîtriser
+    skills:
+      - id: crdt
+        title: Les CRDT
+      - id: split-brain
+        title: Split-brain et jetons de fencing
+      - id: verification
+        title: Vérifier un protocole (TLA+, exploration exhaustive)
+      - id: articles-fondateurs
+        title: Les articles fondateurs
+    boss:
+      id: systemes-distribues.n5.boss
+      title: "Boss : le split-brain"
+      exercises:
+        - systemes-distribues.n5.crdt.qcm-invariant
+        - systemes-distribues.n5.split-brain.find-bug
+        - systemes-distribues.n5.verification.qcm-exploration
+        - systemes-distribues.n5.articles.match
+        - systemes-distribues.n5.crdt.predict-fusion
+      pass_ratio: 0.8
+      time_limit_min: 9

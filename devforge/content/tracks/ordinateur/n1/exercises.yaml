@@ -1,0 +1,127 @@
+exercises:
+  - id: ordinateur.n1.binaire.predict-debordement
+    type: predict-output
+    title: Le débordement silencieux
+    skills: [binaire]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          println(42.toString(2) + " " + 42.toString(16))
+          println(Int.MAX_VALUE + 1)
+          println((200).toByte())
+      }
+    choices:
+      - id: a
+        text: "`101010 2a` / `-2147483648` / `-56`"
+        correct: true
+      - id: b
+        text: "`101010 2a` / `2147483648` / `200`"
+        feedback: "Un Int a 32 bits et un Byte 8 bits signés : les valeurs « font le tour » sans erreur."
+      - id: c
+        text: "`101010 2a` / une ArithmeticException"
+        feedback: "Seul `Math.addExact` lève une exception ; l'addition ordinaire déborde silencieusement."
+      - id: d
+        text: "`42 42` / `-2147483648` / `-56`"
+    explanation: |
+      Complément à deux : après le maximum, on repart du minimum. 200 ne tient pas dans un
+      octet signé (-128 à 127) : 200 − 256 = −56. Sortie vérifiée.
+
+  - id: ordinateur.n1.flottants.predict-somme
+    type: predict-output
+    title: Additionner des flottants
+    skills: [flottants]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          println(0.1 + 0.2)
+          println(0.1 + 0.2 == 0.3)
+          println(1e16 + 1 == 1e16)
+      }
+    choices:
+      - id: a
+        text: "`0.30000000000000004` / `false` / `true`"
+        correct: true
+      - id: b
+        text: "`0.3` / `true` / `false`"
+        feedback: "0,1 et 0,2 n'ont pas de représentation binaire exacte : leur somme n'est pas exactement 0,3."
+      - id: c
+        text: "`0.30000000000000004` / `false` / `false`"
+        feedback: "À 10¹⁶, un Double n'a plus assez de chiffres significatifs pour représenter « +1 »."
+      - id: d
+        text: "`0.3` / `false` / `true`"
+    explanation: |
+      IEEE 754 stocke 0,1 comme 0,1000000000000000055… ; les erreurs d'arrondi s'additionnent.
+      Pas de `==` entre flottants, et jamais de flottants pour l'argent. Sortie vérifiée.
+
+  - id: ordinateur.n1.texte.predict-longueur
+    type: predict-output
+    title: La longueur d'un emoji
+    skills: [texte-encodage]
+    difficulty: 4
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          println("é".toByteArray(Charsets.UTF_8).size)
+          println("😀".length)
+          println("😀".codePointCount(0, "😀".length))
+      }
+    choices:
+      - id: a
+        text: "`2` / `2` / `1`"
+        correct: true
+      - id: b
+        text: "`1` / `1` / `1`"
+        feedback: "« é » occupe 2 octets en UTF-8, et la JVM compte les chaînes en unités UTF-16."
+      - id: c
+        text: "`2` / `4` / `1`"
+        feedback: "4, c'est le nombre d'octets en UTF-8 ; `length` compte des unités UTF-16 (2 pour cet emoji)."
+      - id: d
+        text: "`2` / `1` / `1`"
+    explanation: |
+      La « longueur » dépend de l'unité : octets UTF-8 (é = 2, 😀 = 4), unités UTF-16 de la JVM
+      (😀 = 2), points de code (😀 = 1). Tronquer une chaîne peut couper un emoji en deux.
+      Sortie vérifiée.
+
+  - id: ordinateur.n1.texte.qcm-mojibake
+    type: qcm
+    title: Des accents illisibles
+    skills: [texte-encodage]
+    difficulty: 3
+    prompt: "Un fichier exporté affiche « CafÃ© » au lieu de « Café ». Quelle est la cause ?"
+    choices:
+      - id: a
+        text: "Les octets UTF-8 de « é » (c3 a9) ont été lus avec un autre encodage (Latin-1), qui les affiche comme deux caractères."
+        correct: true
+      - id: b
+        text: Le fichier est corrompu.
+      - id: c
+        text: La police ne contient pas le caractère é.
+      - id: d
+        text: Le mot a été mal saisi.
+    explanation: |
+      En UTF-8, « é » = `c3 a9`. Lus en Latin-1, ces deux octets donnent « Ã » et « © ». On
+      déclare l'encodage partout : fichiers, base, en-têtes HTTP.
+
+  - id: ordinateur.n1.binaire.match
+    type: match
+    title: Lire les représentations
+    skills: [binaire, flottants]
+    difficulty: 2
+    prompt: Relie chaque écriture à sa valeur ou à son sens.
+    pairs:
+      - left: "101010 en binaire"
+        right: "42"
+      - left: "0xFF en hexadécimal"
+        right: "255"
+      - left: "Tous les bits d'un Int à 1"
+        right: "-1 en complément à deux"
+      - left: "3fb999999999999a (IEEE 754, 64 bits)"
+        right: Le Double le plus proche de 0,1
+    explanation: |
+      Un chiffre hexadécimal = 4 bits ; le complément à deux fait compter le bit de poids fort
+      négativement ; 0,1 n'a qu'une approximation en binaire.

@@ -1,53 +1,112 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: compilation
 title: Langages et compilateurs
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Comprendre ce que fait un compilateur en construisant un petit langage, « Mini », étape par
+  étape : analyse lexicale et syntaxique, arbre, interpréteur, portée et fermetures, types,
+  bytecode et machine à pile, optimisations, SSA et LLVM.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: interprete-ou-compile
-    title: Interprété ou compilé
-  - id: etapes-d-un-compilateur
-    title: Étapes d'un compilateur
-  - id: grammaires
-    title: Grammaires
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: analyse-lexicale
-    title: Analyse lexicale
-  - id: analyse-syntaxique-descente
-    title: Analyse syntaxique (descente récursive)
-  - id: arbre-syntaxique-ast
-    title: Arbre syntaxique (AST)
-- level: 3
-  title: Approfondir
-  skills:
-  - id: interpreteur-d-ast
-    title: Interpréteur d'AST
-  - id: portee-et-environnements
-    title: Portée et environnements
-  - id: fermetures
-    title: Fermetures
-- level: 4
-  title: Concevoir
-  skills:
-  - id: systemes-de-types
-    title: Systèmes de types
-  - id: inference-de-types
-    title: Inférence de types
-  - id: generation-de-bytecode
-    title: Génération de bytecode
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: optimisations-propagation-de
-    title: Optimisations (propagation de constantes, code mort)
-  - id: ssa
-    title: SSA
-  - id: llvm
-    title: LLVM
-  - id: projet-ton-propre-langage
-    title: 'Projet : ton propre langage'
+  - level: 1
+    title: Comment un langage s'exécute
+    skills:
+      - id: interprete-compile
+        title: Interprété, compilé, bytecode et JIT
+      - id: etapes
+        title: Les étapes d'un compilateur
+      - id: grammaires
+        title: Les grammaires
+    boss:
+      id: compilation.n1.boss
+      title: "Boss : la grammaire"
+      exercises:
+        - compilation.n1.bytecode.predict-dis
+        - compilation.n1.etapes.parsons
+        - compilation.n1.grammaires.qcm-priorite
+        - compilation.n1.interprete.match
+        - compilation.n1.grammaires.qcm-ambigu
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: Lire le texte
+    skills:
+      - id: analyse-lexicale
+        title: L'analyse lexicale
+      - id: analyse-syntaxique
+        title: L'analyse syntaxique par descente récursive
+      - id: ast
+        title: L'arbre syntaxique abstrait
+    boss:
+      id: compilation.n2.boss
+      title: "Boss : l'analyseur"
+      exercises:
+        - compilation.n2.lexicale.predict-jetons
+        - compilation.n2.ast.qcm-arbre
+        - compilation.n2.erreurs.match
+        - compilation.n2.syntaxique.qcm-descente
+        - compilation.n2.ast.qcm-usages
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Exécuter
+    skills:
+      - id: interpreteur
+        title: Un interpréteur d'arbre
+      - id: portee
+        title: Portée et environnements
+      - id: fermetures
+        title: Les fermetures
+    boss:
+      id: compilation.n3.boss
+      title: "Boss : la fermeture"
+      exercises:
+        - compilation.n3.interpreteur.qcm-lenteur
+        - compilation.n3.fermetures.find-bug
+        - compilation.n3.fermetures.predict-boucle
+        - compilation.n3.concepts.match
+        - compilation.n3.portee.predict-lexicale
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 4
+    title: Typer et générer du code
+    skills:
+      - id: systemes-types
+        title: Les systèmes de types
+      - id: inference
+        title: L'inférence de types
+      - id: bytecode
+        title: Bytecode et machine à pile
+    boss:
+      id: compilation.n4.boss
+      title: "Boss : la machine à pile"
+      exercises:
+        - compilation.n4.types.match-axes
+        - compilation.n4.inference.qcm-deux-fois
+        - compilation.n4.bytecode.predict-machine
+        - compilation.n4.bytecode.parsons
+        - compilation.n4.types.predict-python
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 5
+    title: Optimiser
+    skills:
+      - id: optimisations
+        title: Repliement de constantes et code mort
+      - id: ssa-llvm
+        title: SSA et LLVM
+      - id: son-langage
+        title: Créer son propre langage
+    boss:
+      id: compilation.n5.boss
+      title: "Boss : l'optimiseur"
+      exercises:
+        - compilation.n5.optimisations.find-bug
+        - compilation.n5.ssa.qcm-phi
+        - compilation.n5.son-langage.match
+        - compilation.n5.optimisations.predict-zero
+        - compilation.n5.optimisations.qcm-passes
+      pass_ratio: 0.8
+      time_limit_min: 9

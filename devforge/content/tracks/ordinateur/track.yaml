@@ -1,71 +1,112 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: ordinateur
 title: Comment fonctionne un ordinateur
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Des bits au silicium : représentation des données, processeur et assembleur, de la
+  compilation à l'exécution, système d'exploitation, mémoire virtuelle, entrées-sorties,
+  et ce qui rend les processeurs modernes si rapides (et parfois vulnérables).
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: binaire
-    title: Binaire
-  - id: octets
-    title: Octets
-  - id: processeur
-    title: Processeur
-  - id: memoire-vive
-    title: Mémoire vive
-  - id: stockage
-    title: Stockage
-  - id: du-code-source-a-l-execution
-    title: Du code source à l'exécution
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: jeu-d-instructions
-    title: Jeu d'instructions
-  - id: registres
-    title: Registres
-  - id: cycle-d-execution
-    title: Cycle d'exécution
-  - id: lire-quelques-lignes-d-assembleur
-    title: Lire quelques lignes d'assembleur
-- level: 3
-  title: Approfondir
-  skills:
-  - id: systeme-d-exploitation-processus
-    title: 'Système d''exploitation : processus'
-  - id: threads
-    title: Threads
-  - id: ordonnancement
-    title: Ordonnancement
-  - id: appels-systeme
-    title: Appels système
-  - id: interruptions
-    title: Interruptions
-- level: 4
-  title: Concevoir
-  skills:
-  - id: memoire-virtuelle
-    title: Mémoire virtuelle
-  - id: pagination
-    title: Pagination
-  - id: hierarchie-des-caches
-    title: Hiérarchie des caches
-  - id: entrees-sorties-bloquantes-non
-    title: Entrées-sorties (bloquantes, non bloquantes, epoll)
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: pipeline
-    title: Pipeline
-  - id: execution-speculative
-    title: Exécution spéculative
-  - id: prediction-de-branchement
-    title: Prédiction de branchement
-  - id: simd
-    title: SIMD
-  - id: numa
-    title: NUMA
-  - id: mechanical-sympathy
-    title: '*mechanical sympathy*'
+  - level: 1
+    title: Les données en binaire
+    skills:
+      - id: binaire
+        title: Binaire, hexadécimal et entiers
+      - id: texte-encodage
+        title: Le texte (ASCII, Unicode, UTF-8)
+      - id: flottants
+        title: Les nombres à virgule flottante
+    boss:
+      id: ordinateur.n1.boss
+      title: "Boss : le nombre trahi"
+      exercises:
+        - ordinateur.n1.binaire.predict-debordement
+        - ordinateur.n1.texte.qcm-mojibake
+        - ordinateur.n1.binaire.match
+        - ordinateur.n1.texte.predict-longueur
+        - ordinateur.n1.flottants.predict-somme
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 2
+    title: Le processeur et le programme
+    skills:
+      - id: composants
+        title: Processeur, mémoire, stockage et bus
+      - id: assembleur
+        title: Instructions, registres et assembleur
+      - id: compilation-edition-liens
+        title: Du code source à l'exécutable
+    boss:
+      id: ordinateur.n2.boss
+      title: "Boss : l'édition de liens"
+      exercises:
+        - ordinateur.n2.composants.match
+        - ordinateur.n2.assembleur.qcm
+        - ordinateur.n2.composants.qcm-statique
+        - ordinateur.n2.edition-liens.qcm-undefined
+        - ordinateur.n2.edition-liens.match
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Le système d'exploitation
+    skills:
+      - id: noyau-processus
+        title: Le noyau, les processus et les threads
+      - id: interruptions
+        title: Interruptions et appels système
+      - id: demarrage
+        title: Le démarrage d'un ordinateur
+    boss:
+      id: ordinateur.n3.boss
+      title: "Boss : l'appel système"
+      exercises:
+        - ordinateur.n3.processus.match
+        - ordinateur.n3.demarrage.parsons
+        - ordinateur.n3.interruptions.qcm
+        - ordinateur.n3.noyau.qcm-mode
+        - ordinateur.n2.composants.qcm-statique
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 4
+    title: Mémoire et entrées-sorties
+    skills:
+      - id: pagination
+        title: Pagination et défauts de page
+      - id: entrees-sorties
+        title: Entrées-sorties bloquantes et non bloquantes
+      - id: stockage
+        title: Disques, SSD et systèmes de fichiers
+    boss:
+      id: ordinateur.n4.boss
+      title: "Boss : la mémoire paginée"
+      exercises:
+        - ordinateur.n4.pagination.qcm-defauts
+        - ordinateur.n4.entrees-sorties.qcm
+        - ordinateur.n4.stockage.match
+        - ordinateur.n4.stockage.qcm-fsync
+        - ordinateur.n4.pagination.match
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 5
+    title: Au plus près du silicium
+    skills:
+      - id: pipeline-speculation
+        title: Pipeline et exécution spéculative
+      - id: simd
+        title: SIMD, le calcul vectoriel
+      - id: multicoeur-gpu
+        title: Multicœur, NUMA et GPU
+    boss:
+      id: ordinateur.n5.boss
+      title: "Boss : le pipeline"
+      exercises:
+        - ordinateur.n5.speculation.qcm-spectre
+        - ordinateur.n5.multicoeur.match
+        - ordinateur.n5.pipeline.parsons
+        - ordinateur.n5.multicoeur.qcm-gpu
+        - ordinateur.n5.simd.qcm
+      pass_ratio: 0.8
+      time_limit_min: 9

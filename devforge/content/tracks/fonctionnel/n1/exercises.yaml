@@ -1,0 +1,143 @@
+exercises:
+  - id: fonctionnel.n1.map-filter.predict-pipeline
+    type: predict-output
+    title: Un pipeline de transformations
+    skills: [map-filter-reduce]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val mots = listOf("kotlin", "java", "scala", "go", "rust")
+          val resultat = mots
+              .filter { it.length > 2 }
+              .map { it.uppercase() }
+              .fold("") { acc, mot -> acc + mot.first() }
+          println(resultat)
+          println(mots.groupBy { it.length }.keys)
+      }
+    choices:
+      - id: a
+        text: "`KJSR` / `[6, 4, 5, 2]`"
+        correct: true
+      - id: b
+        text: "`KJSGR` / `[6, 4, 5, 2]`"
+        feedback: "« go » n'a que 2 lettres : il est retiré par le filtre."
+      - id: c
+        text: "`kjsr` / `[2, 4, 5, 6]`"
+        feedback: "Les mots sont passés en majuscules avant le fold ; et groupBy garde l'ordre de première apparition."
+      - id: d
+        text: "`KJSR` / `[2, 4, 4, 5, 6]`"
+    explanation: |
+      filter garde kotlin, java, scala, rust ; map les met en majuscules ; fold concatène leurs
+      premières lettres. `groupBy` crée une clé par longueur, dans l'ordre de première
+      apparition. Sortie vérifiée.
+
+  - id: fonctionnel.n1.lambdas.predict-capture
+    type: predict-output
+    title: Ce que capture une fermeture
+    skills: [lambdas]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun multiplicateur(n: Int): (Int) -> Int = { x -> x * n }
+
+      fun main() {
+          var facteur = 2
+          val parFacteur = { x: Int -> x * facteur }
+          val fois3 = multiplicateur(3)
+          facteur = 10
+          println(parFacteur(5))
+          println(fois3(5))
+      }
+    choices:
+      - id: a
+        text: "`50` / `15`"
+        correct: true
+      - id: b
+        text: "`10` / `15`"
+        feedback: "La lambda capture la variable `facteur` elle-même, pas sa valeur au moment de la création."
+      - id: c
+        text: "`50` / `50`"
+      - id: d
+        text: "`10` / `30`"
+    explanation: |
+      Une fermeture capture les **variables** de son environnement : `parFacteur` lit
+      `facteur` au moment de l'appel (10). `fois3` a capturé le paramètre `n = 3`, qui ne
+      change plus. C'est une raison de préférer des valeurs immuables. Sortie vérifiée.
+
+  - id: fonctionnel.n1.immutabilite.predict-vue
+    type: predict-output
+    title: Une liste en lecture seule ?
+    skills: [immutabilite]
+    difficulty: 4
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val source = mutableListOf(1, 2, 3)
+          val lectureSeule: List<Int> = source
+          val copie = source.toList()
+          source.add(4)
+          println(lectureSeule)
+          println(copie)
+      }
+    choices:
+      - id: a
+        text: "`[1, 2, 3, 4]` / `[1, 2, 3]`"
+        correct: true
+      - id: b
+        text: "`[1, 2, 3]` / `[1, 2, 3]`"
+        feedback: "`List` n'est qu'une vue en lecture seule sur la même liste : elle voit l'ajout."
+      - id: c
+        text: "`[1, 2, 3, 4]` / `[1, 2, 3, 4]`"
+        feedback: "`toList()` crée une copie indépendante au moment de l'appel."
+      - id: d
+        text: Une erreur de compilation.
+    explanation: |
+      En Kotlin, `List` interdit de modifier **par cette référence**, pas de modifier la liste
+      tout court. Aux frontières (paramètres, champs), on copie, ou on utilise des
+      collections réellement immuables. Sortie vérifiée.
+
+  - id: fonctionnel.n1.map-filter.match
+    type: match
+    title: La bonne opération
+    skills: [map-filter-reduce]
+    difficulty: 2
+    prompt: Relie chaque besoin à l'opération de collection adaptée.
+    pairs:
+      - left: Les prix TTC à partir des prix HT
+        right: map
+      - left: Seulement les commandes payées
+        right: filter
+      - left: Le total de toutes les commandes
+        right: fold (ou sumOf)
+      - left: Toutes les lignes de toutes les commandes, en une seule liste
+        right: flatMap
+      - left: Les commandes rangées par client
+        right: groupBy
+    explanation: |
+      Chaque opération exprime une intention ; les enchaîner donne un pipeline lisible, sans
+      variable modifiée ni indice.
+
+  - id: fonctionnel.n1.immutabilite.qcm
+    type: qcm
+    title: Pourquoi l'immutabilité ?
+    skills: [immutabilite]
+    difficulty: 2
+    prompt: "Quel avantage concret apporte une data class immuable (des val, et copy pour « modifier ») ?"
+    choices:
+      - id: a
+        text: "Une valeur passée à une fonction ou partagée entre threads ne peut pas être modifiée dans le dos de celui qui la lit."
+        correct: true
+      - id: b
+        text: Le programme utilise moins de mémoire.
+        feedback: "Créer de nouvelles valeurs peut en utiliser plus ; le gain est la sûreté du raisonnement."
+      - id: c
+        text: Le code s'exécute toujours plus vite.
+      - id: d
+        text: Elle empêche les NullPointerException.
+    explanation: |
+      L'immutabilité supprime les bugs d'aliasing et les courses entre threads sur les
+      données, et permet de raisonner localement sur le code.

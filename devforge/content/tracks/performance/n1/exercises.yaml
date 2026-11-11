@@ -1,0 +1,98 @@
+exercises:
+  - id: performance.n1.percentiles.qcm-moyenne
+    type: qcm
+    title: Une moyenne trompeuse
+    skills: [percentiles]
+    difficulty: 3
+    prompt: "Sur 10 000 requêtes, 99 % prennent environ 40 ms et 1 % entre 0,8 et 2 s. La moyenne vaut 54 ms. Qu'est-ce qu'elle cache ?"
+    choices:
+      - id: a
+        text: "Qu'une requête sur cent prend près d'une seconde ou plus (p99 ≈ 800 ms) : la moyenne ne correspond à aucune expérience réelle."
+        correct: true
+      - id: b
+        text: Rien, 54 ms est un très bon temps de réponse.
+      - id: c
+        text: Que la médiane est forcément supérieure à la moyenne.
+        feedback: "Ici la médiane (40 ms) est inférieure : les quelques valeurs extrêmes tirent la moyenne vers le haut."
+      - id: d
+        text: Que le serveur est en panne 1 % du temps.
+    explanation: |
+      Valeurs réelles calculées : moyenne 54 ms, médiane 40 ms, p99 801 ms, p99,9 1 851 ms.
+      On suit le p50 et le p99, jamais la moyenne seule.
+
+  - id: performance.n1.mesurer.parsons
+    type: parsons
+    title: Optimiser méthodiquement
+    skills: [mesurer]
+    difficulty: 2
+    language: text
+    prompt: Remets dans l'ordre une démarche d'optimisation.
+    lines:
+      - Fixer un objectif chiffré (page produit en moins de 1 s au p75)
+      - Mesurer l'existant dans des conditions réalistes
+      - Trouver le goulot avec un profileur
+      - Corriger une seule chose, puis remesurer
+      - Ajouter un test ou une alerte pour empêcher la régression
+    distractors:
+      - Réécrire en premier la fonction qui semble la plus lente à la lecture
+    explanation: |
+      L'intuition se trompe sur l'endroit où passe le temps ; seule la mesure le dit.
+
+  - id: performance.n1.percentiles.qcm-moyenne-p99
+    type: qcm
+    title: Combiner des p99
+    skills: [percentiles]
+    difficulty: 4
+    prompt: "Le serveur A a un p99 de 100 ms, le serveur B de 300 ms, et ils reçoivent autant de trafic. Quel est le p99 de l'ensemble ?"
+    choices:
+      - id: a
+        text: "On ne peut pas le savoir avec ces deux nombres : il faut agréger les mesures brutes ou les histogrammes."
+        correct: true
+      - id: b
+        text: "200 ms, la moyenne des deux."
+        feedback: "Un percentile ne se moyenne pas : la forme des distributions compte."
+      - id: c
+        text: "300 ms, le plus grand des deux."
+      - id: d
+        text: "100 ms, le plus petit des deux."
+    explanation: |
+      D'où les histogrammes de Prometheus (parcours SRE, niveau 2) : ils s'additionnent, et
+      le percentile se calcule ensuite sur l'ensemble.
+
+  - id: performance.n1.objectifs.match
+    type: match
+    title: Repères de performance
+    skills: [objectifs-performance]
+    difficulty: 2
+    prompt: Relie chaque indicateur à ce qu'il mesure.
+    pairs:
+      - left: LCP (Largest Contentful Paint)
+        right: Le temps d'affichage du plus gros élément visible
+      - left: INP (Interaction to Next Paint)
+        right: La réactivité de la page aux interactions
+      - left: CLS (Cumulative Layout Shift)
+        right: Les éléments qui sautent pendant le chargement
+      - left: Moins de 100 ms
+        right: Une réponse perçue comme instantanée
+    explanation: |
+      Les Core Web Vitals se mesurent sur de vrais visiteurs, au 75e percentile.
+
+  - id: performance.n1.mesurer.qcm-gain
+    type: qcm
+    title: Le bon endroit
+    skills: [mesurer]
+    difficulty: 3
+    prompt: "Une requête prend 1 s : 800 ms dans une requête SQL, 150 ms de sérialisation JSON, 50 ms de logique métier. Tu rends la logique métier 10 fois plus rapide. Quel est le nouveau temps total ?"
+    choices:
+      - id: a
+        text: "Environ 955 ms : un gain de 4,5 %."
+        correct: true
+      - id: b
+        text: "Environ 100 ms"
+      - id: c
+        text: "Environ 500 ms"
+      - id: d
+        text: "Environ 905 ms"
+    explanation: |
+      50 ms deviennent 5 ms : 800 + 150 + 5 = 955 ms. Le même effort sur la requête SQL
+      (un index, par exemple) aurait pu diviser le total par plusieurs fois.

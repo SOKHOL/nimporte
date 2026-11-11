@@ -1,0 +1,126 @@
+exercises:
+  - id: debogage.n4.thread-dump.qcm-interblocage
+    type: qcm
+    title: Lire un thread dump
+    skills: [thread-dumps]
+    difficulty: 3
+    language: text
+    prompt: Que montre ce thread dump réel, et comment corriger ?
+    code: |
+      Found one Java-level deadlock:
+      "virement-A-vers-B":
+        waiting to lock monitor … (object 0x0000000737904298, a Compte),
+        which is held by "virement-B-vers-A"
+      "virement-B-vers-A":
+        waiting to lock monitor … (object 0x000000073781acb0, a Compte),
+        which is held by "virement-A-vers-B"
+    choices:
+      - id: a
+        text: "Un interblocage : chaque thread tient un compte et attend l'autre. Verrouiller toujours dans le même ordre (par identifiant de compte)."
+        correct: true
+      - id: b
+        text: Un thread trop lent ; il faut augmenter le nombre de threads.
+      - id: c
+        text: Une fuite mémoire dans la classe Compte.
+      - id: d
+        text: Un bug de la JVM.
+    explanation: |
+      Le virement A→B verrouille A puis attend B ; le virement B→A verrouille B puis attend A.
+      Avec un ordre global des verrous, l'attente circulaire devient impossible.
+
+  - id: debogage.n4.fuites.scenario
+    type: scenario
+    title: Le service qui meurt chaque nuit
+    skills: [fuites-memoire]
+    difficulty: 4
+    prompt: |
+      Un service Java redémarre chaque nuit vers 3 h avec une OutOfMemoryError, après environ
+      20 heures de fonctionnement.
+    start: debut
+    nodes:
+      debut:
+        text: Par quoi commences-tu ?
+        options:
+          - text: "Je regarde la mémoire utilisée après chaque GC complet sur 24 h : si elle monte sans cesse, c'est une fuite."
+            next: histogrammes
+            points: 3
+          - text: Je double la mémoire du service.
+            next: doubler
+            points: 0
+            feedback: "Le service mourra au bout de 40 heures au lieu de 20."
+      doubler:
+        text: "Le service tient maintenant 40 heures avant de mourir. Et ensuite ?"
+        options:
+          - text: Je cherche ce qui s'accumule, avec des histogrammes de classes comparés.
+            next: histogrammes
+            points: 1
+      histogrammes:
+        text: "Deux histogrammes à une heure d'écart : le nombre d'instances de Session passe de 84 000 à 411 000. Que fais-tu ?"
+        options:
+          - text: "Je prends un heap dump et je regarde, dans MAT, le chemin vers les racines du GC des objets Session."
+            next: racines
+            points: 3
+          - text: Je supprime la classe Session.
+            next: racines
+            points: 0
+      racines:
+        text: "Le chemin mène à `CacheSessions.sessions`, une Map statique. Quelle correction ?"
+        options:
+          - text: "Un cache borné avec expiration (par exemple Caffeine, taille maximale et durée de vie), et une alerte sur la mémoire après GC."
+            next: resolu
+            points: 3
+          - text: Vider la Map chaque nuit à 2 h.
+            next: vider
+            points: 1
+      vider:
+        ending: partial
+        text: "🟡 Plus de plantage… jusqu'au jour de forte affluence où la Map se remplit avant 2 h, et les sessions actives sont perdues chaque nuit."
+      resolu:
+        ending: success
+        text: "✅ La mémoire après GC reste stable depuis un mois."
+    explanation: |
+      Mesures réelles d'une fuite du même type : 84 000, 247 000, puis 411 000 objets Session
+      (109, 301 puis 495 Mo de tas), puis `OutOfMemoryError`.
+
+  - id: debogage.n4.profilage.qcm-jfr
+    type: qcm
+    title: Ce que dit le profileur
+    skills: [profilage]
+    difficulty: 3
+    language: text
+    prompt: "Le profil JFR d'un service de validation d'e-mails montre ceci. Quelle est la correction la plus probable ?"
+    code: |
+      Method                                              Samples  Percent
+      java.util.regex.Pattern.compile()                       102   16.64%
+      java.util.regex.Matcher.<init>(Pattern, CharSequence)    58    9.46%
+    choices:
+      - id: a
+        text: "L'expression régulière est compilée à chaque appel : la compiler une seule fois (une constante) et la réutiliser."
+        correct: true
+      - id: b
+        text: Remplacer les expressions régulières par un appel à un service externe.
+      - id: c
+        text: Ajouter des threads.
+      - id: d
+        text: Augmenter la mémoire.
+    explanation: |
+      Mesure réelle : 2,87 millions de validations par seconde avec la Regex recréée, 18,3
+      millions une fois compilée.
+
+  - id: debogage.n4.outils.match
+    type: match
+    title: Quel outil pour quel symptôme ?
+    skills: [thread-dumps, fuites-memoire, profilage]
+    difficulty: 3
+    prompt: Relie chaque symptôme en production à l'outil de diagnostic adapté.
+    pairs:
+      - left: Le service ne répond plus du tout, le CPU est à zéro
+        right: Trois thread dumps à quelques secondes d'intervalle
+      - left: La mémoire après GC augmente un peu chaque heure
+        right: Histogrammes de classes comparés, puis heap dump
+      - left: Le CPU est à 90 % et les réponses sont lentes
+        right: Un profileur par échantillonnage (JFR, async-profiler)
+      - left: Le service vient de mourir d'une OutOfMemoryError cette nuit
+        right: Le heap dump écrit grâce à -XX:+HeapDumpOnOutOfMemoryError
+    explanation: |
+      Bloqué : thread dump. Qui grossit : heap dump. Lent : profileur.

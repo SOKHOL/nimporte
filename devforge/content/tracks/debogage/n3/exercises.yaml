@@ -1,0 +1,110 @@
+exercises:
+  - id: debogage.n3.bisect.qcm-etapes
+    type: qcm
+    title: Combien d'essais pour git bisect ?
+    skills: [git-bisect]
+    difficulty: 2
+    prompt: "Un bug est apparu quelque part dans les 1 000 derniers commits. Environ combien d'exécutions du test faut-il à git bisect pour trouver le coupable ?"
+    choices:
+      - id: a
+        text: "Une dizaine (log₂ 1000 ≈ 10)"
+        correct: true
+      - id: b
+        text: "500 en moyenne"
+        feedback: "Ce serait une recherche linéaire ; bisect coupe l'intervalle en deux à chaque étape."
+      - id: c
+        text: "1 000"
+      - id: d
+        text: "Une seule"
+    explanation: |
+      Mesure réelle sur 40 commits : 5 exécutions (log₂ 40 ≈ 5,3). Chaque test divise par
+      deux le nombre de suspects.
+
+  - id: debogage.n3.bisect.qcm-code-125
+    type: qcm
+    title: Le commit qui ne compile pas
+    skills: [git-bisect]
+    difficulty: 3
+    prompt: "Pendant un git bisect run, certains commits ne compilent pas. Que doit renvoyer le script pour ceux-là ?"
+    choices:
+      - id: a
+        text: "125 : bisect saute ce commit sans le déclarer bon ni mauvais."
+        correct: true
+      - id: b
+        text: "1, comme un échec."
+        feedback: "Bisect accuserait à tort un commit qui n'a rien à voir avec le bug."
+      - id: c
+        text: "0, pour continuer."
+        feedback: "Bisect le croirait bon et pourrait conclure faux."
+      - id: d
+        text: "Rien, bisect le détecte seul."
+    explanation: |
+      0 = bon, 1 à 127 (sauf 125) = mauvais, 125 = impossible à tester. D'où l'intérêt de
+      commits qui compilent tous.
+
+  - id: debogage.n3.intermittents.qcm-course
+    type: qcm
+    title: Le compteur qui perd des incréments
+    skills: [bugs-intermittents]
+    difficulty: 3
+    language: kotlin
+    prompt: "Quatre threads exécutent chacun un million de fois `compteur++` sur un Int partagé. Que vaut le compteur à la fin ?"
+    code: |
+      var compteur = 0
+      val threads = List(4) { thread { repeat(1_000_000) { compteur++ } } }
+      threads.forEach { it.join() }
+      println(compteur)
+    choices:
+      - id: a
+        text: "Moins de 4 000 000, et une valeur différente à chaque exécution."
+        correct: true
+      - id: b
+        text: "Exactement 4 000 000."
+        feedback: "`compteur++` lit, ajoute puis écrit : deux threads peuvent écraser mutuellement leurs incréments."
+      - id: c
+        text: "Exactement 1 000 000."
+      - id: d
+        text: Une exception ConcurrentModificationException.
+    explanation: |
+      Mesures réelles : 3 155 186, 3 253 096, 3 095 247 ; avec `AtomicInteger`, 4 000 000 à
+      chaque fois.
+
+  - id: debogage.n3.reduire.qcm
+    type: qcm
+    title: Le fichier de 401 lignes
+    skills: [reduire]
+    difficulty: 3
+    prompt: "Un import plante sur un fichier CSV de 401 lignes. Quelle est la démarche la plus efficace ?"
+    choices:
+      - id: a
+        text: "Réduire l'entrée (supprimer des moitiés tant que ça plante encore, à la main ou automatiquement) jusqu'au cas minimal, puis en faire un test."
+        correct: true
+      - id: b
+        text: Lire les 401 lignes une à une.
+      - id: c
+        text: Ajouter un try/catch autour de l'import.
+        feedback: "Ça cache le symptôme sans comprendre la cause."
+      - id: d
+        text: Demander au client un autre fichier.
+    explanation: |
+      Démonstration réelle : 401 lignes réduites automatiquement à 2, dont une quantité
+      écrite « trois » en toutes lettres.
+
+  - id: debogage.n3.intermittents.match
+    type: match
+    title: L'indice et la cause
+    skills: [bugs-intermittents]
+    difficulty: 4
+    prompt: Relie chaque symptôme d'un bug intermittent à sa cause la plus probable.
+    pairs:
+      - left: Les totaux sont faux de façon variable, seulement aux heures de pointe
+        right: Une course entre threads
+      - left: Les rapports échouent la nuit du dernier dimanche d'octobre
+        right: Le changement d'heure
+      - left: Le test passe seul mais échoue quand toute la suite tourne
+        right: Un état partagé entre tests
+      - left: Le service échoue après environ 3 jours de fonctionnement
+        right: Une ressource qui s'épuise (mémoire, descripteurs, connexions)
+    explanation: |
+      Un bug « aléatoire » a toujours une cause qui dépend d'un facteur non contrôlé ; le
+      moment où il survient est l'indice principal.

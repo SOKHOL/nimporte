@@ -1,0 +1,102 @@
+exercises:
+  - id: fonctionnel.n4.monades.predict-flatmap
+    type: predict-output
+    title: map ou flatMap ?
+    skills: [foncteurs-monades]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      data class Client(val adresse: Adresse?)
+      data class Adresse(val codePostal: String?)
+
+      fun main() {
+          println(listOf(1, 2, 3).map { listOf(it, it * 10) })
+          println(listOf(1, 2, 3).flatMap { listOf(it, it * 10) })
+          val clients = listOf(Client(Adresse("69001")), Client(Adresse(null)), Client(null))
+          println(clients.map { it.adresse?.codePostal?.take(2) })
+          println(clients.mapNotNull { it.adresse?.codePostal })
+      }
+    choices:
+      - id: a
+        text: "`[[1, 10], [2, 20], [3, 30]]` / `[1, 10, 2, 20, 3, 30]` / `[69, null, null]` / `[69001]`"
+        correct: true
+      - id: b
+        text: "`[1, 10, 2, 20, 3, 30]` / `[1, 10, 2, 20, 3, 30]` / `[69, null, null]` / `[69001]`"
+        feedback: "`map` garde chaque liste produite telle quelle : on obtient une liste de listes."
+      - id: c
+        text: "`[[1, 10], [2, 20], [3, 30]]` / `[1, 10, 2, 20, 3, 30]` / `[69]` / `[69001]`"
+        feedback: "`map` garde un élément par client, même quand la chaîne `?.` donne null."
+      - id: d
+        text: Une NullPointerException sur le troisième client.
+    explanation: |
+      `flatMap` aplatit les listes produites ; la chaîne `?.` s'arrête au premier null ;
+      `mapNotNull` retire les null. Sortie vérifiée.
+
+  - id: fonctionnel.n4.combinateurs.qcm
+    type: qcm
+    title: Ce qui reste à lire
+    skills: [combinateurs]
+    difficulty: 4
+    prompt: "Avec l'analyseur d'expressions construit par combinateurs, `expr.lire(\"2+\")` renvoie `(2, \"+\")`. Que signifie ce résultat ?"
+    choices:
+      - id: a
+        text: "L'analyse a réussi à lire « 2 », mais « + » n'a pas pu être suivi d'un terme : il reste non lu. Un analyseur complet doit vérifier qu'il ne reste rien."
+        correct: true
+      - id: b
+        text: L'analyseur a calculé 2 + 0.
+      - id: c
+        text: C'est une erreur de syntaxe signalée par Kotlin.
+      - id: d
+        text: L'analyseur a planté.
+    explanation: |
+      Sortie réelle : `2+ = (2, +)`. La répétition `(('+' | '-') terme)*` s'arrête au premier
+      échec et rend la main. On ajoute un combinateur « fin du texte » pour refuser les
+      entrées incomplètes.
+
+  - id: fonctionnel.n4.effets.qcm
+    type: qcm
+    title: Tester sans doublure
+    skills: [effets]
+    difficulty: 3
+    language: kotlin
+    prompt: "Pourquoi cette conception rend-elle les tests de `traiter` si simples ?"
+    code: |
+      fun traiter(commande: Commande, stock: Stock): List<Action> =
+          if (stock.suffit(commande)) listOf(Enregistrer(commande.validee()), EnvoyerEmail(commande.client, "Confirmée"))
+          else listOf(EnvoyerEmail(commande.client, "Rupture de stock"))
+    choices:
+      - id: a
+        text: "La fonction est pure : elle décrit les actions à faire sans les exécuter ; on vérifie la liste renvoyée, sans base ni serveur d'e-mails simulés."
+        correct: true
+      - id: b
+        text: Parce que la fonction ne fait rien du tout.
+      - id: c
+        text: Parce que List est plus facile à tester que Set.
+      - id: d
+        text: Parce qu'elle utilise une sealed interface.
+        feedback: "La sealed interface aide à décrire les actions, mais c'est la séparation entre décision et exécution qui compte."
+    explanation: |
+      Le cœur pur renvoie des décisions ; la coquille les exécute. C'est l'architecture Elm,
+      Redux et MVI : nouvel état et commandes.
+
+  - id: fonctionnel.n4.monades.match
+    type: match
+    title: Un même motif, des contextes différents
+    skills: [foncteurs-monades]
+    difficulty: 3
+    prompt: Relie chaque type au contexte qu'il gère.
+    pairs:
+      - left: "List<T>"
+        right: Plusieurs valeurs
+      - left: "T? (nullable)"
+        right: Peut-être une valeur
+      - left: "Result<T>"
+        right: Une valeur ou une erreur
+      - left: "Deferred<T> (ou une Promise)"
+        right: Une valeur plus tard
+      - left: "Flow<T>"
+        right: Des valeurs au fil du temps
+    explanation: |
+      Tous offrent `map` et une forme de `flatMap` pour enchaîner des étapes, en laissant le
+      type gérer le contexte.

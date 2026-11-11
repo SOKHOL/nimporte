@@ -1,0 +1,110 @@
+exercises:
+  - id: performance.n4.lots.qcm
+    type: qcm
+    title: Importer 20 000 lignes
+    skills: [entrees-sorties]
+    difficulty: 3
+    prompt: "Un import insère 20 000 lignes, une transaction par ligne : 5,5 s. Quelle approche est la plus rapide ?"
+    choices:
+      - id: a
+        text: "Le chargement en masse (COPY), ou des requêtes par lots de quelques centaines à milliers de lignes, dans peu de transactions."
+        correct: true
+      - id: b
+        text: Une seule transaction, en gardant une requête par ligne.
+        feedback: "C'est mieux (1 s mesurée), mais chaque requête reste un aller-retour."
+      - id: c
+        text: Lancer 20 000 threads, un par ligne.
+      - id: d
+        text: Désactiver les index pendant l'import, sans rien changer d'autre.
+    explanation: |
+      Mesures réelles : 5 512 ms (une transaction par ligne), 1 024 ms (une transaction),
+      83 ms (lots de 1 000), 32 ms (COPY).
+
+  - id: performance.n4.lois.qcm-little
+    type: qcm
+    title: La loi de Little
+    skills: [lois-performance]
+    difficulty: 3
+    prompt: "Un service reçoit 2 000 requêtes par seconde, chacune dure 50 ms. Combien de requêtes sont en cours en moyenne ?"
+    choices:
+      - id: a
+        text: "100"
+        correct: true
+      - id: b
+        text: "40"
+      - id: c
+        text: "2 000"
+      - id: d
+        text: "50"
+    explanation: |
+      En cours = débit × durée = 2 000 × 0,05 = 100. Si la durée passe à 200 ms, il en faut
+      400 : un pool de 200 threads s'épuise.
+
+  - id: performance.n4.lois.qcm-amdahl
+    type: qcm
+    title: La limite d'Amdahl
+    skills: [lois-performance, parallelisme]
+    difficulty: 4
+    prompt: "Un traitement a 10 % de travail séquentiel. Quelle accélération maximale peut-on espérer avec un nombre illimité de cœurs ?"
+    choices:
+      - id: a
+        text: "×10"
+        correct: true
+      - id: b
+        text: "Illimitée"
+      - id: c
+        text: "×90"
+      - id: d
+        text: "×2"
+    explanation: |
+      1 / s = 1 / 0,1 = 10. Mesure réelle sur 4 cœurs : ×2,91 (théorie : ×3,08). Pour aller
+      plus loin, il faut réduire la partie séquentielle elle-même.
+
+  - id: performance.n4.parallelisme.match
+    type: match
+    title: Paralléliser selon le langage
+    skills: [parallelisme]
+    difficulty: 3
+    prompt: Relie chaque situation à l'approche de parallélisme adaptée.
+    pairs:
+      - left: Un calcul intensif en Python pur, sur 8 cœurs
+        right: Plusieurs processus (multiprocessing)
+      - left: Un calcul intensif en Kotlin sur la JVM
+        right: Un pool de la taille du nombre de cœurs (Dispatchers.Default)
+      - left: Des milliers d'appels HTTP qui attendent le réseau
+        right: Coroutines ou threads virtuels
+      - left: Un calcul lourd dans une page web, sans bloquer l'interface
+        right: Un Web Worker
+    explanation: |
+      Le GIL de Python empêche le calcul parallèle par threads ; la JVM a de vrais threads ;
+      les attentes d'entrées-sorties se gèrent bien avec beaucoup de tâches légères.
+
+  - id: performance.n4.lots.qcm-serie
+    type: qcm
+    title: Trois appels l'un après l'autre
+    skills: [entrees-sorties]
+    difficulty: 2
+    language: kotlin
+    prompt: "Ces trois appels indépendants prennent chacun 100 ms. Combien de temps prend cette fonction, et comment l'améliorer ?"
+    code: |
+      suspend fun tableauDeBord(id: ClientId): TableauDeBord {
+          val profil = profils.lire(id)          // 100 ms
+          val commandes = commandes.recentes(id) // 100 ms
+          val points = fidelite.solde(id)        // 100 ms
+          return TableauDeBord(profil, commandes, points)
+      }
+    choices:
+      - id: a
+        text: "300 ms ; en lançant les trois appels en parallèle (async dans un coroutineScope), environ 100 ms."
+        correct: true
+      - id: b
+        text: "100 ms, les coroutines sont déjà parallèles."
+        feedback: "Dans une coroutine, les appels suspend s'exécutent l'un après l'autre, sauf si on les lance avec async."
+      - id: c
+        text: "300 ms, et on ne peut rien y faire."
+      - id: d
+        text: "33 ms"
+    explanation: |
+      `coroutineScope { val p = async { … }; val c = async { … }; val f = async { … };
+      TableauDeBord(p.await(), c.await(), f.await()) }` : la durée devient celle de l'appel
+      le plus lent.

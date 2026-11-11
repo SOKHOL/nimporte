@@ -1,57 +1,112 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: performance
 title: Performance et optimisation
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Rendre un logiciel rapide pour de bonnes raisons : mesurer d'abord, profiler, choisir les
+  bons algorithmes et structures, grouper les entrées-sorties, paralléliser avec réalisme, et
+  comprendre le matériel (caches, branchements, latence de queue).
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: mesurer-avant-d-optimiser
+  - level: 1
     title: Mesurer avant d'optimiser
-  - id: latence-et-debit
-    title: Latence et débit
-  - id: percentiles-p50-p99
-    title: Percentiles (p50, p99)
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: microbenchmarks-jmh-et-leurs-pieges
-    title: Microbenchmarks (JMH) et leurs pièges
-  - id: profilers
-    title: Profilers
-  - id: flame-graphs
-    title: Flame graphs
-- level: 3
-  title: Approfondir
-  skills:
-  - id: complexite-en-pratique
-    title: Complexité en pratique
-  - id: allocations-et-pression-sur-le-gc
-    title: Allocations et pression sur le GC
-  - id: caches-applicatifs
-    title: Caches applicatifs
-  - id: entrees-sorties
-    title: Entrées-sorties
-- level: 4
-  title: Concevoir
-  skills:
-  - id: performance-des-bases-de-donnees
-    title: Performance des bases de données
-  - id: tests-de-charge
-    title: Tests de charge
-  - id: loi-de-little
-    title: Loi de Little
-  - id: loi-d-amdahl
-    title: Loi d'Amdahl
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: mechanical-sympathy
-    title: '*mechanical sympathy*'
-  - id: optimisations-du-jit
-    title: Optimisations du JIT
-  - id: structures-adaptees-au-cache
-    title: Structures adaptées au cache
-  - id: latence-de-queue
-    title: Latence de queue
+    skills:
+      - id: mesurer
+        title: Mesurer avant d'optimiser
+      - id: percentiles
+        title: Moyennes et percentiles
+      - id: objectifs-performance
+        title: Objectifs et budgets de performance
+    boss:
+      id: performance.n1.boss
+      title: "Boss : la moyenne menteuse"
+      exercises:
+        - performance.n1.mesurer.qcm-gain
+        - performance.n1.percentiles.qcm-moyenne-p99
+        - performance.n1.objectifs.match
+        - performance.n1.mesurer.parsons
+        - performance.n1.percentiles.qcm-moyenne
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: Les outils
+    skills:
+      - id: profileurs
+        title: Les profileurs
+      - id: microbenchmarks
+        title: Les microbenchmarks et leurs pièges
+      - id: flame-graphs
+        title: Lire un flame graph
+    boss:
+      id: performance.n2.boss
+      title: "Boss : le benchmark naïf"
+      exercises:
+        - performance.n2.profileurs.qcm-cprofile
+        - performance.n2.microbenchmarks.review
+        - performance.n2.profileurs.match
+        - performance.n2.microbenchmarks.qcm-prechauffage
+        - performance.n2.flame-graphs.qcm
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 3
+    title: Un code efficace
+    skills:
+      - id: complexite-pratique
+        title: La complexité en pratique
+      - id: caches-memoisation
+        title: Mémoïsation et caches applicatifs
+      - id: allocations
+        title: Allocations, boxing et pression sur le GC
+    boss:
+      id: performance.n3.boss
+      title: "Boss : l'algorithme quadratique"
+      exercises:
+        - performance.n3.complexite.find-bug
+        - performance.n3.memoisation.qcm-fib
+        - performance.n3.allocations.qcm-boxing
+        - performance.n3.caches.match
+        - performance.n3.complexite.qcm-volume
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 4
+    title: Le système entier
+    skills:
+      - id: entrees-sorties
+        title: Entrées-sorties et traitement par lots
+      - id: lois-performance
+        title: Les lois de Little et d'Amdahl
+      - id: parallelisme
+        title: Paralléliser avec réalisme
+    boss:
+      id: performance.n4.boss
+      title: "Boss : la loi d'Amdahl"
+      exercises:
+        - performance.n4.lots.qcm
+        - performance.n4.lois.qcm-amdahl
+        - performance.n4.parallelisme.match
+        - performance.n4.lois.qcm-little
+        - performance.n4.lots.qcm-serie
+      pass_ratio: 0.8
+      time_limit_min: 8
+
+  - level: 5
+    title: Mechanical sympathy
+    skills:
+      - id: caches-cpu
+        title: Les caches du processeur
+      - id: branchements
+        title: La prédiction de branchement
+      - id: latence-queue
+        title: Réduire la latence de queue
+    boss:
+      id: performance.n5.boss
+      title: "Boss : le cache du processeur"
+      exercises:
+        - performance.n5.caches.qcm-colonnes
+        - performance.n5.branchements.qcm-tri
+        - performance.n5.latence-queue.match
+        - performance.n5.latence-queue.qcm-hedged
+        - performance.n5.caches.qcm-matrice
+      pass_ratio: 0.8
+      time_limit_min: 8

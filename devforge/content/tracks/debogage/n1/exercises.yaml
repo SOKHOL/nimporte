@@ -1,0 +1,116 @@
+exercises:
+  - id: debogage.n1.erreurs.qcm-cause
+    type: qcm
+    title: La vraie cause
+    skills: [lire-erreurs]
+    difficulty: 2
+    language: text
+    prompt: D'après cette pile d'appels réelle, quelle est la cause du problème ?
+    code: |
+      Exception in thread "main" java.lang.IllegalStateException: commande 7731 introuvable
+      	at DepotCommandes.charger(Commande.kt:5)
+      	at ServiceFacturation.facturer(Commande.kt:10)
+      	at CommandeKt.main(Commande.kt:12)
+      Caused by: java.io.FileNotFoundException: commandes/7731.json (No such file or directory)
+      	at java.base/java.io.FileInputStream.open0(Native Method)
+      	at DepotCommandes.lireFichier(Commande.kt:7)
+      	at DepotCommandes.charger(Commande.kt:3)
+    choices:
+      - id: a
+        text: "Le fichier commandes/7731.json n'existe pas, à l'endroit où le programme le cherche (un chemin relatif au dossier courant)."
+        correct: true
+      - id: b
+        text: Un bug dans ServiceFacturation.facturer.
+        feedback: "facturer n'a fait que transmettre l'appel ; la cause est dans le Caused by."
+      - id: c
+        text: Un bug de la classe FileInputStream du JDK.
+      - id: d
+        text: La commande 7731 a été supprimée de la base.
+        feedback: "Le message parle d'un fichier, pas d'une base ; il faut lire la cause, pas deviner."
+    explanation: |
+      On lit le `Caused by` le plus bas : c'est l'erreur d'origine. Le chemin
+      `commandes/7731.json` est relatif : il dépend du dossier depuis lequel le programme a
+      été lancé, un piège classique.
+
+  - id: debogage.n1.methode.parsons
+    type: parsons
+    title: Déboguer méthodiquement
+    skills: [methode-scientifique, reproduire]
+    difficulty: 2
+    language: text
+    prompt: Remets dans l'ordre une démarche de débogage méthodique.
+    lines:
+      - Recueillir les faits (version, données, étapes, journaux)
+      - Reproduire le bug, idéalement avec un test automatisé qui échoue
+      - Formuler une hypothèse précise et falsifiable
+      - Faire une expérience qui ne change qu'une seule chose
+      - Corriger, puis vérifier que le test passe et qu'aucun autre ne casse
+    distractors:
+      - Modifier plusieurs parties du code en même temps pour gagner du temps
+    explanation: |
+      Changer plusieurs choses à la fois empêche de savoir laquelle a eu un effet, et peut
+      masquer le symptôme sans corriger la cause.
+
+  - id: debogage.n1.reproduire.qcm
+    type: qcm
+    title: Le bug qui ne se reproduit pas chez moi
+    skills: [reproduire]
+    difficulty: 3
+    prompt: "Un client voit des dates de livraison décalées d'un jour. Chez toi, tout est juste. Que regardes-tu en priorité ?"
+    choices:
+      - id: a
+        text: "Les différences entre son contexte et le tien : fuseau horaire, langue, données, version, configuration."
+        correct: true
+      - id: b
+        text: Rien, le bug n'existe pas puisqu'il ne se reproduit pas.
+      - id: c
+        text: "Le code d'affichage, au hasard, pour voir."
+      - id: d
+        text: Réinstaller l'application chez le client.
+    explanation: |
+      Un décalage d'un jour évoque fortement un problème de fuseau horaire (une date à minuit
+      UTC affichée dans un fuseau à l'ouest). Ce sont les différences d'environnement qui
+      mènent au bug.
+
+  - id: debogage.n1.erreurs.find-bug
+    type: find-bug
+    title: L'erreur avalée
+    skills: [lire-erreurs]
+    difficulty: 2
+    language: kotlin
+    prompt: "Depuis une semaine, certaines factures ne sont jamais envoyées, sans aucune trace dans les journaux. Touche la ligne responsable du silence."
+    code: |
+      fun envoyerFactures(factures: List<Facture>) {
+          for (f in factures) {
+              try {
+                  mailer.envoyer(f.client.email, f.pdf())
+              } catch (e: Exception) {
+              }
+          }
+      }
+    bug_lines: [5]
+    explanation: |
+      L'exception est avalée : ni journal, ni relance, ni alerte. Au minimum, journaliser
+      l'erreur avec l'identifiant de la facture et la cause, et compter les échecs (une
+      métrique) ; idéalement, réessayer et signaler.
+
+  - id: debogage.n1.methode.qcm-hypothese
+    type: qcm
+    title: Une bonne hypothèse
+    skills: [methode-scientifique]
+    difficulty: 3
+    prompt: Laquelle de ces hypothèses est la plus utile pour avancer ?
+    choices:
+      - id: a
+        text: "« La remise est appliquée deux fois quand le panier contient un code promo » : si c'est vrai, il manque exactement 5 % avec un code, et rien sans."
+        correct: true
+      - id: b
+        text: « Le calcul du total est bugué. »
+        feedback: "Trop vague : elle ne dit pas quoi vérifier."
+      - id: c
+        text: « C'est sûrement un problème de cache. »
+      - id: d
+        text: « Ça marchait la semaine dernière. »
+    explanation: |
+      Une bonne hypothèse est précise et fait une prédiction qu'une expérience peut
+      réfuter.

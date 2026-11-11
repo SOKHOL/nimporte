@@ -1,0 +1,142 @@
+exercises:
+  - id: debogage.n5.sanitizers.qcm-silencieux
+    type: qcm
+    title: Le programme qui ne plante pas
+    skills: [sanitizers]
+    difficulty: 3
+    language: c
+    prompt: Que fait réellement ce programme, compilé normalement ?
+    code: |
+      int *solde = malloc(sizeof(int));
+      *solde = 100;
+      free(solde);
+      printf("solde : %d\n", *solde);
+    choices:
+      - id: a
+        text: "Il affiche une valeur imprévisible, sans planter : la lecture après libération est silencieuse sans outil."
+        correct: true
+      - id: b
+        text: Il plante toujours avec une erreur de segmentation.
+        feedback: "La mémoire libérée appartient encore au processus : la lecture « réussit » et renvoie n'importe quoi."
+      - id: c
+        text: "Il affiche toujours « solde : 100 »."
+      - id: d
+        text: Il ne compile pas.
+    explanation: |
+      Exécution réelle : `solde : 1456454365`. Valgrind signale `Invalid read of size 4 …
+      inside a block of size 4 free'd` ; AddressSanitizer donnerait un rapport
+      `heap-use-after-free`.
+
+  - id: debogage.n5.sanitizers.match
+    type: match
+    title: Le bon sanitizer
+    skills: [sanitizers]
+    difficulty: 4
+    prompt: Relie chaque type de bug au sanitizer qui le détecte.
+    pairs:
+      - left: Écrire 13 octets dans un bloc de 8
+        right: AddressSanitizer (heap-buffer-overflow)
+      - left: Deux threads modifient la même variable sans synchronisation
+        right: ThreadSanitizer
+      - left: Un entier signé qui déborde
+        right: UndefinedBehaviorSanitizer
+      - left: Lire une variable jamais initialisée
+        right: MemorySanitizer
+    explanation: |
+      Rapport réel d'ASan : `heap-buffer-overflow … WRITE of size 13 … 0 bytes after 8-byte
+      region`, avec la ligne fautive et l'endroit de l'allocation.
+
+  - id: debogage.n5.distribue.scenario
+    type: scenario
+    title: La commande facturée deux fois
+    skills: [debogage-distribue]
+    difficulty: 5
+    prompt: |
+      Quelques clients par jour reçoivent deux factures pour la même commande. Les services
+      Commande, Paiement et Facturation n'ont aucune erreur dans leurs journaux.
+    start: debut
+    nodes:
+      debut:
+        text: Par où commences-tu ?
+        options:
+          - text: "Je prends l'identifiant de corrélation d'une commande touchée et je reconstitue son parcours dans les journaux et les traces des trois services."
+            next: parcours
+            points: 3
+          - text: Je relis le code de génération des factures.
+            next: code
+            points: 1
+            feedback: "Le code de chaque service peut être juste ; le bug naît souvent des interactions."
+      code:
+        text: "Le code de facturation paraît correct : il crée une facture par message reçu. Que vérifies-tu ?"
+        options:
+          - text: Combien de messages ont été reçus pour cette commande, et pourquoi.
+            next: parcours
+            points: 2
+      parcours:
+        text: "La trace montre que Facturation a reçu deux fois le message « paiement accepté », à 31 secondes d'écart. Hypothèse ?"
+        options:
+          - text: "Le message a été relivré (livraison au moins une fois), par exemple parce que l'acquittement a échoué ou a dépassé le délai, et le traitement n'est pas idempotent."
+            next: correction
+            points: 3
+          - text: Le client a payé deux fois.
+            next: correction
+            points: 0
+            feedback: "Le service Paiement n'a qu'un seul paiement pour cette commande."
+      correction:
+        text: Quelle correction ?
+        options:
+          - text: "Rendre la facturation idempotente : une contrainte d'unicité sur l'identifiant de la commande (ou du message), et ignorer les doublons."
+            next: resolu
+            points: 3
+          - text: Allonger le délai d'acquittement de la file.
+            next: delai
+            points: 1
+      delai:
+        ending: partial
+        text: "🟡 Les doublons sont plus rares, mais toujours possibles lors d'un redémarrage."
+      resolu:
+        ending: success
+        text: "✅ Plus aucune double facture, même quand un message est relivré."
+    explanation: |
+      Dans un système distribué, se demander toujours si une opération peut arriver deux fois,
+      dans le désordre ou partiellement. Ici, la livraison « au moins une fois » exige un
+      consommateur idempotent.
+
+  - id: debogage.n5.code-des-autres.parsons
+    type: parsons
+    title: Un bug dans une bibliothèque
+    skills: [code-des-autres]
+    difficulty: 3
+    language: text
+    prompt: Tu soupçonnes un bug dans une bibliothèque de sérialisation JSON. Remets la démarche dans l'ordre.
+    lines:
+      - Vérifier quelle version est réellement chargée (et l'absence de conflit de versions)
+      - Lire le code source de la bibliothèque et y poser un point d'arrêt
+      - Chercher dans les issues et le changelog du projet
+      - Réduire à un exemple minimal indépendant de ton projet
+      - "Ouvrir une issue avec l'exemple, les versions, l'attendu et l'observé"
+    distractors:
+      - Copier la bibliothèque dans ton projet et la modifier sans le signaler
+    explanation: |
+      Le bug est souvent connu ou corrigé dans une version récente ; un exemple minimal fait
+      corriger un bug, un projet entier le fait ignorer.
+
+  - id: debogage.n5.distribue.qcm-horloge
+    type: qcm
+    title: L'ordre trompeur
+    skills: [debogage-distribue]
+    difficulty: 4
+    prompt: "Les journaux montrent qu'une facture a été créée 3 ms AVANT la réception du paiement qui la déclenche, sur deux machines différentes. Qu'en conclure ?"
+    choices:
+      - id: a
+        text: "Probablement rien d'anormal : les horloges des deux machines ne sont pas parfaitement synchronisées ; on se fie aux relations de cause (identifiants, spans parents) plutôt qu'à l'heure."
+        correct: true
+      - id: b
+        text: Le service de facturation devine l'avenir.
+      - id: c
+        text: Le paiement a été reçu deux fois.
+      - id: d
+        text: Il faut supprimer la facture.
+    explanation: |
+      Quelques millisecondes d'écart entre horloges suffisent à inverser l'ordre apparent.
+      Les traces distribuées et les horloges logiques donnent l'ordre causal réel.

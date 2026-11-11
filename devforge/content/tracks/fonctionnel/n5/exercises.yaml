@@ -1,0 +1,133 @@
+exercises:
+  - id: fonctionnel.n5.persistantes.predict-partage
+    type: predict-output
+    title: Trois listes, combien de copies ?
+    skills: [structures-persistantes]
+    difficulty: 4
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      sealed interface Liste<out T>
+      data object Vide : Liste<Nothing>
+      data class Cellule<T>(val tete: T, val queue: Liste<T>) : Liste<T>
+
+      fun <T> Liste<T>.ajouterDevant(x: T): Liste<T> = Cellule(x, this)
+      fun <T> Liste<T>.taille(): Int = when (this) { Vide -> 0; is Cellule -> 1 + queue.taille() }
+
+      fun main() {
+          val a = Vide.ajouterDevant(3).ajouterDevant(2)
+          val b = a.ajouterDevant(1)
+          val c = a.ajouterDevant(9)
+          println("${a.taille()} ${b.taille()} ${c.taille()}")
+          println((b as Cellule).queue === a && (c as Cellule).queue === a)
+      }
+    choices:
+      - id: a
+        text: "`2 3 3` / `true`"
+        correct: true
+      - id: b
+        text: "`2 3 3` / `false`"
+        feedback: "`b` et `c` ajoutent une cellule devant `a` sans la copier : leur queue est le même objet que `a`."
+      - id: c
+        text: "`3 3 3` / `true`"
+        feedback: "`a` n'a jamais été modifiée : elle contient toujours 2 éléments."
+      - id: d
+        text: "`2 5 5` / `false`"
+    explanation: |
+      Les trois versions coexistent en partageant leurs cellules communes : c'est le principe
+      des structures persistantes. Sortie vérifiée.
+
+  - id: fonctionnel.n5.lambda.predict-church
+    type: predict-output
+    title: Compter avec des fonctions
+    skills: [lambda-calcul]
+    difficulty: 5
+    language: kotlin
+    prompt: Qu'affiche ce programme, qui code les nombres uniquement avec des fonctions ?
+    code: |
+      typealias Nombre = ((Any?) -> Any?) -> (Any?) -> Any?
+      val zero: Nombre = { _ -> { x -> x } }
+      fun succ(n: Nombre): Nombre = { f -> { x -> f(n(f)(x)) } }
+      fun plus(a: Nombre, b: Nombre): Nombre = { f -> { x -> a(f)(b(f)(x)) } }
+      fun fois(a: Nombre, b: Nombre): Nombre = { f -> a(b(f)) }
+      fun enEntier(n: Nombre): Int = n { (it as Int) + 1 }(0) as Int
+
+      fun main() {
+          val un = succ(zero); val deux = succ(un); val trois = plus(un, deux)
+          println("${enEntier(zero)} ${enEntier(un)} ${enEntier(trois)} ${enEntier(fois(trois, deux))}")
+      }
+    choices:
+      - id: a
+        text: "`0 1 3 6`"
+        correct: true
+      - id: b
+        text: "`0 1 3 5`"
+        feedback: "`fois(a, b)` applique `b(f)` a fois : 3 × 2 = 6 applications."
+      - id: c
+        text: "`1 2 4 7`"
+      - id: d
+        text: Une ClassCastException.
+    explanation: |
+      Le nombre n est « appliquer n fois f ». `enEntier` compte les applications de « +1 » à
+      partir de 0. Sortie vérifiée.
+
+  - id: fonctionnel.n5.categories.qcm-monoide
+    type: qcm
+    title: Pourquoi l'associativité compte
+    skills: [categories]
+    difficulty: 4
+    prompt: "Pourquoi un calcul de somme, de maximum ou de concaténation se parallélise-t-il facilement sur 100 machines ?"
+    choices:
+      - id: a
+        text: "Ce sont des monoïdes : l'opération est associative et a un élément neutre, donc on peut découper les données, calculer chaque morceau séparément, puis combiner les résultats partiels."
+        correct: true
+      - id: b
+        text: Parce que ces opérations sont rapides.
+      - id: c
+        text: Parce qu'elles sont commutatives, ce qui est la seule propriété nécessaire.
+        feedback: "L'associativité suffit à découper et recombiner dans l'ordre ; la commutativité permet en plus de recombiner dans n'importe quel ordre."
+      - id: d
+        text: Parce qu'elles ne lisent pas de base de données.
+    explanation: |
+      (a + b) + (c + d) = ((a + b) + c) + d : chaque machine calcule son morceau, et un
+      dernier pas combine. C'est le cœur de MapReduce et des agrégations distribuées. La
+      moyenne n'est pas un monoïde telle quelle ; on combine des couples (somme, nombre).
+
+  - id: fonctionnel.n5.langages.match
+    type: match
+    title: Les langages fonctionnels
+    skills: [langages-purs]
+    difficulty: 3
+    prompt: Relie chaque langage à sa caractéristique principale.
+    pairs:
+      - left: Haskell
+        right: Pureté et paresse par défaut, effets typés par IO
+      - left: Elm
+        right: Interfaces web sans erreur à l'exécution
+      - left: Elixir (et Erlang)
+        right: Systèmes concurrents et tolérants aux pannes
+      - left: Clojure
+        right: Un Lisp sur la JVM, avec des données immuables par défaut
+    explanation: |
+      Chaque langage pousse une idée fonctionnelle à son maximum ; en apprendre un améliore
+      ta façon d'écrire dans les autres.
+
+  - id: fonctionnel.n5.lambda.qcm-turing
+    type: qcm
+    title: Seulement des fonctions
+    skills: [lambda-calcul]
+    difficulty: 3
+    prompt: "Le lambda-calcul n'a ni nombres, ni booléens, ni boucles. Que peut-il calculer ?"
+    choices:
+      - id: a
+        text: "Tout ce qu'une machine de Turing peut calculer : nombres, booléens et récursion se codent avec des fonctions."
+        correct: true
+      - id: b
+        text: Seulement des fonctions mathématiques simples.
+      - id: c
+        text: Rien d'utile, c'est un jeu théorique.
+      - id: d
+        text: Seulement des calculs sur des listes.
+    explanation: |
+      Church et Turing ont montré l'équivalence de leurs modèles (1936). Les entiers de
+      Church calculent réellement 0, 1, 3 et 6 dans l'exemple du cours.

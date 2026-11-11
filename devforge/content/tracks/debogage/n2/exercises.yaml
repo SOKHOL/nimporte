@@ -1,0 +1,111 @@
+exercises:
+  - id: debogage.n2.debogueur.qcm-gdb
+    type: qcm
+    title: Ce que dit gdb
+    skills: [debogueur]
+    difficulty: 3
+    language: text
+    prompt: D'après cette session gdb réelle, quelle est la cause du plantage ?
+    code: |
+      Program received signal SIGSEGV, Segmentation fault.
+      0x000055555555519a in moyenne (e=0x7fffffffc298) at moyenne.c:6
+      6	    for (int i = 0; i < e->nb_notes; i++) total += e->notes[i];
+      (gdb) print *e
+      $1 = {nom = 0x555555556008 "Linus", notes = 0x0, nb_notes = 2}
+      (gdb) print i
+      $2 = 0
+    choices:
+      - id: a
+        text: "L'élève Linus a 2 notes annoncées mais un tableau de notes NULL : la lecture de e->notes[0] plante."
+        correct: true
+      - id: b
+        text: Une division par zéro dans le calcul de la moyenne.
+        feedback: "Le programme n'a pas atteint la division : il plante dans la boucle, à i = 0."
+      - id: c
+        text: Un débordement de la pile.
+      - id: d
+        text: Un bug de gdb.
+    explanation: |
+      `print *e` montre l'état de l'élève au moment du plantage. Le calcul est correct ; ce
+      sont les données qui sont incohérentes (une vérification ou un type plus sûr manque).
+
+  - id: debogage.n2.journaux.qcm-tampon
+    type: qcm
+    title: Le message disparu
+    skills: [journaux-diagnostic]
+    difficulty: 4
+    prompt: |
+      Un programme C affiche « Ada : 15.0 » puis plante. Lancé dans un terminal, la ligne
+      s'affiche. Lancé avec `./moyenne > sortie.txt`, le fichier est vide. Pourquoi ?
+    choices:
+      - id: a
+        text: "Vers un fichier, la sortie standard est mise en tampon par blocs ; le programme plante avant que le tampon soit écrit."
+        correct: true
+      - id: b
+        text: Le fichier n'a pas les bons droits.
+      - id: c
+        text: printf n'écrit jamais dans les fichiers.
+      - id: d
+        text: Le plantage efface le fichier.
+    explanation: |
+      Démonstration réelle : code de sortie 139, fichier vide. L'absence d'un message de
+      débogage ne prouve pas que le code n'a pas été exécuté. Écrire sur stderr, vider le
+      tampon (`fflush`) ou utiliser un journal.
+
+  - id: debogage.n2.debogueur.match
+    type: match
+    title: La bonne fonction du débogueur
+    skills: [debogueur]
+    difficulty: 3
+    prompt: Relie chaque besoin à la fonction du débogueur qui y répond.
+    pairs:
+      - left: Le bug n'apparaît qu'au 8 412e tour d'une boucle, pour le client 7731
+        right: Point d'arrêt conditionnel
+      - left: Une exception est attrapée et transformée en message vague, plus loin
+        right: Point d'arrêt sur exception (au moment où elle est levée)
+      - left: Une variable change de valeur et personne ne sait qui la modifie
+        right: Point d'observation (watchpoint)
+      - left: Afficher une valeur à chaque passage sans arrêter le programme
+        right: Point de journalisation
+    explanation: |
+      Ces fonctions évitent des dizaines de `println` et de recompilations.
+
+  - id: debogage.n2.lire.parsons
+    type: parsons
+    title: Comprendre un code inconnu
+    skills: [lire-le-code]
+    difficulty: 2
+    language: text
+    prompt: "Tu dois corriger un bug dans le calcul des frais de port d'un projet que tu découvres. Remets la démarche dans l'ordre."
+    lines:
+      - "Chercher dans le code le texte affiché à l'écran (« Frais de port »)"
+      - Suivre l'appel jusqu'à la fonction de calcul avec « aller à la définition »
+      - Lire les tests de cette fonction pour comprendre les cas prévus
+      - Poser un point d'arrêt et exécuter le cas qui pose problème
+      - "Lire git blame et les commits des lignes suspectes"
+    distractors:
+      - Lire tous les fichiers du projet de haut en bas avant de commencer
+    explanation: |
+      On part d'un point d'entrée concret et on suit un seul chemin ; l'historique Git
+      explique souvent une ligne étrange.
+
+  - id: debogage.n2.journaux.find-bug
+    type: find-bug
+    title: Le journal inutile
+    skills: [journaux-diagnostic]
+    difficulty: 2
+    language: kotlin
+    prompt: "Quand un appel au transporteur échoue, l'astreinte ne sait pas quelle commande est concernée ni pourquoi. Touche la ligne de journal à améliorer."
+    code: |
+      fun reserverLivraison(commande: Commande): Reservation {
+          val reponse = transporteur.reserver(commande.adresse, commande.poids)
+          if (!reponse.ok) {
+              log.error("erreur")
+              throw EchecReservation(reponse.code)
+          }
+          return reponse.reservation
+      }
+    bug_lines: [4]
+    explanation: |
+      « erreur » ne dit rien. Il faut le contexte : identifiant de la commande, code et
+      message renvoyés par le transporteur, durée de l'appel, identifiant de trace.

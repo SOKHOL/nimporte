@@ -1,0 +1,109 @@
+exercises:
+  - id: performance.n3.complexite.find-bug
+    type: find-bug
+    title: Le rapport qui devient lent
+    skills: [complexite-pratique]
+    difficulty: 3
+    language: kotlin
+    prompt: "Ce rapport prenait 50 ms avec 1 000 clients ; avec 100 000 clients, il prend plusieurs minutes. Touche la ligne responsable."
+    code: |
+      fun rapport(commandes: List<Commande>, clients: List<Client>): List<Ligne> {
+          val lignes = mutableListOf<Ligne>()
+          for (c in commandes) {
+              val client = clients.first { it.id == c.clientId }
+              lignes += Ligne(client.nom, c.montant)
+          }
+          return lignes
+      }
+    bug_lines: [4]
+    explanation: |
+      Chercher le client dans une liste à chaque commande est en O(commandes × clients). On
+      construit une fois `val parId = clients.associateBy { it.id }` et on fait
+      `parId.getValue(c.clientId)` : O(1) par commande. Mesure du même phénomène en Python :
+      148 ms dans une liste contre 0,21 ms dans un set.
+
+  - id: performance.n3.memoisation.qcm-fib
+    type: qcm
+    title: Mémoïser Fibonacci
+    skills: [caches-memoisation]
+    difficulty: 3
+    language: python
+    prompt: "fib(30) prend 69 ms en récursif naïf. Avec @lru_cache, combien environ ?"
+    code: |
+      @functools.lru_cache(maxsize=None)
+      def fib(n):
+          return n if n < 2 else fib(n - 1) + fib(n - 2)
+    choices:
+      - id: a
+        text: "Quelques dizaines de microsecondes : chaque fib(k) n'est calculé qu'une fois."
+        correct: true
+      - id: b
+        text: Environ 35 ms, deux fois plus rapide.
+      - id: c
+        text: Toujours 69 ms, le cache n'aide pas une fonction récursive.
+        feedback: "Les appels récursifs passent aussi par le cache : c'est justement là que tout se gagne."
+      - id: d
+        text: Plus lent, à cause du coût du cache.
+    explanation: |
+      Mesure réelle : 18 µs. Le nombre d'appels passe de plus d'un million à environ 30 :
+      c'est le principe de la programmation dynamique.
+
+  - id: performance.n3.allocations.qcm-boxing
+    type: qcm
+    title: List<Int> ou IntArray ?
+    skills: [allocations]
+    difficulty: 3
+    prompt: "Pourquoi sommer 10 millions d'entiers est-il environ 6 fois plus lent dans une List<Int> que dans un IntArray, en Kotlin sur la JVM ?"
+    choices:
+      - id: a
+        text: "La List contient des références vers des objets Integer séparés (boxing) : plus de mémoire, des accès éparpillés, de la pression sur le GC ; l'IntArray stocke les valeurs côte à côte."
+        correct: true
+      - id: b
+        text: "List est une interface, donc chaque accès est un appel virtuel coûteux."
+        feedback: "Le JIT optimise très bien ces appels ; l'essentiel du coût vient des objets Integer."
+      - id: c
+        text: L'IntArray est trié automatiquement.
+      - id: d
+        text: Il n'y a pas de différence réelle.
+    explanation: |
+      Mesure réelle : 23 ms pour la List<Int> contre 4 ms pour l'IntArray, après
+      préchauffage ; environ 200 Mo contre 40 Mo.
+
+  - id: performance.n3.caches.match
+    type: match
+    title: Les questions d'un cache
+    skills: [caches-memoisation]
+    difficulty: 3
+    prompt: Relie chaque problème de cache à la question qui l'aurait évité.
+    pairs:
+      - left: Le cache grossit jusqu'à l'OutOfMemoryError
+        right: Quelle taille maximale ?
+      - left: Des clients voient les prix dans la mauvaise devise
+        right: La clé contient-elle tous les paramètres ?
+      - left: Un prix modifié reste faux pendant des heures
+        right: Quand la valeur devient-elle fausse (invalidation, durée de vie) ?
+      - left: Le cache coûte de la mémoire mais ne sert que 2 % des requêtes
+        right: Quel taux de réussite, mesuré ?
+    explanation: |
+      Un cache est une décision de conception, pas une optimisation gratuite.
+
+  - id: performance.n3.complexite.qcm-volume
+    type: qcm
+    title: Cent fois plus de données
+    skills: [complexite-pratique]
+    difficulty: 3
+    prompt: "Un dédoublonnage en O(n²) prend 258 ms sur 20 000 éléments. Environ combien de temps sur 200 000 éléments ?"
+    choices:
+      - id: a
+        text: "Environ 26 secondes (10 fois plus de données, 100 fois plus de temps)."
+        correct: true
+      - id: b
+        text: "Environ 2,6 secondes"
+        feedback: "Ce serait le cas d'un algorithme linéaire."
+      - id: c
+        text: "Environ 258 ms, la taille ne change rien."
+      - id: d
+        text: "Environ 520 ms"
+    explanation: |
+      En O(n²), multiplier n par 10 multiplie le temps par 100. La version en O(n)
+      (`dict.fromkeys`) a pris 0,5 ms pour 20 000 éléments.

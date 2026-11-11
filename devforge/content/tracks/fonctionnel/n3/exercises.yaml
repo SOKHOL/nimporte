@@ -1,0 +1,146 @@
+exercises:
+  - id: fonctionnel.n3.paresse.predict-sequence
+    type: predict-output
+    title: Liste ou séquence ?
+    skills: [paresse]
+    difficulty: 4
+    language: kotlin
+    prompt: "Qu'affiche la partie séquence de ce programme ? (seules les lignes après « liste : 20 » comptent)"
+    code: |
+      fun main() {
+          val liste = listOf(1, 2, 3, 4)
+              .map { println("map $it"); it * 10 }
+              .filter { println("filter $it"); it > 15 }
+              .first()
+          println("liste : $liste")
+          val seq = sequenceOf(1, 2, 3, 4)
+              .map { println("map $it"); it * 10 }
+              .filter { println("filter $it"); it > 15 }
+              .first()
+          println("séquence : $seq")
+      }
+    choices:
+      - id: a
+        text: "`map 1` / `filter 10` / `map 2` / `filter 20` / `séquence : 20`"
+        correct: true
+      - id: b
+        text: "`map 1` / `map 2` / `map 3` / `map 4` / `filter 10` / `filter 20` / `séquence : 20`"
+        feedback: "C'est le comportement de la liste : chaque étape traite tous les éléments."
+      - id: c
+        text: "`séquence : 20` seulement"
+        feedback: "Les lambdas s'exécutent bien, mais seulement pour les éléments nécessaires."
+      - id: d
+        text: "`map 1` / `filter 10` / `séquence : 10`"
+        feedback: "10 ne passe pas le filtre `> 15`."
+    explanation: |
+      La séquence fait passer un élément à la fois dans tout le pipeline et s'arrête dès que
+      `first()` a sa réponse : 4 appels au lieu de 8 pour la liste. Sortie vérifiée.
+
+  - id: fonctionnel.n3.recursion.predict-tailrec
+    type: predict-output
+    title: Récursion et pile
+    skills: [recursion-terminale]
+    difficulty: 4
+    language: kotlin
+    prompt: Qu'affichent les deux premières lignes de ce programme ?
+    code: |
+      fun somme(n: Long): Long = if (n == 0L) 0 else n + somme(n - 1)
+
+      tailrec fun sommeTerminale(n: Long, acc: Long = 0): Long =
+          if (n == 0L) acc else sommeTerminale(n - 1, acc + n)
+
+      fun main() {
+          println(sommeTerminale(1_000_000))
+          try { println(somme(1_000_000)) } catch (e: StackOverflowError) { println("StackOverflowError") }
+      }
+    choices:
+      - id: a
+        text: "`500000500000` / `StackOverflowError`"
+        correct: true
+      - id: b
+        text: "`500000500000` / `500000500000`"
+        feedback: "Dans `somme`, l'addition reste à faire après l'appel : ce n'est pas un appel terminal, et la JVM ne l'optimise pas."
+      - id: c
+        text: "`StackOverflowError` / `StackOverflowError`"
+        feedback: "`tailrec` transforme la récursion terminale en boucle."
+      - id: d
+        text: "Une erreur de compilation sur `tailrec`."
+    explanation: |
+      `sommeTerminale` porte le résultat dans l'accumulateur et se compile en boucle. `somme`
+      empile un million de frames et déborde (la pile par défaut a tenu environ 12 000 appels
+      dans la mesure). Sortie vérifiée.
+
+  - id: fonctionnel.n3.erreurs.predict-result
+    type: predict-output
+    title: Une chaîne de Result
+    skills: [erreurs-fonctionnelles]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun lireAge(texte: String): Result<Int> = runCatching { texte.trim().toInt() }
+          .mapCatching { require(it in 0..150) { "âge impossible : $it" }; it }
+
+      fun main() {
+          for (entree in listOf(" 42 ", "abc", "200")) {
+              println(lireAge(entree).fold(onSuccess = { "ok $it" }, onFailure = { "erreur : ${it::class.simpleName}" }))
+          }
+      }
+    choices:
+      - id: a
+        text: "`ok 42` / `erreur : NumberFormatException` / `erreur : IllegalArgumentException`"
+        correct: true
+      - id: b
+        text: "`erreur : NumberFormatException` / `erreur : NumberFormatException` / `ok 200`"
+        feedback: "`trim()` retire les espaces avant la conversion ; et 200 est refusé par `require`."
+      - id: c
+        text: "`ok 42` / `erreur : NumberFormatException` / `ok 200`"
+      - id: d
+        text: Le programme s'arrête sur la première exception.
+        feedback: "runCatching transforme l'exception en valeur Result.failure : rien ne remonte."
+    explanation: |
+      Chaque étape ne s'exécute que si la précédente a réussi ; l'échec voyage comme une
+      valeur jusqu'au `fold`. Sortie vérifiée.
+
+  - id: fonctionnel.n3.erreurs.match
+    type: match
+    title: Exception ou valeur ?
+    skills: [erreurs-fonctionnelles]
+    difficulty: 3
+    prompt: Relie chaque situation à la façon la plus adaptée de la représenter.
+    pairs:
+      - left: L'e-mail est déjà utilisé à l'inscription
+        right: Un cas d'un type somme (EmailDejaUtilise)
+      - left: La base de données ne répond plus
+        right: Une exception
+      - left: Aucun utilisateur ne correspond à cet identifiant
+        right: Un type nullable (Utilisateur?)
+      - left: La conversion d'un texte en nombre peut échouer
+        right: Result<Int>
+    explanation: |
+      Les échecs prévus du métier font partie du contrat : le type les rend visibles et
+      oblige à les traiter. L'imprévu reste une exception.
+
+  - id: fonctionnel.n3.paresse.qcm-infini
+    type: qcm
+    title: Une suite infinie
+    skills: [paresse]
+    difficulty: 3
+    language: kotlin
+    prompt: "Pourquoi ce code termine-t-il, alors que la séquence est infinie ?"
+    code: |
+      val puissances = generateSequence(1) { it * 2 }
+      println(puissances.take(5).toList())   // [1, 2, 4, 8, 16]
+    choices:
+      - id: a
+        text: "La séquence est paresseuse : take(5) ne demande que 5 éléments, et seuls ceux-là sont calculés."
+        correct: true
+      - id: b
+        text: generateSequence s'arrête automatiquement après 1 000 éléments.
+      - id: c
+        text: Kotlin détecte la boucle infinie et la coupe.
+      - id: d
+        text: Il ne termine pas.
+    explanation: |
+      Avec une liste, il faudrait tout calculer d'abord. La paresse permet de décrire des
+      sources infinies et de n'en consommer que ce qu'il faut.

@@ -81,7 +81,7 @@ tracks:
     title: Programmation fonctionnelle
     domain: code
     requires: [fondations@2]
-    status: planned
+    status: pilot
 
   - id: clean-code
     title: Clean code, refactoring et tests
@@ -195,13 +195,13 @@ tracks:
     title: Performance et optimisation
     domain: systemes
     requires: [jvm@2, algo@2]
-    status: planned
+    status: pilot
 
   - id: debogage
     title: Débogage et diagnostic
     domain: code
     requires: [fondations@1]
-    status: planned
+    status: pilot
 
   - id: systemes-distribues
     title: Systèmes distribués

@@ -50,12 +50,12 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 ## Ce qui existe déjà
 
 - La carte des 31 parcours et de leurs prérequis : [`content/curriculum.yaml`](content/curriculum.yaml).
-- 19 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
-  POO, Design patterns, Clean code, Architecture, System design, DevOps, SRE, Cloud, Bases de
-  données, Réseau et web, Sécurité, **Gestion de la mémoire, JVM, Threads et concurrence,
-  Métaprogrammation et AOP**.
-- **109 leçons et 544 exercices**, couvrant 9 types d'exercices, et **95 boss chronométrés,
-  un par niveau**. **Les 19 parcours détaillés sont complets du niveau 1 au niveau 5** :
+- 22 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
+  POO, Programmation fonctionnelle, Design patterns, Clean code, Débogage, Performance,
+  Architecture, System design, DevOps, SRE, Cloud, Bases de données, Réseau et web, Sécurité,
+  **Gestion de la mémoire, JVM, Threads et concurrence, Métaprogrammation et AOP**.
+- **124 leçons et 617 exercices**, couvrant 9 types d'exercices, et **110 boss chronométrés,
+  un par niveau**. **Les 22 parcours détaillés sont complets du niveau 1 au niveau 5** :
   - fondations : types, boucles, collections, exceptions, complexité, nullabilité,
     génériques, fonctions d'ordre supérieur, apprendre n'importe quel langage ;
   - algorithmes : recherche et tris, piles, files, hachage, fenêtres glissantes, arbres,
@@ -96,6 +96,14 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
   - sécurité : mots de passe, MFA et passkeys, injections, XSS, CSRF, IDOR, SSRF, autorisation,
     secrets, cryptographie appliquée, dépendances, STRIDE, zero trust, tests de sécurité,
     réponse à incident, test d'intrusion, RGPD, ingénierie sociale ;
+  - programmation fonctionnelle : lambdas et fermetures, map/filter/fold, immutabilité,
+    fonctions pures, composition, types algébriques, Result, paresse, récursion terminale,
+    foncteurs et monades, effets, combinateurs, structures persistantes, lambda-calcul ;
+  - débogage : piles d'appels, méthode scientifique, gdb, journaux, git bisect, réduction
+    de cas, bugs intermittents, thread dumps, fuites mémoire, profilage JFR, sanitizers ;
+  - performance : percentiles, profileurs, microbenchmarks, flame graphs, complexité,
+    mémoïsation, boxing, traitement par lots, lois de Little et d'Amdahl, caches du
+    processeur, prédiction de branchement, latence de queue ;
   - clean code : nommage, fonctions, DRY/KISS/YAGNI, odeurs et refactorings, tests unitaires,
     TDD, doublures, pyramide, couverture, code existant, tests de contrat, tests par
     propriétés, tests instables, tests de mutation, revue de code ;
@@ -113,7 +121,8 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
   Tous les extraits (Kotlin, C, Python, Rust, JavaScript) ont été exécutés pour vérifier les
   réponses attendues, et les sorties citées dans les cours Git, Linux, System design et DevOps
   sont des sorties réelles (Git, bash, strace, Redis, PostgreSQL, Docker, Terraform, curl,
-  openssl, bandit, pip-audit, pytest, Hypothesis, Prometheus, OpenTelemetry).
+  openssl, bandit, pip-audit, pytest, Hypothesis, Prometheus, OpenTelemetry, gdb, valgrind,
+  AddressSanitizer, jstack, JFR, cProfile).
 - Un validateur (schémas + cohérence) avec ses tests, lancé par GitHub Actions.
 
 ## Structure
@@ -154,6 +163,6 @@ python -m unittest discover -s devforge/tools -v
 
 ## Prochaine étape
 
-Rédiger les 12 parcours encore à l'état de plan (programmation fonctionnelle, débogage,
-performance, systèmes distribués…), enrichir les parcours existants (plus d'exercices par compétence), puis
+Rédiger les 9 parcours encore à l'état de plan (systèmes distribués, compilateurs,
+fonctionnement d'un ordinateur…), enrichir les parcours existants (plus d'exercices par compétence), puis
 notifications et widget pour le défi du jour. Voir le [plan d'action](docs/04-plan-d-action.md).

@@ -1,51 +1,112 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: debogage
 title: Débogage et diagnostic
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Trouver la cause d'un bug méthodiquement plutôt qu'au hasard : lire les erreurs, reproduire,
+  utiliser le débogueur, bisect, réduire un cas, chasser les bugs intermittents, et
+  diagnostiquer en production avec thread dumps, heap dumps et sanitizers.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: lire-un-message-d-erreur-et-une
-    title: Lire un message d'erreur et une stack trace
-  - id: reproduire-un-bug
-    title: Reproduire un bug
-  - id: la-methode-scientifique
-    title: La méthode scientifique
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: debogueur-points-d-arret-pas-a-pas
-    title: Débogueur (points d'arrêt, pas à pas, conditions)
-  - id: logs-utiles
-    title: Logs utiles
-- level: 3
-  title: Approfondir
-  skills:
-  - id: git-bisect
-    title: Git bisect
-  - id: reduire-un-cas-de-test
-    title: Réduire un cas de test
-  - id: bugs-intermittents
-    title: Bugs intermittents
-  - id: debogage-a-distance
-    title: Débogage à distance
-- level: 4
-  title: Concevoir
-  skills:
-  - id: thread-dumps-interblocages
-    title: Thread dumps (interblocages, contention)
-  - id: heap-dumps-fuites
-    title: Heap dumps (fuites)
-  - id: profilage-en-production
-    title: Profilage en production
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: deboguer-un-systeme-distribue-traces
-    title: Déboguer un système distribué (traces, corrélation)
-  - id: post-mortems
-    title: Post-mortems
-  - id: deboguer-le-code-des-autres
-    title: Déboguer le code des autres
+  - level: 1
+    title: Les bases du débogage
+    skills:
+      - id: lire-erreurs
+        title: Lire un message d'erreur et une pile d'appels
+      - id: reproduire
+        title: Reproduire un bug
+      - id: methode-scientifique
+        title: La méthode scientifique
+    boss:
+      id: debogage.n1.boss
+      title: "Boss : la pile d'appels"
+      exercises:
+        - debogage.n1.erreurs.qcm-cause
+        - debogage.n1.methode.parsons
+        - debogage.n1.erreurs.find-bug
+        - debogage.n1.reproduire.qcm
+        - debogage.n1.methode.qcm-hypothese
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: Les outils
+    skills:
+      - id: debogueur
+        title: Le débogueur (points d'arrêt, pas à pas)
+      - id: journaux-diagnostic
+        title: Des journaux pour diagnostiquer
+      - id: lire-le-code
+        title: Lire un code qu'on ne connaît pas
+    boss:
+      id: debogage.n2.boss
+      title: "Boss : le tampon perdu"
+      exercises:
+        - debogage.n2.debogueur.qcm-gdb
+        - debogage.n2.journaux.find-bug
+        - debogage.n2.lire.parsons
+        - debogage.n2.debogueur.match
+        - debogage.n2.journaux.qcm-tampon
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Chasser le bug
+    skills:
+      - id: git-bisect
+        title: Trouver le commit fautif avec git bisect
+      - id: reduire
+        title: Réduire un cas de test
+      - id: bugs-intermittents
+        title: Les bugs intermittents
+    boss:
+      id: debogage.n3.boss
+      title: "Boss : le commit coupable"
+      exercises:
+        - debogage.n3.bisect.qcm-code-125
+        - debogage.n3.reduire.qcm
+        - debogage.n3.intermittents.match
+        - debogage.n3.intermittents.qcm-course
+        - debogage.n3.bisect.qcm-etapes
+      pass_ratio: 0.8
+      time_limit_min: 8
+
+  - level: 4
+    title: Diagnostiquer en production
+    skills:
+      - id: thread-dumps
+        title: Thread dumps et interblocages
+      - id: fuites-memoire
+        title: Fuites mémoire et heap dumps
+      - id: profilage
+        title: Profiler en production
+    boss:
+      id: debogage.n4.boss
+      title: "Boss : l'interblocage"
+      exercises:
+        - debogage.n4.thread-dump.qcm-interblocage
+        - debogage.n4.fuites.scenario
+        - debogage.n4.outils.match
+        - debogage.n4.profilage.qcm-jfr
+        - debogage.n3.intermittents.match
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 5
+    title: Les cas difficiles
+    skills:
+      - id: debogage-distribue
+        title: Déboguer un système distribué
+      - id: sanitizers
+        title: Bugs mémoire et sanitizers
+      - id: code-des-autres
+        title: Déboguer le code des autres
+    boss:
+      id: debogage.n5.boss
+      title: "Boss : la double facture"
+      exercises:
+        - debogage.n5.distribue.scenario
+        - debogage.n5.sanitizers.match
+        - debogage.n5.code-des-autres.parsons
+        - debogage.n5.distribue.qcm-horloge
+        - debogage.n5.sanitizers.qcm-silencieux
+      pass_ratio: 0.8
+      time_limit_min: 10

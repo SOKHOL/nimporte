@@ -1,0 +1,108 @@
+exercises:
+  - id: performance.n5.caches.qcm-matrice
+    type: qcm
+    title: Lignes ou colonnes ?
+    skills: [caches-cpu]
+    difficulty: 3
+    language: c
+    prompt: "Une matrice C de 4 096 × 4 096 entiers est stockée ligne par ligne. Quelle boucle est la plus rapide, et de combien environ ?"
+    code: |
+      // A
+      for (int i = 0; i < N; i++) for (int j = 0; j < N; j++) s += m[i][j];
+      // B
+      for (int j = 0; j < N; j++) for (int i = 0; i < N; i++) s += m[i][j];
+    choices:
+      - id: a
+        text: "A, environ 12 à 18 fois plus rapide : elle lit la mémoire dans l'ordre, chaque ligne de cache chargée sert 16 entiers."
+        correct: true
+      - id: b
+        text: "B, car elle parcourt les colonnes."
+      - id: c
+        text: Elles sont identiques, elles font les mêmes additions.
+        feedback: "Les mêmes calculs, mais pas les mêmes accès mémoire : c'est ce qui compte ici."
+      - id: d
+        text: "A, mais seulement 10 % plus rapide."
+    explanation: |
+      Mesure réelle : 9 à 13 ms par lignes, 159 ms par colonnes. Chaque accès par colonne
+      saute de 16 Ko et charge une nouvelle ligne de cache.
+
+  - id: performance.n5.branchements.qcm-tri
+    type: qcm
+    title: Trier pour aller plus vite
+    skills: [branchements]
+    difficulty: 4
+    prompt: "Compilé en -O0, sommer les valeurs ≥ 128 d'un tableau aléatoire prend 325 ms ; le même tableau trié, 76 à 88 ms. Compilé en -O1, les deux prennent environ 34 ms. Pourquoi ?"
+    choices:
+      - id: a
+        text: "En -O0, la branche est imprévisible sur des données aléatoires et le processeur se trompe souvent ; en -O1, le compilateur remplace le saut par une instruction conditionnelle (cmov) qui ne devine rien."
+        correct: true
+      - id: b
+        text: "Le tri rend le tableau plus petit."
+      - id: c
+        text: "En -O1, le compilateur trie le tableau automatiquement."
+      - id: d
+        text: "Le cache du processeur se remplit mieux avec des données triées."
+        feedback: "Les deux versions parcourent le même tableau dans le même ordre : les accès mémoire sont identiques."
+    explanation: |
+      Le code généré en -O1 contient réellement `cmovg`. Leçon : une mesure dépend du
+      compilateur et de ses options.
+
+  - id: performance.n5.latence-queue.match
+    type: match
+    title: Réduire la latence de queue
+    skills: [latence-queue]
+    difficulty: 4
+    prompt: Relie chaque source de lenteur rare au remède adapté.
+    pairs:
+      - left: Une réplique répond parfois en 2 s au lieu de 20 ms
+        right: Une requête de couverture vers une autre réplique après le p95
+      - left: Des pauses du ramasse-miettes de 300 ms
+        right: Un GC à faible latence (ZGC) et moins d'allocations
+      - left: La sauvegarde nocturne ralentit les requêtes
+        right: Isoler les tâches de fond (autres machines ou priorités)
+      - left: Un module de recommandations lent bloque toute la page
+        right: Un délai serré et une page dégradée sans ce module
+    explanation: |
+      À grande échelle, les lenteurs rares de chaque composant deviennent la latence normale
+      des requêtes qui en appellent beaucoup.
+
+  - id: performance.n5.caches.qcm-colonnes
+    type: qcm
+    title: Les bases en colonnes
+    skills: [caches-cpu]
+    difficulty: 4
+    prompt: "Pourquoi une base analytique « en colonnes » calcule-t-elle « la somme des prix des 100 millions de ventes » bien plus vite qu'une base classique « en lignes » ?"
+    choices:
+      - id: a
+        text: "Elle stocke tous les prix côte à côte : elle ne lit que cette colonne, de façon contiguë et bien compressée, au lieu de lire chaque ligne entière."
+        correct: true
+      - id: b
+        text: Elle met tout le résultat en cache à l'avance.
+      - id: c
+        text: Elle utilise plus de serveurs.
+      - id: d
+        text: Elle ne vérifie pas les contraintes.
+    explanation: |
+      C'est la « structure de tableaux » appliquée au stockage : les données lues ensemble
+      sont stockées ensemble, ce que les caches et le préchargement adorent.
+
+  - id: performance.n5.latence-queue.qcm-hedged
+    type: qcm
+    title: Les requêtes de couverture
+    skills: [latence-queue]
+    difficulty: 4
+    prompt: "Quel est le principe d'une requête de couverture (hedged request) ?"
+    choices:
+      - id: a
+        text: "Si la réponse n'est pas arrivée après le délai habituel (le p95), envoyer la même requête idempotente à une autre réplique et garder la première réponse."
+        correct: true
+      - id: b
+        text: Envoyer chaque requête à toutes les répliques, toujours.
+        feedback: "Ça multiplierait la charge ; la couverture n'est envoyée que pour les requêtes qui tardent."
+      - id: c
+        text: Mettre en cache toutes les réponses.
+      - id: d
+        text: Rejeter les requêtes lentes.
+    explanation: |
+      Quelques pour cent de requêtes en plus suffisent à réduire fortement le p99,9 (Dean et
+      Barroso, The Tail at Scale).

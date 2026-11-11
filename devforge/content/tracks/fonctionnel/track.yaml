@@ -1,61 +1,114 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: fonctionnel
 title: Programmation fonctionnelle
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Penser en fonctions et en valeurs : immutabilité, fonctions pures, composition, types
+  algébriques, erreurs sans exceptions, paresse, monades en pratique, et un détour par le
+  lambda-calcul.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: lambdas
-    title: Lambdas
-  - id: fonctions-d-ordre-superieur
-    title: Fonctions d'ordre supérieur
-  - id: map-filter-reduce
-    title: Map/filter/reduce
-  - id: immutabilite
-    title: Immutabilité
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: fonctions-pures
-    title: Fonctions pures
-  - id: effets-de-bord
-    title: Effets de bord
-  - id: composition
-    title: Composition
-  - id: sealed-classes-et-pattern-matching
-    title: Sealed classes et pattern matching
-- level: 3
-  title: Approfondir
-  skills:
-  - id: option-result
-    title: Option/Result
-  - id: gestion-d-erreurs-fonctionnelle
-    title: Gestion d'erreurs fonctionnelle
-  - id: evaluation-paresseuse
-    title: Évaluation paresseuse
-  - id: recursivite-terminale
-    title: Récursivité terminale
-- level: 4
-  title: Concevoir
-  skills:
-  - id: types-algebriques
-    title: Types algébriques
-  - id: functors-et-monades-en-pratique
-    title: Functors et monades en pratique (Arrow)
-  - id: effets
-    title: Effets
-  - id: programmation-reactive
-    title: Programmation réactive
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: structures-de-donnees-persistantes
-    title: Structures de données persistantes
-  - id: lambda-calcul
-    title: Lambda-calcul
-  - id: langages-purs-haskell
-    title: Langages purs (Haskell)
-  - id: theorie-des-categories-apercu
-    title: Théorie des catégories (aperçu)
+  - level: 1
+    title: Les fonctions comme valeurs
+    skills:
+      - id: lambdas
+        title: Lambdas et fonctions d'ordre supérieur
+      - id: map-filter-reduce
+        title: map, filter, reduce et compagnie
+      - id: immutabilite
+        title: L'immutabilité
+    boss:
+      id: fonctionnel.n1.boss
+      title: "Boss : la fermeture piégée"
+      exercises:
+        - fonctionnel.n1.lambdas.predict-capture
+        - fonctionnel.n1.map-filter.match
+        - fonctionnel.n1.immutabilite.qcm
+        - fonctionnel.n1.immutabilite.predict-vue
+        - fonctionnel.n1.map-filter.predict-pipeline
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 2
+    title: Penser en fonctions
+    skills:
+      - id: fonctions-pures
+        title: Fonctions pures et effets de bord
+      - id: composition
+        title: Composition et application partielle
+      - id: types-algebriques
+        title: Types algébriques et pattern matching
+    boss:
+      id: fonctionnel.n2.boss
+      title: "Boss : l'état impossible"
+      exercises:
+        - fonctionnel.n2.pures.match
+        - fonctionnel.n2.composition.predict-slug
+        - fonctionnel.n2.types.qcm-exhaustif
+        - fonctionnel.n2.types.qcm-impossible
+        - fonctionnel.n2.pures.qcm-avantage
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Erreurs, paresse et récursion
+    skills:
+      - id: erreurs-fonctionnelles
+        title: Option, Result et Either
+      - id: paresse
+        title: L'évaluation paresseuse
+      - id: recursion-terminale
+        title: Récursion et récursion terminale
+    boss:
+      id: fonctionnel.n3.boss
+      title: "Boss : la séquence paresseuse"
+      exercises:
+        - fonctionnel.n3.erreurs.predict-result
+        - fonctionnel.n3.paresse.qcm-infini
+        - fonctionnel.n3.recursion.predict-tailrec
+        - fonctionnel.n3.erreurs.match
+        - fonctionnel.n3.paresse.predict-sequence
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 4
+    title: Les abstractions fonctionnelles
+    skills:
+      - id: foncteurs-monades
+        title: Foncteurs et monades en pratique
+      - id: effets
+        title: Isoler les effets
+      - id: combinateurs
+        title: Combinateurs et DSL
+    boss:
+      id: fonctionnel.n4.boss
+      title: "Boss : la monade cachée"
+      exercises:
+        - fonctionnel.n4.monades.predict-flatmap
+        - fonctionnel.n4.effets.qcm
+        - fonctionnel.n4.combinateurs.qcm
+        - fonctionnel.n4.monades.match
+        - fonctionnel.n3.paresse.predict-sequence
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 5
+    title: Aux sources
+    skills:
+      - id: structures-persistantes
+        title: Structures de données persistantes
+      - id: lambda-calcul
+        title: Le lambda-calcul
+      - id: langages-purs
+        title: Haskell et les langages purs
+      - id: categories
+        title: Un aperçu de la théorie des catégories
+    boss:
+      id: fonctionnel.n5.boss
+      title: "Boss : le lambda-calcul"
+      exercises:
+        - fonctionnel.n5.persistantes.predict-partage
+        - fonctionnel.n5.lambda.qcm-turing
+        - fonctionnel.n5.langages.match
+        - fonctionnel.n5.categories.qcm-monoide
+        - fonctionnel.n5.lambda.predict-church
+      pass_ratio: 0.8
+      time_limit_min: 9

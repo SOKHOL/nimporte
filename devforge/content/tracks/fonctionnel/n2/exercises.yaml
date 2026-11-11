@@ -1,0 +1,128 @@
+exercises:
+  - id: fonctionnel.n2.composition.predict-slug
+    type: predict-output
+    title: Composer des fonctions
+    skills: [composition]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      infix fun <A, B, C> ((A) -> B).puis(g: (B) -> C): (A) -> C = { x -> g(this(x)) }
+
+      fun main() {
+          val nettoyer: (String) -> String = { it.trim() }
+          val minuscules: (String) -> String = { it.lowercase() }
+          val slug: (String) -> String = { it.replace(" ", "-") }
+          val enSlug = nettoyer puis minuscules puis slug
+          println(enSlug("  Programmation Fonctionnelle  "))
+          val ajouter = { a: Int -> { b: Int -> a + b } }
+          val plus10 = ajouter(10)
+          println(listOf(1, 2, 3).map(plus10))
+      }
+    choices:
+      - id: a
+        text: "`programmation-fonctionnelle` / `[11, 12, 13]`"
+        correct: true
+      - id: b
+        text: "`--programmation-fonctionnelle--` / `[11, 12, 13]`"
+        feedback: "`nettoyer` s'applique en premier et retire les espaces des bords."
+      - id: c
+        text: "`Programmation-Fonctionnelle` / `[11, 12, 13]`"
+      - id: d
+        text: "`programmation-fonctionnelle` / `[10, 10, 10]`"
+    explanation: |
+      `f puis g` applique f puis g ; la chaîne passe par trim, lowercase, puis replace.
+      `ajouter(10)` renvoie une fonction qui ajoute 10. Sortie vérifiée.
+
+  - id: fonctionnel.n2.pures.match
+    type: match
+    title: Pure ou pas ?
+    skills: [fonctions-pures]
+    difficulty: 2
+    prompt: Relie chaque fonction à son diagnostic.
+    pairs:
+      - left: "fun ttc(ht: Long, taux: Int) = ht * (100 + taux) / 100"
+        right: Pure
+      - left: "fun estExpire(fin: LocalDate) = fin < LocalDate.now()"
+        right: Impure, elle lit l'horloge
+      - left: "fun trier(liste: MutableList<Int>) { liste.sort() }"
+        right: Impure, elle modifie son argument
+      - left: "fun tirage() = Random.nextInt(100)"
+        right: Impure, elle dépend de l'aléa
+    explanation: |
+      Pour rendre `estExpire` pure : `estExpire(fin, aujourdhui)`. Pour `trier` : renvoyer
+      `liste.sorted()` sans toucher à l'argument.
+
+  - id: fonctionnel.n2.types.qcm-exhaustif
+    type: qcm
+    title: Le nouveau moyen de paiement
+    skills: [types-algebriques]
+    difficulty: 3
+    language: kotlin
+    prompt: "On ajoute `data class Crypto(val reseau: String) : Paiement` à la sealed interface. Que se passe-t-il pour cette fonction ?"
+    code: |
+      fun libelle(p: Paiement): String = when (p) {
+          is Carte -> "carte •••• ${p.derniers}"
+          is Virement -> "virement ${p.iban.take(4)}…"
+          Especes -> "espèces"
+      }
+    choices:
+      - id: a
+        text: "Elle ne compile plus : le when n'est plus exhaustif, et le compilateur signale le cas manquant."
+        correct: true
+      - id: b
+        text: Elle renvoie une chaîne vide pour Crypto.
+      - id: c
+        text: Elle lève une exception à l'exécution pour Crypto.
+      - id: d
+        text: Rien, Crypto est ignoré.
+    explanation: |
+      Sans `else`, le compilateur liste tous les endroits à mettre à jour. Un `else` aurait
+      traité Crypto silencieusement, et peut-être mal.
+
+  - id: fonctionnel.n2.types.qcm-impossible
+    type: qcm
+    title: Des états impossibles
+    skills: [types-algebriques]
+    difficulty: 3
+    language: kotlin
+    prompt: Quel est le problème de cette modélisation de l'état d'un écran ?
+    code: |
+      data class EtatEcran(
+          val enCours: Boolean,
+          val articles: List<Article>?,
+          val erreur: String?,
+      )
+    choices:
+      - id: a
+        text: "Elle permet des combinaisons incohérentes (en cours ET en erreur, ou ni l'un ni l'autre sans articles) ; une sealed interface EnCours / Succès / Échec les rend impossibles."
+        correct: true
+      - id: b
+        text: Les champs nullables sont interdits dans une data class.
+      - id: c
+        text: Il manque un champ pour le titre de l'écran.
+      - id: d
+        text: Aucun problème.
+    explanation: |
+      Avec trois champs indépendants, il y a 8 combinaisons et 3 seulement ont un sens. Un
+      type somme n'en laisse exister que trois.
+
+  - id: fonctionnel.n2.pures.qcm-avantage
+    type: qcm
+    title: L'avantage d'une fonction pure
+    skills: [fonctions-pures]
+    difficulty: 2
+    prompt: Quel avantage est propre aux fonctions pures ?
+    choices:
+      - id: a
+        text: "On peut mettre leur résultat en cache et les appeler en parallèle sans risque, et les tester sans rien simuler."
+        correct: true
+      - id: b
+        text: Elles sont toujours plus rapides.
+      - id: c
+        text: Elles ne peuvent jamais lever d'exception.
+      - id: d
+        text: Elles n'ont pas besoin de paramètres.
+    explanation: |
+      Même entrée, même sortie, aucun effet : c'est la transparence référentielle. On
+      remplace l'appel par son résultat sans changer le programme.

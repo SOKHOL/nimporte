@@ -1,0 +1,122 @@
+exercises:
+  - id: performance.n2.profileurs.qcm-cprofile
+    type: qcm
+    title: Lire un profil cProfile
+    skills: [profileurs]
+    difficulty: 3
+    language: text
+    prompt: D'après ce profil réel, quelle fonction faut-il optimiser en premier ?
+    code: |
+      ncalls     tottime  cumtime  function
+      1          0.000    0.084    rapport
+      1          0.062    0.063    doublons_lent
+      1          0.000    0.021    builtins.sum
+      109455/5   0.021    0.021    fib
+    choices:
+      - id: a
+        text: "doublons_lent : 62 ms de temps propre sur 84 au total."
+        correct: true
+      - id: b
+        text: "rapport : c'est elle qui a le plus grand temps cumulé."
+        feedback: "Son temps propre est nul : elle ne fait qu'appeler les autres."
+      - id: c
+        text: "fib : elle est appelée 109 455 fois."
+        feedback: "Beaucoup d'appels, mais seulement 21 ms au total."
+      - id: d
+        text: builtins.sum
+    explanation: |
+      Le temps cumulé guide la descente dans l'arbre ; le temps propre désigne le code
+      coupable.
+
+  - id: performance.n2.microbenchmarks.qcm-prechauffage
+    type: qcm
+    title: Le premier tour est plus lent
+    skills: [microbenchmarks]
+    difficulty: 3
+    prompt: "Une boucle Kotlin qui somme 10 millions d'entiers prend 37 ms aux premiers tours, puis 23 ms aux suivants. Pourquoi ?"
+    choices:
+      - id: a
+        text: "Le code est d'abord interprété, puis compilé par le JIT (C1, puis C2) au fil des exécutions : il faut un préchauffage avant de mesurer."
+        correct: true
+      - id: b
+        text: Le processeur chauffe et ralentit.
+      - id: c
+        text: Le ramasse-miettes libère de la mémoire au début.
+      - id: d
+        text: Kotlin met en cache le résultat.
+    explanation: |
+      Mesure réelle : 37, 37, 45, 37, 23, 23 ms. JMH fait des itérations de préchauffage
+      avant les itérations mesurées, sur plusieurs JVM séparées.
+
+  - id: performance.n2.microbenchmarks.review
+    type: code-review
+    title: "Revue : un benchmark maison"
+    skills: [microbenchmarks]
+    difficulty: 4
+    language: kotlin
+    prompt: Ce benchmark compare deux implémentations. Trouve au moins 3 problèmes.
+    code: |
+      fun main() {
+          val donnees = List(1_000) { it }
+          val t1 = System.currentTimeMillis()
+          for (i in 0 until 1_000) versionA(donnees)
+          val t2 = System.currentTimeMillis()
+          for (i in 0 until 1_000) versionB(donnees)
+          val t3 = System.currentTimeMillis()
+          println("A : ${t2 - t1} ms, B : ${t3 - t2} ms")
+      }
+    issues:
+      - lines: [4, 6]
+        category: test
+        description: "Les résultats ne sont pas utilisés : le JIT peut supprimer les appels (code mort). Les consommer (Blackhole en JMH)."
+      - lines: [4]
+        category: test
+        description: "Pas de préchauffage : A est mesurée en partie interprétée, B profite du JIT déjà chaud pour le code commun. L'ordre biaise le résultat."
+      - lines: [3, 5, 7]
+        category: test
+        description: "`currentTimeMillis` a une résolution grossière et peut sauter ; `nanoTime` au minimum, JMH idéalement."
+      - lines: [2]
+        category: test
+        description: "1 000 éléments tiennent dans le cache du processeur : pas représentatif d'un vrai volume."
+    min_found: 3
+    explanation: |
+      JMH règle ces problèmes : préchauffage, forks séparés, résultats consommés, statistiques.
+
+  - id: performance.n2.flame-graphs.qcm
+    type: qcm
+    title: Lire un flame graph
+    skills: [flame-graphs]
+    difficulty: 3
+    prompt: "Dans un flame graph, que signifie un rectangle très large tout en haut d'une pile, sans rien au-dessus ?"
+    choices:
+      - id: a
+        text: "Une fonction qui consomme elle-même beaucoup de temps : c'est un bon candidat à optimiser."
+        correct: true
+      - id: b
+        text: Une fonction appelée très tard dans l'exécution.
+        feedback: "L'axe horizontal n'est pas le temps : les fonctions sont triées par nom."
+      - id: c
+        text: Une fonction appelée par beaucoup d'autres.
+      - id: d
+        text: Une fonction qui a planté.
+    explanation: |
+      La largeur est la part des échantillons où la fonction apparaît ; sans enfant au-dessus,
+      ce temps est passé dans son propre code.
+
+  - id: performance.n2.profileurs.match
+    type: match
+    title: Quel profil regarder ?
+    skills: [profileurs, flame-graphs]
+    difficulty: 3
+    prompt: Relie chaque symptôme au type de profil qui l'explique.
+    pairs:
+      - left: Le CPU est à 95 % et les réponses sont lentes
+        right: Un profil CPU (échantillonnage)
+      - left: Le ramasse-miettes tourne sans arrêt
+        right: Un profil des allocations
+      - left: Le CPU est à 10 % mais les requêtes sont lentes
+        right: Un profil hors CPU (verrous, disque, réseau)
+      - left: Le service est plus lent depuis le déploiement d'hier
+        right: Un flame graph différentiel avant/après
+    explanation: |
+      Un programme lent ne calcule pas forcément : il peut attendre ou allouer.

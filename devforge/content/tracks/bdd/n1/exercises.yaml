@@ -1,0 +1,113 @@
+exercises:
+  - id: bdd.n1.null.predict-not-in
+    type: predict-output
+    title: Le NOT IN qui ne renvoie rien
+    skills: [valeurs-null]
+    difficulty: 4
+    language: sql
+    prompt: "La table employes contient : Ada (R&D), Linus (R&D), Grace (Ventes), Alan (service NULL). Combien de lignes renvoie cette requête ?"
+    code: |
+      select nom from employes
+      where service not in ('Ventes', null);
+    choices:
+      - id: a
+        text: "0 ligne"
+        correct: true
+      - id: b
+        text: "2 lignes (Ada et Linus)"
+        feedback: "`service <> NULL` est inconnu pour toutes les lignes ; la condition entière n'est jamais vraie."
+      - id: c
+        text: "3 lignes (Ada, Linus, Alan)"
+      - id: d
+        text: Une erreur de syntaxe.
+    explanation: |
+      `x not in ('Ventes', NULL)` signifie `x <> 'Ventes' and x <> NULL` ; la seconde partie
+      est toujours inconnue. Résultat réel sur PostgreSQL 16 : `(0 rows)`. Avec une
+      sous-requête qui peut contenir un NULL, préférer `not exists`.
+
+  - id: bdd.n1.null.predict-count
+    type: predict-output
+    title: Compter avec des NULL
+    skills: [valeurs-null, select]
+    difficulty: 3
+    language: sql
+    prompt: "Même table (Alan n'a pas de service). Qu'affiche cette requête ?"
+    code: |
+      select count(*), count(service), avg(salaire)::int
+      from employes;
+      -- salaires : Ada 5200, Linus 4800, Grace 4100, Alan 3900
+    choices:
+      - id: a
+        text: "`4 | 3 | 4500`"
+        correct: true
+      - id: b
+        text: "`4 | 4 | 4500`"
+        feedback: "`count(colonne)` ne compte que les valeurs non NULL."
+      - id: c
+        text: "`3 | 3 | 4500`"
+        feedback: "`count(*)` compte les lignes, quelles que soient leurs valeurs."
+      - id: d
+        text: "`4 | 3 | NULL`"
+    explanation: |
+      Résultat réel : `4 | 3 | 4500`. `count(*)` compte les lignes, `count(service)` les
+      services connus ; les agrégats comme `avg` ignorent aussi les NULL.
+
+  - id: bdd.n1.select.qcm-ordre
+    type: qcm
+    title: L'ordre des résultats
+    skills: [select]
+    difficulty: 2
+    prompt: "Une requête `select * from commandes where client_id = 7` renvoie toujours les commandes dans l'ordre de création, depuis des mois. Peut-on compter dessus ?"
+    choices:
+      - id: a
+        text: "Non : sans ORDER BY, aucun ordre n'est garanti, il peut changer après une mise à jour, un VACUUM ou un changement de plan."
+        correct: true
+      - id: b
+        text: Oui, les lignes sont toujours renvoyées dans l'ordre d'insertion.
+      - id: c
+        text: Oui, si la table a une clé primaire.
+      - id: d
+        text: Seulement en MySQL.
+    explanation: |
+      L'ordre observé est un détail d'implémentation. Si l'ordre compte (affichage,
+      pagination, tests), il faut un `order by`, idéalement sur une colonne unique pour que
+      la pagination soit stable.
+
+  - id: bdd.n1.modifier.find-bug
+    type: find-bug
+    title: La mise à jour catastrophique
+    skills: [modifier]
+    difficulty: 2
+    language: sql
+    prompt: Le support voulait corriger l'e-mail d'un client. Tous les clients ont maintenant le même e-mail. Touche la ligne fautive.
+    code: |
+      begin;
+      update clients
+      set email = 'ada.lovelace@exemple.com';
+      commit;
+    bug_lines: [3]
+    explanation: |
+      Il manque le `where id = …` : la mise à jour touche toute la table. Réflexes : écrire
+      d'abord le `select` avec le même `where`, vérifier le nombre de lignes renvoyé par
+      l'`update` (`UPDATE 1` attendu) avant le `commit`, et faire un `rollback` sinon.
+
+  - id: bdd.n1.tables.match-types
+    type: match
+    title: Le bon type
+    skills: [tables-types]
+    difficulty: 2
+    prompt: Relie chaque donnée au type PostgreSQL le plus adapté.
+    pairs:
+      - left: Le prix d'un article en euros
+        right: numeric(12, 2)
+      - left: La date et l'heure d'une commande, avec fuseau
+        right: timestamptz
+      - left: Un identifiant généré automatiquement
+        right: bigint generated always as identity
+      - left: Le nom d'un client
+        right: text
+      - left: Abonné à la lettre d'information ou non
+        right: boolean
+    explanation: |
+      `float` arrondit (0,1 + 0,2 ≠ 0,3) : jamais pour l'argent. `timestamptz` stocke un
+      instant précis, affiché dans le fuseau de la session.

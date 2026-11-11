@@ -1,0 +1,179 @@
+exercises:
+  - id: securite.n2.injections.predict-sql
+    type: predict-output
+    title: L'injection SQL
+    skills: [injections]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import sqlite3
+
+      db = sqlite3.connect(":memory:")
+      db.executescript("""
+          create table utilisateurs(id integer primary key, nom text);
+          insert into utilisateurs values (1, 'ada'), (2, 'linus'), (3, 'grace');
+      """)
+
+      def chercher(nom):
+          return db.execute(f"select id from utilisateurs where nom = '{nom}'").fetchall()
+
+      def chercher_sur(nom):
+          return db.execute("select id from utilisateurs where nom = ?", (nom,)).fetchall()
+
+      print(len(chercher("x' or '1'='1")))
+      print(len(chercher_sur("x' or '1'='1")))
+    choices:
+      - id: a
+        text: "`3` / `0`"
+        correct: true
+      - id: b
+        text: "`0` / `0`"
+        feedback: "Dans la première fonction, l'entrée ferme la chaîne et ajoute `or '1'='1'`, toujours vrai."
+      - id: c
+        text: "`3` / `3`"
+        feedback: "Avec un paramètre, l'entrée reste une simple valeur : aucun utilisateur ne s'appelle ainsi."
+      - id: d
+        text: Une erreur de syntaxe SQL.
+    explanation: |
+      La requête construite par concaténation devient `where nom = 'x' or '1'='1'`. La requête
+      paramétrée cherche littéralement le nom `x' or '1'='1`. Sortie vérifiée.
+
+  - id: securite.n2.xss.bug-gabarit
+    type: find-bug
+    title: Le commentaire qui vole les sessions
+    skills: [xss]
+    difficulty: 3
+    language: javascript
+    prompt: Ce composant affiche les commentaires des visiteurs. Touche la ligne qui permet une XSS.
+    code: |
+      function Commentaire({ auteur, texte }) {
+        return (
+          <article>
+            <h3>{auteur}</h3>
+            <p dangerouslySetInnerHTML={{ __html: texte }} />
+          </article>
+        );
+      }
+    bug_lines: [5]
+    explanation: |
+      React échappe `{auteur}` automatiquement, mais `dangerouslySetInnerHTML` insère le texte
+      comme du HTML : un commentaire contenant `<img src=x onerror=…>` exécute du JavaScript
+      chez chaque lecteur. Afficher `{texte}`, ou assainir avec DOMPurify si du HTML est voulu.
+
+  - id: securite.n2.controle-acces.scenario-idor
+    type: scenario
+    title: Les factures des autres
+    skills: [controle-acces]
+    difficulty: 4
+    prompt: |
+      Un chercheur en sécurité signale qu'en changeant l'identifiant dans
+      `GET /api/factures/1001`, il peut télécharger les factures d'autres clients.
+    start: debut
+    nodes:
+      debut:
+        text: L'API vérifie pourtant que l'utilisateur est connecté. Quel est le problème ?
+        options:
+          - text: "Elle vérifie l'authentification mais pas l'autorisation : personne ne contrôle que la facture appartient à l'utilisateur (IDOR)."
+            next: correction
+            points: 3
+          - text: Le jeton de session est trop faible.
+            next: jeton
+            points: 0
+      jeton:
+        text: "Le chercheur utilise son propre compte, avec un jeton valide. Que lui manque-t-il pour être bloqué ?"
+        options:
+          - text: Une vérification que la ressource lui appartient.
+            next: correction
+            points: 1
+      correction:
+        text: Quelle correction choisis-tu ?
+        options:
+          - text: "Vérifier côté serveur, à chaque requête et à un endroit central, que la facture appartient à l'utilisateur ; sinon répondre 404. Puis rechercher le même défaut sur les autres ressources."
+            next: resolu
+            points: 3
+          - text: Remplacer les identifiants numériques par des UUID.
+            next: uuid
+            points: 1
+            feedback: "Ça rend l'attaque plus difficile, sans la rendre impossible : un identifiant finit toujours par fuiter."
+          - text: Masquer le bouton de téléchargement pour les autres factures.
+            next: bouton
+            points: 0
+      uuid:
+        ending: partial
+        text: "🟡 Plus difficile à exploiter, mais un UUID partagé dans un e-mail suffit à rouvrir la faille."
+      bouton:
+        ending: failure
+        text: "❌ L'API reste appelable directement : la faille est intacte."
+      resolu:
+        ending: success
+        text: "✅ Chaque ressource est vérifiée côté serveur ; deux autres endpoints vulnérables ont été trouvés et corrigés."
+    explanation: |
+      Le contrôle d'accès défaillant est la première catégorie du Top 10 de l'OWASP.
+      L'interface n'est pas une frontière de sécurité : l'API doit tout vérifier.
+
+  - id: securite.n2.commande.qcm
+    type: qcm
+    title: Un nom de fichier dangereux
+    skills: [injections]
+    difficulty: 3
+    language: python
+    prompt: "Avec le nom de fichier `rapport.txt; echo PIRATÉ`, que fait la première ligne ?"
+    code: |
+      subprocess.run(f"echo traitement de {fichier}", shell=True)
+      subprocess.run(["echo", "traitement de", fichier])
+    choices:
+      - id: a
+        text: "Elle exécute deux commandes : l'echo prévu, puis « echo PIRATÉ » ; la seconde ligne affiche le nom tel quel."
+        correct: true
+      - id: b
+        text: Les deux lignes affichent la même chose.
+      - id: c
+        text: La première échoue avec une erreur de syntaxe.
+      - id: d
+        text: La seconde est aussi vulnérable.
+        feedback: "Sans shell, chaque élément de la liste est un argument : le `;` n'a aucun sens particulier."
+    explanation: |
+      Sortie réelle : la première ligne affiche `traitement de rapport.txt` puis `PIRATÉ` ; la
+      seconde, `traitement de rapport.txt; echo PIRATÉ`. Avec `shell=True`, le shell
+      interprète le `;`.
+
+  - id: securite.n2.failles.match
+    type: match
+    title: La faille et sa défense
+    skills: [xss, csrf, ssrf, injections]
+    difficulty: 3
+    prompt: Relie chaque faille à sa défense principale.
+    pairs:
+      - left: Injection SQL
+        right: Requêtes paramétrées
+      - left: XSS
+        right: Échappement selon le contexte et Content Security Policy
+      - left: CSRF
+        right: Cookies SameSite et jeton anti-CSRF
+      - left: SSRF
+        right: Liste blanche de destinations et blocage des adresses internes
+    explanation: |
+      Chaque faille a sa défense de base ; on les combine avec d'autres couches (moindre
+      privilège, journalisation, tests).
+
+  - id: securite.n2.ssrf.qcm-metadonnees
+    type: qcm
+    title: Importer une image depuis une URL
+    skills: [ssrf]
+    difficulty: 4
+    prompt: "Un utilisateur saisit l'URL `http://169.254.169.254/latest/meta-data/iam/security-credentials/` dans la fonction « importer une image ». Quel est le risque ?"
+    choices:
+      - id: a
+        text: "Le serveur appelle le service de métadonnées du cloud, accessible depuis l'intérieur seulement, et peut renvoyer des identifiants temporaires à l'attaquant."
+        correct: true
+      - id: b
+        text: Aucun, cette adresse n'existe pas sur Internet.
+        feedback: "Justement : elle n'existe que pour le serveur lui-même, qui va l'appeler."
+      - id: c
+        text: L'image sera trop grande.
+      - id: d
+        text: Un déni de service du navigateur de l'utilisateur.
+    explanation: |
+      C'est un SSRF, la technique de la fuite de Capital One (2019). Liste blanche, refus des
+      adresses internes après résolution DNS, isolation réseau et IMDSv2.

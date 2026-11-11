@@ -99,13 +99,13 @@ tracks:
     title: Bases de données
     domain: data
     requires: [fondations@1]
-    status: planned
+    status: pilot
 
   - id: reseau-web
     title: Réseau, web et API
     domain: architecture
     requires: [fondations@1, linux@1]
-    status: planned
+    status: pilot
 
   - id: architecture
     title: Architecture logicielle
@@ -141,7 +141,7 @@ tracks:
     title: Sécurité
     domain: securite
     requires: [reseau-web@2, bdd@1]
-    status: planned
+    status: pilot
 
   - id: maths
     title: Maths pour l'informatique

@@ -1,0 +1,108 @@
+exercises:
+  - id: reseau-web.n1.http.match-codes
+    type: match
+    title: Le bon code de réponse
+    skills: [http]
+    difficulty: 2
+    prompt: Relie chaque situation au code HTTP qui convient.
+    pairs:
+      - left: La ressource a été créée
+        right: 201 Created
+      - left: Aucun jeton d'authentification n'a été envoyé
+        right: 401 Unauthorized
+      - left: L'utilisateur est connecté, mais n'a pas le droit de supprimer
+        right: 403 Forbidden
+      - left: Le client a dépassé son quota de requêtes
+        right: 429 Too Many Requests
+      - left: Le serveur a planté en traitant la requête
+        right: 500 Internal Server Error
+    explanation: |
+      4xx : le client doit changer quelque chose ; 5xx : le problème est côté serveur. 401 =
+      « qui es-tu ? », 403 = « je sais qui tu es, et c'est non ».
+
+  - id: reseau-web.n1.http.qcm-idempotent
+    type: qcm
+    title: Réessayer sans danger
+    skills: [http]
+    difficulty: 3
+    prompt: "La connexion est coupée avant la réponse. Quelle requête un client peut-il réessayer automatiquement sans risque d'effet en double ?"
+    choices:
+      - id: a
+        text: "DELETE /commandes/42"
+        correct: true
+      - id: b
+        text: "POST /commandes (créer une commande)"
+        feedback: "POST n'est pas idempotent : réessayer peut créer deux commandes (sauf avec une clé d'idempotence)."
+      - id: c
+        text: "POST /paiements"
+      - id: d
+        text: Aucune, il ne faut jamais réessayer.
+    explanation: |
+      DELETE est idempotent : supprimer deux fois la commande 42 la laisse supprimée. GET,
+      HEAD, PUT et DELETE peuvent être réessayés ; POST demande une clé d'idempotence.
+
+  - id: reseau-web.n1.dns.qcm-ttl
+    type: qcm
+    title: La migration que certains ne voient pas
+    skills: [dns]
+    difficulty: 3
+    prompt: |
+      Le site a déménagé vers un nouveau serveur à 10 h, en changeant l'enregistrement A.
+      L'ancien TTL était de 86 400 secondes. À 17 h, une partie des utilisateurs arrive encore
+      sur l'ancien serveur. Pourquoi ?
+    choices:
+      - id: a
+        text: "Leurs résolveurs gardent l'ancienne réponse en cache jusqu'à 24 h ; il fallait baisser le TTL quelques jours avant."
+        correct: true
+      - id: b
+        text: Le nouveau serveur est trop lent.
+      - id: c
+        text: Les navigateurs gardent l'adresse IP pour toujours.
+      - id: d
+        text: Le DNS met toujours une semaine à se propager.
+        feedback: "Il n'y a pas de « propagation » : il y a des caches, et leur durée est le TTL."
+    explanation: |
+      Le TTL (réel : 60 s pour github.com) fixe la durée de cache. On le baisse à quelques
+      minutes plusieurs jours avant une migration, puis on le remonte une fois la migration
+      terminée.
+
+  - id: reseau-web.n1.json.qcm-grand-id
+    type: qcm
+    title: L'identifiant qui change tout seul
+    skills: [json]
+    difficulty: 4
+    prompt: "L'API renvoie `{\"id\": 9007199254740993}`. Dans l'application web, l'identifiant affiché est 9007199254740992. Pourquoi ?"
+    choices:
+      - id: a
+        text: "JavaScript lit les nombres JSON en flottants 64 bits, exacts seulement jusqu'à 2⁵³ − 1 ; il faut transmettre les grands identifiants en chaîne."
+        correct: true
+      - id: b
+        text: Un bug du serveur.
+      - id: c
+        text: JSON limite les nombres à 32 bits.
+      - id: d
+        text: Le navigateur arrondit pour économiser de la mémoire.
+    explanation: |
+      9007199254740993 = 2⁵³ + 1 n'est pas représentable en double précision. Twitter a dû
+      ajouter des champs `id_str` pour cette raison.
+
+  - id: reseau-web.n1.client-serveur.qcm-fragment
+    type: qcm
+    title: Ce que reçoit le serveur
+    skills: [client-serveur]
+    difficulty: 2
+    prompt: "Le navigateur ouvre `https://boutique.exemple.com/produits/42?lang=fr#avis`. Quelle partie le serveur ne reçoit-il pas ?"
+    choices:
+      - id: a
+        text: "#avis (le fragment)"
+        correct: true
+      - id: b
+        text: "?lang=fr"
+      - id: c
+        text: "/produits/42"
+      - id: d
+        text: Le nom d'hôte
+        feedback: "Il est envoyé dans l'en-tête Host (et dans le SNI de TLS)."
+    explanation: |
+      Le fragment sert au navigateur (aller à une section, routage de certaines applications
+      web) ; il n'apparaît jamais dans la requête HTTP.

@@ -1,0 +1,135 @@
+exercises:
+  - id: bdd.n4.verrous.scenario-migration
+    type: scenario
+    title: La migration d'une milliseconde
+    skills: [verrous, migrations]
+    difficulty: 5
+    prompt: |
+      À 14 h, un déploiement lance la migration `alter table commandes add column
+      source text`. Pendant 4 minutes, le site entier ne répond plus, alors que la migration
+      elle-même est instantanée.
+    start: debut
+    nodes:
+      debut:
+        text: "`pg_stat_activity` montre l'ALTER TABLE en attente de verrou, et 300 requêtes select en attente derrière lui. Pourquoi les select attendent-ils ?"
+        options:
+          - text: "L'ALTER TABLE attend la fin d'une longue transaction ; pendant qu'il est en file pour un verrou exclusif, toutes les requêtes suivantes sur la table attendent derrière lui."
+            next: cause
+            points: 3
+          - text: L'ajout d'une colonne réécrit toute la table.
+            next: reecriture
+            points: 1
+            feedback: "Pas pour une colonne qui accepte NULL : c'est instantané. Le problème est l'attente du verrou."
+      reecriture:
+        text: "En préproduction, la même migration prend 3 ms. Que se passe-t-il donc en production ?"
+        options:
+          - text: Elle attend un verrou détenu par une transaction longue, et bloque les autres pendant ce temps.
+            next: cause
+            points: 2
+      cause:
+        text: "La transaction longue est un export comptable lancé à 13 h 56. Comment éviter que ça se reproduise ?"
+        options:
+          - text: "Migrations avec lock_timeout court (quelques centaines de ms) et réessais automatiques ; et un statement_timeout pour les longues requêtes de l'application."
+            next: resolu
+            points: 3
+          - text: Lancer les migrations à 3 h du matin.
+            next: nuit
+            points: 1
+            feedback: "Moins de trafic, mais les exports et sauvegardes tournent souvent la nuit."
+      nuit:
+        ending: partial
+        text: "🟡 Moins d'impact… jusqu'au jour où la migration croise la sauvegarde nocturne."
+      resolu:
+        ending: success
+        text: "✅ Si un verrou n'est pas obtenu en 200 ms, la migration abandonne et réessaie : plus personne n'est bloqué."
+    explanation: |
+      Démonstration réelle : derrière un ALTER TABLE en attente, deux simples lectures ont
+      attendu 3 secondes ; avec `set lock_timeout = '200ms'`, l'ALTER échoue
+      (« canceling statement due to lock timeout ») sans bloquer personne.
+
+  - id: bdd.n4.migrations.match
+    type: match
+    title: Migrer sans couper
+    skills: [migrations]
+    difficulty: 4
+    prompt: Relie chaque changement à la façon sûre de le faire sur une grosse table en production.
+    pairs:
+      - left: Créer un index
+        right: create index concurrently
+      - left: Ajouter une clé étrangère
+        right: "add constraint … not valid, puis validate constraint"
+      - left: Renommer une colonne
+        right: "Expand / contract, sur plusieurs déploiements"
+      - left: Remplir une nouvelle colonne sur 100 millions de lignes
+        right: Par lots de quelques milliers de lignes
+    explanation: |
+      Chaque technique évite un verrou long ou une incompatibilité avec le code encore
+      déployé.
+
+  - id: bdd.n4.nosql.match
+    type: match
+    title: La bonne famille NoSQL
+    skills: [nosql]
+    difficulty: 3
+    prompt: Relie chaque besoin à la famille de base la plus adaptée.
+    pairs:
+      - left: Sessions utilisateur et compteurs, lus par clé en moins d'une milliseconde
+        right: Clé-valeur (Redis)
+      - left: Des milliards de mesures de capteurs, écrites en continu, lues par capteur et par période
+        right: Colonnes larges (Cassandra)
+      - left: "« Les amis de mes amis qui aiment ce groupe »"
+        right: Graphe (Neo4j)
+      - left: Recherche plein texte avec filtres et fautes de frappe tolérées
+        right: Moteur de recherche (Elasticsearch, OpenSearch)
+    explanation: |
+      Chaque famille optimise un type de requête. Avant d'en ajouter une, vérifier ce que la
+      base existante sait faire (jsonb, recherche plein texte, extensions).
+
+  - id: bdd.n4.pool.qcm
+    type: qcm
+    title: Trop de connexions
+    skills: [pool-connexions]
+    difficulty: 4
+    prompt: |
+      L'API passe de 10 à 30 instances, chacune avec un pool de 20 connexions. La base
+      (max_connections = 100) refuse des connexions. Quelle solution ?
+    choices:
+      - id: a
+        text: "Réduire le pool par instance et/ou placer PgBouncer devant la base pour multiplexer les connexions ; un pool plus petit est souvent plus rapide."
+        correct: true
+      - id: b
+        text: Passer max_connections à 1000.
+        feedback: "Chaque connexion est un processus avec sa mémoire ; 1000 connexions actives se gênent et épuisent la mémoire."
+      - id: c
+        text: Ouvrir une nouvelle connexion à chaque requête, sans pool.
+        feedback: "Mesuré : 2,29 ms par requête au lieu de 0,062 ms, et toujours autant de connexions au pic."
+      - id: d
+        text: Ajouter des index.
+    explanation: |
+      30 × 20 = 600 connexions pour une base qui en accepte 100. La base n'exécute
+      efficacement qu'un nombre limité de requêtes en parallèle ; au-delà, elles attendent
+      de toute façon.
+
+  - id: bdd.n4.nosql.qcm-requete-imprevue
+    type: qcm
+    title: La requête imprévue
+    skills: [nosql]
+    difficulty: 4
+    prompt: |
+      Les commandes sont dans Cassandra, dans une table partitionnée par client. Le
+      marketing veut « toutes les commandes contenant le produit 42 ». Que faire ?
+    choices:
+      - id: a
+        text: "Créer une nouvelle table dénormalisée partitionnée par produit, alimentée à chaque commande, ou exporter vers un système analytique."
+        correct: true
+      - id: b
+        text: Écrire la requête avec un WHERE sur le produit.
+        feedback: "Sans la clé de partition, il faudrait relire toutes les partitions de tout le cluster."
+      - id: c
+        text: Ajouter un index secondaire et c'est réglé.
+        feedback: "Les index secondaires de Cassandra interrogent tous les nœuds : à éviter sur de gros volumes."
+      - id: d
+        text: C'est impossible en NoSQL.
+    explanation: |
+      En colonnes larges, on modélise une table par requête. Une nouvelle question demande
+      une nouvelle table (et de la remplir), là où le relationnel aurait ajouté un index.

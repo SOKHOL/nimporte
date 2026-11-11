@@ -1,0 +1,143 @@
+exercises:
+  - id: reseau-web.n4.jwt.predict-charge
+    type: predict-output
+    title: Lire un JWT sans la clé
+    skills: [jwt]
+    difficulty: 3
+    language: python
+    prompt: "Qu'affiche ce programme, qui n'a pas la clé de signature ?"
+    code: |
+      import base64, json
+
+      jeton = ("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+               ".eyJzdWIiOiJhZGEiLCJyb2xlIjoibGVjdGV1ciIsImV4cCI6MTc5NDQwMDAwMH0"
+               ".rolas5F2urKaEjIxIpc6F1h0rxaiVb60qagWJHI7060")
+
+      charge = jeton.split(".")[1]
+      charge += "=" * (-len(charge) % 4)
+      print(json.loads(base64.urlsafe_b64decode(charge)))
+    choices:
+      - id: a
+        text: "`{'sub': 'ada', 'role': 'lecteur', 'exp': 1794400000}`"
+        correct: true
+      - id: b
+        text: "Une erreur : il faut la clé pour lire le jeton."
+        feedback: "La clé sert à signer et vérifier ; la charge n'est que du Base64URL."
+      - id: c
+        text: "Des octets chiffrés illisibles."
+      - id: d
+        text: "`{'alg': 'HS256', 'typ': 'JWT'}`"
+        feedback: "C'est la première partie, l'en-tête ; ici on décode la deuxième."
+    explanation: |
+      Une charge JWT est lisible par quiconque possède le jeton. On n'y met jamais de secret,
+      et on la protège contre la **modification** par la signature. Sortie vérifiée.
+
+  - id: reseau-web.n4.jwt.qcm-none
+    type: qcm
+    title: Le jeton sans signature
+    skills: [jwt]
+    difficulty: 4
+    language: python
+    prompt: Pourquoi ce vérificateur est-il dangereux ?
+    code: |
+      def verifier(jeton):
+          entete, charge, signature = jeton.split(".")
+          alg = json.loads(b64decode(entete))["alg"]
+          if alg == "none":
+              return json.loads(b64decode(charge))
+          return verifier_hs256(entete, charge, signature)
+    choices:
+      - id: a
+        text: "Il fait confiance à l'algorithme annoncé par le jeton : un attaquant envoie alg=none, une charge à son goût, et aucune signature."
+        correct: true
+      - id: b
+        text: Il ne vérifie pas le format Base64.
+      - id: c
+        text: HS256 n'est pas assez sûr.
+      - id: d
+        text: Aucun danger, alg=none n'est jamais utilisé.
+    explanation: |
+      Démonstration réelle : un jeton `{"alg":"none"}` avec la charge
+      `{"sub":"mallory","role":"admin"}` est accepté. Le serveur doit imposer l'algorithme et
+      la clé attendus, sans lire le choix dans le jeton.
+
+  - id: reseau-web.n4.oauth.parsons
+    type: parsons
+    title: Le flux code d'autorisation avec PKCE
+    skills: [oauth2-oidc]
+    difficulty: 4
+    language: text
+    prompt: Remets dans l'ordre les étapes d'une connexion OAuth 2 avec PKCE dans une application mobile.
+    lines:
+      - L'application génère un code_verifier secret et calcule son code_challenge
+      - "Elle ouvre la page du serveur d'autorisation avec le code_challenge et les scopes"
+      - L'utilisateur s'authentifie chez le serveur d'autorisation et accepte les permissions
+      - Le serveur redirige vers l'application avec un code à usage unique
+      - "L'application échange le code et le code_verifier contre un jeton d'accès"
+      - "Elle appelle l'API avec Authorization: Bearer <jeton>"
+    distractors:
+      - L'application demande le mot de passe de l'utilisateur et l'envoie au serveur d'autorisation
+    explanation: |
+      L'application ne voit jamais le mot de passe. Le `code_verifier` empêche une autre
+      application qui intercepterait le code de l'échanger.
+
+  - id: reseau-web.n4.api.qcm-pagination
+    type: qcm
+    title: La page 5 000
+    skills: [conception-api]
+    difficulty: 3
+    prompt: "Une API pagine avec `?page=5000&taille=20` (offset). Les dernières pages sont très lentes, et des éléments apparaissent en double quand on parcourt la liste. Que proposer ?"
+    choices:
+      - id: a
+        text: "Une pagination par curseur : « les 20 éléments après l'identifiant 8812 », stable et rapide grâce à l'index."
+        correct: true
+      - id: b
+        text: Des pages de 1 000 éléments.
+      - id: c
+        text: Un cache de toutes les pages.
+      - id: d
+        text: Interdire d'aller au-delà de la page 100.
+        feedback: "Ça limite la casse, sans régler les doublons ni la lenteur de l'offset."
+    explanation: |
+      Avec un offset de 100 000, la base lit et ignore 100 000 lignes ; et une insertion
+      pendant la lecture décale tout. Le curseur s'appuie sur un index et une position fixe.
+
+  - id: reseau-web.n4.api.match-styles
+    type: match
+    title: REST, gRPC ou GraphQL ?
+    skills: [grpc-graphql, conception-api]
+    difficulty: 3
+    prompt: Relie chaque besoin au style d'API le plus adapté.
+    pairs:
+      - left: Des appels très fréquents entre microservices internes, avec un contrat généré
+        right: gRPC
+      - left: Une application mobile et un site web qui veulent chacun des champs différents
+        right: GraphQL
+      - left: Une API publique pour des partenaires, simple et cachable
+        right: REST
+      - left: Un flux continu d'événements d'un service vers un autre
+        right: gRPC en streaming
+    explanation: |
+      Chaque style a ses forces ; beaucoup d'entreprises combinent REST public, gRPC interne
+      et GraphQL pour les interfaces.
+
+  - id: reseau-web.n4.api.qcm-compatible
+    type: qcm
+    title: Faire évoluer sans casser
+    skills: [conception-api]
+    difficulty: 3
+    prompt: Quel changement d'une API JSON utilisée par des clients mobiles est compatible avec les versions existantes ?
+    choices:
+      - id: a
+        text: "Ajouter un champ facultatif dans la réponse"
+        correct: true
+      - id: b
+        text: Renommer le champ prix en montant
+      - id: c
+        text: Transformer le champ quantite de nombre en chaîne
+      - id: d
+        text: Rendre obligatoire un paramètre auparavant facultatif
+    explanation: |
+      Ajouter est compatible (si les clients ignorent les champs inconnus) ; renommer,
+      supprimer, changer un type ou durcir une règle casse les anciens clients, qui restent
+      installés sur des téléphones pendant des mois.

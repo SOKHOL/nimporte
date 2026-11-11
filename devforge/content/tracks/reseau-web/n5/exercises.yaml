@@ -1,0 +1,152 @@
+exercises:
+  - id: reseau-web.n5.performance.qcm-rtt
+    type: qcm
+    title: La première requête sur mobile
+    skills: [performance-reseau]
+    difficulty: 3
+    prompt: "Avec 100 ms d'aller-retour, combien de temps faut-il environ avant le premier octet d'une première requête HTTPS (DNS non en cache, TLS 1.3) ?"
+    choices:
+      - id: a
+        text: "Environ 400 ms : DNS, TCP, TLS et la requête, un aller-retour chacun."
+        correct: true
+      - id: b
+        text: "Environ 100 ms"
+        feedback: "C'est le cas d'une requête sur une connexion déjà ouverte."
+      - id: c
+        text: "Environ 50 ms"
+      - id: d
+        text: "Environ 1 seconde"
+    explanation: |
+      DNS (1) + TCP (1) + TLS 1.3 (1) + requête (1) = 4 allers-retours. Réutiliser les
+      connexions et rapprocher le serveur (CDN) sont les deux leviers principaux.
+
+  - id: reseau-web.n5.performance.qcm-compression
+    type: qcm
+    title: Compresser une réponse JSON
+    skills: [performance-reseau]
+    difficulty: 2
+    prompt: "Une réponse JSON de 2 000 produits pèse 90 890 octets. Environ combien pèse-t-elle compressée en gzip ?"
+    choices:
+      - id: a
+        text: Environ 5 Ko
+        correct: true
+      - id: b
+        text: Environ 80 Ko
+        feedback: "Le JSON répète les mêmes noms de champs : il se compresse très bien."
+      - id: c
+        text: Environ 45 Ko
+      - id: d
+        text: Environ 500 octets
+    explanation: |
+      Mesure réelle : 5 139 octets avec gzip -9, soit 17 fois moins. Les images et vidéos,
+      déjà compressées, ne gagneraient presque rien.
+
+  - id: reseau-web.n5.proxys.qcm-x-forwarded
+    type: qcm
+    title: D'où vient la requête ?
+    skills: [proxys]
+    difficulty: 4
+    prompt: |
+      L'application bloque les IP après 10 échecs de connexion, en lisant l'en-tête
+      `X-Forwarded-For`. Un attaquant n'est jamais bloqué. Pourquoi ?
+    choices:
+      - id: a
+        text: "Il envoie lui-même un X-Forwarded-For différent à chaque requête ; l'application doit n'utiliser que l'adresse ajoutée par son propre proxy de confiance."
+        correct: true
+      - id: b
+        text: Il utilise HTTPS.
+      - id: c
+        text: X-Forwarded-For n'existe que derrière un CDN.
+      - id: d
+        text: Il change de navigateur.
+    explanation: |
+      Un en-tête envoyé par le client peut contenir n'importe quoi. On ne lit que la valeur
+      ajoutée par le dernier proxy de confiance (par exemple la dernière entrée de la liste),
+      et on configure le framework pour qu'il le fasse.
+
+  - id: reseau-web.n5.proxys.match
+    type: match
+    title: Proxy, passerelle ou mesh ?
+    skills: [proxys, edge]
+    difficulty: 3
+    prompt: Relie chaque besoin au composant le plus adapté.
+    pairs:
+      - left: Terminer le TLS et répartir la charge devant trois serveurs web
+        right: Un proxy inverse (Nginx, HAProxy)
+      - left: Vérifier les jetons et appliquer des quotas par client partenaire
+        right: Une passerelle d'API
+      - left: Chiffrer et mesurer automatiquement tous les appels entre microservices
+        right: Un service mesh
+      - left: Rediriger selon le pays du visiteur, au plus près de lui
+        right: Une fonction edge
+    explanation: |
+      Ces composants se recouvrent en partie ; ce qui compte est de garder la logique métier
+      dans les services.
+
+  - id: reseau-web.n5.performance.scenario-lenteur
+    type: scenario
+    title: L'appel qui bloque tout
+    skills: [performance-reseau, proxys]
+    difficulty: 5
+    prompt: |
+      Le service de recommandations, appelé par la page produit, devient très lent (30 s par
+      réponse). En quelques minutes, toute la boutique ne répond plus, même les pages qui
+      n'affichent pas de recommandations.
+    start: debut
+    nodes:
+      debut:
+        text: Pourquoi des pages sans recommandations tombent-elles aussi ?
+        options:
+          - text: "Les threads (ou connexions) du serveur web restent bloqués 30 s en attendant les recommandations ; le pool s'épuise et plus aucune requête n'est servie."
+            next: correction
+            points: 3
+          - text: Le service de recommandations a fait tomber le réseau.
+            next: reseau
+            points: 0
+      reseau:
+        text: "Le réseau fonctionne ; les métriques montrent 200 threads sur 200 occupés, tous bloqués dans l'appel HTTP aux recommandations. Qu'en conclus-tu ?"
+        options:
+          - text: L'attente sans délai d'expiration épuise le pool de threads.
+            next: correction
+            points: 2
+      correction:
+        text: Que mets-tu en place ?
+        options:
+          - text: "Un délai d'expiration court sur cet appel (300 ms), un disjoncteur, et une page qui s'affiche sans recommandations en cas d'échec."
+            next: resolu
+            points: 3
+          - text: Doubler le nombre de threads.
+            next: doubler
+            points: 0
+            feedback: "Ils seront bloqués deux fois plus nombreux, à peine plus tard."
+      doubler:
+        ending: failure
+        text: "❌ La boutique tombe quelques minutes plus tard qu'avant."
+      resolu:
+        ending: success
+        text: "✅ Quand les recommandations sont lentes, la page s'affiche sans elles en 300 ms ; le reste du site n'est pas touché."
+    explanation: |
+      Sans délai d'expiration, la lenteur d'une dépendance se propage à tous ceux qui
+      l'appellent. Délais explicites, disjoncteur et mode dégradé contiennent la panne.
+
+  - id: reseau-web.n5.edge.qcm-donnees
+    type: qcm
+    title: Une fonction edge qui ne gagne rien
+    skills: [edge]
+    difficulty: 4
+    prompt: |
+      Une fonction edge, exécutée à Sydney, interroge à chaque requête une base PostgreSQL à
+      Paris. Le temps de réponse est le même qu'avant. Pourquoi ?
+    choices:
+      - id: a
+        text: "La fonction refait le long aller-retour Sydney ↔ Paris vers la base : rapprocher le code ne sert à rien si les données restent loin."
+        correct: true
+      - id: b
+        text: Les fonctions edge sont toujours plus lentes.
+      - id: c
+        text: Le CDN est mal configuré.
+      - id: d
+        text: PostgreSQL ne supporte pas l'edge.
+    explanation: |
+      L'edge brille pour ce qui ne dépend que de la requête (redirections, en-têtes, tests A/B)
+      ou de données répliquées près des utilisateurs (caches, clé-valeur distribué).

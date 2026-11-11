@@ -50,11 +50,11 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 ## Ce qui existe déjà
 
 - La carte des 31 parcours et de leurs prérequis : [`content/curriculum.yaml`](content/curriculum.yaml).
-- 13 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
-  POO, Design patterns, Architecture, System design, DevOps, **Gestion de la mémoire,
-  JVM, Threads et concurrence, Métaprogrammation et AOP**.
-- **79 leçons et 380 exercices**, couvrant 9 types d'exercices, et **65 boss chronométrés,
-  un par niveau**. **Les 13 parcours détaillés sont complets du niveau 1 au niveau 5** :
+- 16 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
+  POO, Design patterns, Architecture, System design, DevOps, Bases de données, Réseau et web,
+  Sécurité, **Gestion de la mémoire, JVM, Threads et concurrence, Métaprogrammation et AOP**.
+- **94 leçons et 465 exercices**, couvrant 9 types d'exercices, et **80 boss chronométrés,
+  un par niveau**. **Les 16 parcours détaillés sont complets du niveau 1 au niveau 5** :
   - fondations : types, boucles, collections, exceptions, complexité, nullabilité,
     génériques, fonctions d'ordre supérieur, apprendre n'importe quel langage ;
   - algorithmes : recherche et tris, piles, files, hachage, fenêtres glissantes, arbres,
@@ -87,6 +87,14 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
     charge, cache, CDN, réplication, files de messages, idempotence, partitionnement et
     hachage cohérent, CAP, cinq études de cas, consensus (Raft), horloges, sagas,
     multi-région ;
+  - bases de données : SQL, pièges de NULL, jointures, fonctions de fenêtre, modélisation,
+    index et plans d'exécution, transactions et isolation, N+1, NoSQL, migrations sans
+    coupure, pools de connexions, MVCC, WAL, B-tree et LSM, NewSQL ;
+  - réseau et web : HTTP, DNS, JSON, REST, cookies, CORS, cache HTTP, TCP, TLS, HTTP/2 et 3,
+    WebSockets, OAuth 2, OpenID Connect, JWT, conception d'API, gRPC, GraphQL, proxys, edge ;
+  - sécurité : mots de passe, MFA et passkeys, injections, XSS, CSRF, IDOR, SSRF, autorisation,
+    secrets, cryptographie appliquée, dépendances, STRIDE, zero trust, tests de sécurité,
+    réponse à incident, test d'intrusion, RGPD, ingénierie sociale ;
   - DevOps : culture et métriques DORA, 12 facteurs, Docker (couches, sécurité, PID 1),
     Compose, CI/CD, stratégies de déploiement, feature flags, Terraform, Ansible,
     Kubernetes et son diagnostic, Helm, GitOps, platform engineering, sécurité de la
@@ -94,7 +102,8 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 
   Tous les extraits (Kotlin, C, Python, Rust, JavaScript) ont été exécutés pour vérifier les
   réponses attendues, et les sorties citées dans les cours Git, Linux, System design et DevOps
-  sont des sorties réelles (Git, bash, strace, Redis, PostgreSQL, Docker, Terraform).
+  sont des sorties réelles (Git, bash, strace, Redis, PostgreSQL, Docker, Terraform, curl,
+  openssl, bandit, pip-audit).
 - Un validateur (schémas + cohérence) avec ses tests, lancé par GitHub Actions.
 
 ## Structure
@@ -135,6 +144,6 @@ python -m unittest discover -s devforge/tools -v
 
 ## Prochaine étape
 
-Rédiger les 18 parcours encore à l'état de plan (cloud, bases de données, sécurité, SRE,
-réseau et web…), enrichir les parcours existants (plus d'exercices par compétence), puis
+Rédiger les 15 parcours encore à l'état de plan (cloud, SRE, clean code, programmation
+fonctionnelle…), enrichir les parcours existants (plus d'exercices par compétence), puis
 notifications et widget pour le défi du jour. Voir le [plan d'action](docs/04-plan-d-action.md).

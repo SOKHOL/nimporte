@@ -1,0 +1,146 @@
+exercises:
+  - id: bdd.n2.jointures.predict-left-count
+    type: predict-output
+    title: Compter après un LEFT JOIN
+    skills: [jointures, agregation]
+    difficulty: 4
+    language: sql
+    prompt: "Employés : Ada et Linus en R&D, Grace aux Ventes, personne au Support. Que renvoie cette requête pour le Support ?"
+    code: |
+      select s.nom, count(*)
+      from (values ('R&D'), ('Ventes'), ('Support')) as s(nom)
+      left join employes e on e.service = s.nom
+      group by s.nom;
+    choices:
+      - id: a
+        text: "`Support | 1`"
+        correct: true
+      - id: b
+        text: "`Support | 0`"
+        feedback: "Ce serait le cas avec `count(e.nom)` ; `count(*)` compte la ligne produite par le left join, même vide."
+      - id: c
+        text: "Aucune ligne pour le Support"
+        feedback: "C'est ce que ferait un inner join ; le left join garde toutes les lignes de gauche."
+      - id: d
+        text: "`Support | NULL`"
+    explanation: |
+      Résultat réel : `R&D 2`, `Support 1`, `Ventes 1`. Le left join produit une ligne
+      Support avec NULL côté employés ; `count(*)` la compte. Pour compter les employés, il
+      faut `count(e.nom)` (résultat réel : `Support 0`).
+
+  - id: bdd.n2.agregation.predict-cumul
+    type: predict-output
+    title: Un cumul avec une fenêtre
+    skills: [agregation]
+    difficulty: 3
+    language: sql
+    prompt: "Salaires : Ada 5200, Linus 4800, Grace 4100, Alan 3900. Quelle valeur de cumul a la ligne de Grace ?"
+    code: |
+      select nom, salaire,
+             sum(salaire) over (order by salaire desc) as cumul
+      from employes
+      order by salaire desc;
+    choices:
+      - id: a
+        text: "`14100`"
+        correct: true
+      - id: b
+        text: "`18000`"
+        feedback: "C'est le total ; avec un `order by` dans la fenêtre, la somme s'arrête à la ligne courante."
+      - id: c
+        text: "`4100`"
+      - id: d
+        text: "Une erreur : il manque un GROUP BY."
+        feedback: "Une fonction de fenêtre ne regroupe pas les lignes : pas besoin de GROUP BY."
+    explanation: |
+      Résultat réel : 5200, 10000, 14100, 18000. Avec `order by` dans `over (…)`, la fenêtre
+      va du début jusqu'à la ligne courante : c'est un cumul. Chaque ligne reste visible.
+
+  - id: bdd.n2.jointures.qcm-multiplication
+    type: qcm
+    title: Le total qui triple
+    skills: [jointures, agregation]
+    difficulty: 4
+    language: sql
+    prompt: "Un client a 10 commandes (total 500 €) et 3 adresses. Combien vaut `total` ?"
+    code: |
+      select c.id, sum(co.montant) as total
+      from clients c
+      join commandes co on co.client_id = c.id
+      join adresses ad on ad.client_id = c.id
+      group by c.id;
+    choices:
+      - id: a
+        text: "1 500 € : chaque commande est répétée pour chacune des 3 adresses (30 lignes)."
+        correct: true
+      - id: b
+        text: "500 €"
+      - id: c
+        text: "166,67 €"
+      - id: d
+        text: Une erreur de PostgreSQL.
+    explanation: |
+      Joindre deux relations « un à plusieurs » sur la même table produit leur produit
+      cartésien. On agrège chaque relation séparément (sous-requêtes ou CTE), puis on joint
+      les résultats.
+
+  - id: bdd.n2.normalisation.match
+    type: match
+    title: Repérer la forme normale violée
+    skills: [normalisation]
+    difficulty: 3
+    prompt: Relie chaque défaut de modélisation à la forme normale qu'il viole.
+    pairs:
+      - left: "Une colonne telephones = '0601…, 0702…'"
+        right: 1NF (valeurs atomiques)
+      - left: "lignes_commande(commande_id, produit_id, quantite, nom_produit)"
+        right: 2NF (nom_produit ne dépend que d'une partie de la clé)
+      - left: "clients(id, nom, code_postal, ville)"
+        right: 3NF (ville dépend de code_postal, pas de la clé)
+    explanation: |
+      Chaque information n'est écrite qu'à un endroit ; sinon, une modification oubliée à un
+      endroit rend la base incohérente.
+
+  - id: bdd.n2.modelisation.qcm-plusieurs
+    type: qcm
+    title: Étudiants et cours
+    skills: [modelisation]
+    difficulty: 2
+    prompt: Un étudiant suit plusieurs cours, un cours a plusieurs étudiants, et on veut la date d'inscription. Comment modéliser ?
+    choices:
+      - id: a
+        text: "Une table d'association inscriptions(etudiant_id, cours_id, inscrit_le) avec deux clés étrangères."
+        correct: true
+      - id: b
+        text: Une colonne cours_ids contenant une liste dans la table etudiants.
+        feedback: Viole la 1NF ; impossible de garantir que les cours existent ou de joindre efficacement.
+      - id: c
+        text: Une clé étrangère cours_id dans la table etudiants.
+        feedback: "Ça limite chaque étudiant à un seul cours."
+      - id: d
+        text: Dupliquer l'étudiant pour chaque cours.
+    explanation: |
+      Le plusieurs-à-plusieurs passe par une table d'association, qui porte aussi les
+      données de la relation (date, note). Sa clé primaire est souvent le couple des deux
+      identifiants.
+
+  - id: bdd.n2.modelisation.qcm-prix
+    type: qcm
+    title: Copier le prix, une erreur ?
+    skills: [modelisation, normalisation]
+    difficulty: 3
+    prompt: "La table lignes_commande contient prix_unitaire, alors que le prix est déjà dans la table produits. Est-ce une redondance à supprimer ?"
+    choices:
+      - id: a
+        text: "Non : c'est le prix au moment de la commande, une donnée différente du prix actuel du catalogue, qui changera."
+        correct: true
+      - id: b
+        text: Oui, il faut toujours joindre la table produits pour avoir le prix.
+        feedback: Toutes les anciennes factures changeraient à chaque modification de prix.
+      - id: c
+        text: Oui, cela viole la 1NF.
+      - id: d
+        text: Non, mais uniquement pour des raisons de performance.
+    explanation: |
+      Une donnée historique n'est pas une redondance : elle a sa propre signification. Même
+      chose pour l'adresse de livraison d'une commande passée.

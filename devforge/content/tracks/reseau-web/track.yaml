@@ -1,71 +1,123 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: reseau-web
 title: Réseau, web et API
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Comment une requête traverse Internet : HTTP, DNS, TCP, TLS, HTTP/2 et 3, la conception
+  d'API, l'authentification, et la performance réseau.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: client-serveur
-    title: Client/serveur
-  - id: http-methodes-codes-en-tetes
-    title: HTTP (méthodes, codes, en-têtes)
-  - id: url
-    title: URL
-  - id: dns
-    title: DNS
-  - id: json
-    title: JSON
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: rest-ressources-idempotence
-    title: REST (ressources, idempotence, pagination, versions)
-  - id: cookies
-    title: Cookies
-  - id: sessions
-    title: Sessions
-  - id: cors
-    title: CORS
-- level: 3
-  title: Approfondir
-  skills:
-  - id: tcp-ip
-    title: TCP/IP
-  - id: tls
-    title: TLS
-  - id: http-2-et-http-3
-    title: HTTP/2 et HTTP/3
-  - id: oauth2
-    title: OAuth2
-  - id: openid-connect
-    title: OpenID Connect
-  - id: jwt
-    title: JWT
-  - id: websockets
-    title: WebSockets
-- level: 4
-  title: Concevoir
-  skills:
-  - id: grpc
-    title: GRPC
-  - id: graphql
-    title: GraphQL
-  - id: conception-d-api-openapi
-    title: Conception d'API (OpenAPI, rétrocompatibilité)
-  - id: rate-limiting
-    title: Rate limiting
-  - id: api-gateway
-    title: API gateway
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: performance-reseau
-    title: Performance réseau
-  - id: proxys-et-load-balancers-l4-l7
-    title: Proxys et load balancers L4/L7
-  - id: cdn
-    title: CDN
-  - id: edge-computing
-    title: Edge computing
+  - level: 1
+    title: Le web de base
+    skills:
+      - id: client-serveur
+        title: Client, serveur et URL
+      - id: http
+        title: HTTP (méthodes, codes, en-têtes)
+      - id: dns
+        title: DNS
+      - id: json
+        title: JSON et formats d'échange
+    boss:
+      id: reseau-web.n1.boss
+      title: "Boss : le code qui ment"
+      exercises:
+        - reseau-web.n1.client-serveur.qcm-fragment
+        - reseau-web.n1.http.match-codes
+        - reseau-web.n1.dns.qcm-ttl
+        - reseau-web.n1.json.qcm-grand-id
+        - reseau-web.n1.http.qcm-idempotent
+      pass_ratio: 0.8
+      time_limit_min: 8
+
+  - level: 2
+    title: Construire des API web
+    skills:
+      - id: rest
+        title: REST, ressources et idempotence
+      - id: cookies-sessions
+        title: Cookies et sessions
+      - id: cors
+        title: CORS et la politique de même origine
+      - id: cache-http
+        title: Le cache HTTP (Cache-Control, ETag)
+    boss:
+      id: reseau-web.n2.boss
+      title: "Boss : le cache trop public"
+      exercises:
+        - reseau-web.n2.rest.review-api
+        - reseau-web.n2.cache.scenario-panier
+        - reseau-web.n2.cors.qcm-curl
+        - reseau-web.n2.cookies.match
+        - reseau-web.n2.cache.qcm-304
+        - reseau-web.n2.rest.qcm-action
+      pass_ratio: 0.8
+      time_limit_min: 13
+
+  - level: 3
+    title: Sous HTTP
+    skills:
+      - id: tcp-udp
+        title: TCP, UDP et les ports
+      - id: tls
+        title: TLS et les certificats
+      - id: http2-http3
+        title: HTTP/2 et HTTP/3
+      - id: websockets
+        title: WebSockets et temps réel
+    boss:
+      id: reseau-web.n3.boss
+      title: "Boss : les 40 millisecondes"
+      exercises:
+        - reseau-web.n3.tcp.scenario-40ms
+        - reseau-web.n3.tls.qcm-reutilisation
+        - reseau-web.n3.websockets.qcm
+        - reseau-web.n3.http2.match
+        - reseau-web.n3.tls.qcm-garanties
+        - reseau-web.n3.tcp.match-protocoles
+      pass_ratio: 0.8
+      time_limit_min: 12
+
+  - level: 4
+    title: Authentifier et concevoir des API
+    skills:
+      - id: oauth2-oidc
+        title: OAuth 2 et OpenID Connect
+      - id: jwt
+        title: Les jetons JWT
+      - id: conception-api
+        title: Concevoir une API (OpenAPI, erreurs, pagination, versions)
+      - id: grpc-graphql
+        title: gRPC et GraphQL
+    boss:
+      id: reseau-web.n4.boss
+      title: "Boss : le jeton sans signature"
+      exercises:
+        - reseau-web.n4.oauth.parsons
+        - reseau-web.n4.jwt.qcm-none
+        - reseau-web.n4.api.match-styles
+        - reseau-web.n4.jwt.predict-charge
+        - reseau-web.n4.api.qcm-pagination
+        - reseau-web.n4.api.qcm-compatible
+      pass_ratio: 0.8
+      time_limit_min: 11
+
+  - level: 5
+    title: Performance et bord du réseau
+    skills:
+      - id: performance-reseau
+        title: Latence, connexions et compression
+      - id: proxys
+        title: Proxys inverses et passerelles d'API
+      - id: edge
+        title: CDN et edge computing
+    boss:
+      id: reseau-web.n5.boss
+      title: "Boss : l'appel sans délai"
+      exercises:
+        - reseau-web.n5.performance.scenario-lenteur
+        - reseau-web.n5.edge.qcm-donnees
+        - reseau-web.n5.proxys.match
+        - reseau-web.n5.proxys.qcm-x-forwarded
+        - reseau-web.n5.performance.qcm-rtt
+        - reseau-web.n5.performance.qcm-compression
+      pass_ratio: 0.8
+      time_limit_min: 11

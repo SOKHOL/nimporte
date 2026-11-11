@@ -1,67 +1,126 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: bdd
 title: Bases de données
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  SQL, modélisation, index, transactions et isolation, NoSQL, migrations sans coupure,
+  et ce qui se passe à l'intérieur d'un moteur de base de données.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: tables
-    title: Tables
-  - id: select-insert-update-delete
-    title: SELECT/INSERT/UPDATE/DELETE
-  - id: where
-    title: WHERE
-  - id: order-by
-    title: ORDER BY
-  - id: cles-primaires
-    title: Clés primaires
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: jointures
-    title: Jointures
-  - id: group-by
-    title: GROUP BY
-  - id: sous-requetes
-    title: Sous-requêtes
-  - id: cles-etrangeres
-    title: Clés étrangères
-  - id: modelisation
-    title: Modélisation
-  - id: normalisation-1nf-3nf
-    title: Normalisation (1NF → 3NF)
-- level: 3
-  title: Approfondir
-  skills:
-  - id: index
-    title: Index
-  - id: plans-d-execution-explain
-    title: Plans d'exécution (EXPLAIN)
-  - id: transactions-acid
-    title: Transactions ACID
-  - id: niveaux-d-isolation
-    title: Niveaux d'isolation
-  - id: orm-et-probleme-n-1
-    title: ORM et problème N+1
-- level: 4
-  title: Concevoir
-  skills:
-  - id: nosql-document-cle-valeur-colonnes
-    title: NoSQL (document, clé-valeur, colonnes, graphe)
-  - id: replication
-    title: Réplication
-  - id: partitionnement
-    title: Partitionnement
-  - id: migrations-sans-interruption
-    title: Migrations sans interruption
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: internes-mvcc-wal-lsm-trees
-    title: Internes (MVCC, WAL, LSM-trees)
-  - id: bases-distribuees
-    title: Bases distribuées
-  - id: choisir-son-stockage
-    title: Choisir son stockage
+  - level: 1
+    title: Interroger une base
+    skills:
+      - id: tables-types
+        title: Tables, types et clés primaires
+      - id: select
+        title: SELECT, WHERE, ORDER BY, LIMIT
+      - id: modifier
+        title: INSERT, UPDATE, DELETE
+      - id: valeurs-null
+        title: NULL et la logique à trois valeurs
+    boss:
+      id: bdd.n1.boss
+      title: "Boss : le NULL fantôme"
+      exercises:
+        - bdd.n1.tables.match-types
+        - bdd.n1.null.predict-count
+        - bdd.n1.modifier.find-bug
+        - bdd.n1.select.qcm-ordre
+        - bdd.n1.null.predict-not-in
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 2
+    title: Relier et modéliser
+    skills:
+      - id: jointures
+        title: Les jointures
+      - id: agregation
+        title: GROUP BY, HAVING et fonctions de fenêtre
+      - id: modelisation
+        title: Clés étrangères et modélisation
+      - id: normalisation
+        title: Normalisation et dénormalisation
+    boss:
+      id: bdd.n2.boss
+      title: "Boss : la jointure qui multiplie"
+      exercises:
+        - bdd.n2.jointures.predict-left-count
+        - bdd.n2.modelisation.qcm-prix
+        - bdd.n2.normalisation.match
+        - bdd.n2.jointures.qcm-multiplication
+        - bdd.n2.agregation.predict-cumul
+        - bdd.n2.modelisation.qcm-plusieurs
+      pass_ratio: 0.8
+      time_limit_min: 11
+
+  - level: 3
+    title: Performance et transactions
+    skills:
+      - id: index
+        title: Les index
+      - id: explain
+        title: Lire un plan d'exécution
+      - id: transactions
+        title: Transactions et ACID
+      - id: isolation
+        title: Niveaux d'isolation et anomalies
+      - id: orm-n-plus-1
+        title: ORM et problème N+1
+    boss:
+      id: bdd.n3.boss
+      title: "Boss : le verrou perdu"
+      exercises:
+        - bdd.n3.explain.qcm-seq
+        - bdd.n3.transactions.scenario-stock
+        - bdd.n3.orm.qcm-n-plus-1
+        - bdd.n3.isolation.match
+        - bdd.n3.index.qcm-lower
+        - bdd.n3.transactions.qcm-http
+      pass_ratio: 0.8
+      time_limit_min: 11
+
+  - level: 4
+    title: Concevoir et faire évoluer
+    skills:
+      - id: nosql
+        title: NoSQL (document, clé-valeur, colonnes, graphe)
+      - id: migrations
+        title: Migrations sans interruption
+      - id: verrous
+        title: Verrous et contention
+      - id: pool-connexions
+        title: Connexions et pools
+    boss:
+      id: bdd.n4.boss
+      title: "Boss : la migration bloquante"
+      exercises:
+        - bdd.n4.nosql.qcm-requete-imprevue
+        - bdd.n4.verrous.scenario-migration
+        - bdd.n4.pool.qcm
+        - bdd.n4.migrations.match
+        - bdd.n4.nosql.match
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 5
+    title: Sous le capot
+    skills:
+      - id: mvcc-wal
+        title: MVCC, VACUUM et WAL
+      - id: structures-stockage
+        title: B-tree et LSM-tree
+      - id: bases-distribuees
+        title: Bases distribuées (NewSQL)
+      - id: choisir-stockage
+        title: Choisir son stockage
+    boss:
+      id: bdd.n5.boss
+      title: "Boss : le VACUUM oublié"
+      exercises:
+        - bdd.n5.mvcc.scenario-gonflement
+        - bdd.n5.stockage.match
+        - bdd.n5.distribue.qcm-newsql
+        - bdd.n5.mvcc.qcm-taille
+        - bdd.n5.wal.qcm-pitr
+        - bdd.n5.choisir.qcm
+      pass_ratio: 0.8
+      time_limit_min: 11

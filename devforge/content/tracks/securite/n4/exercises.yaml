@@ -1,0 +1,138 @@
+exercises:
+  - id: securite.n4.stride.match
+    type: match
+    title: Classer les menaces avec STRIDE
+    skills: [modelisation-menaces]
+    difficulty: 3
+    prompt: Relie chaque menace sur une application de paiement à sa catégorie STRIDE.
+    pairs:
+      - left: Un attaquant se connecte avec les identifiants volés d'un client
+        right: Spoofing (usurpation)
+      - left: Le montant d'un virement est modifié entre l'application et le serveur
+        right: Tampering (altération)
+      - left: Un client nie avoir validé un virement, et rien ne permet de le prouver
+        right: Repudiation (répudiation)
+      - left: Une erreur 500 affiche la requête SQL et la configuration du serveur
+        right: Information disclosure (fuite d'information)
+      - left: Un utilisateur ordinaire accède aux fonctions d'administration
+        right: Elevation of privilege (élévation de privilèges)
+    explanation: |
+      STRIDE aide à ne rien oublier en parcourant chaque élément du schéma de flux, en
+      particulier ceux qui traversent une frontière de confiance.
+
+  - id: securite.n4.tests.qcm-sast
+    type: qcm
+    title: Ce que l'analyse statique ne voit pas
+    skills: [tests-securite]
+    difficulty: 3
+    prompt: "Quelle faille un outil de SAST a-t-il le moins de chances de trouver ?"
+    choices:
+      - id: a
+        text: "Une API qui renvoie les factures d'autres clients quand on change l'identifiant (IDOR)"
+        correct: true
+      - id: b
+        text: Une requête SQL construite par concaténation
+        feedback: "bandit l'a trouvée réellement (B608)."
+      - id: c
+        text: Un appel à subprocess avec shell=True
+        feedback: "bandit l'a signalée avec une gravité haute (B602)."
+      - id: d
+        text: Une clé d'API écrite en dur dans le code
+    explanation: |
+      Le SAST reconnaît des motifs dangereux dans le code ; il ne connaît pas la règle métier
+      « une facture n'est visible que par son client ». Tests d'autorisation écrits par
+      l'équipe et tests d'intrusion couvrent ces failles.
+
+  - id: securite.n4.defense.scenario-poste
+    type: scenario
+    title: Un poste compromis
+    skills: [defense-profondeur, journalisation-securite]
+    difficulty: 5
+    prompt: |
+      Un développeur a ouvert une pièce jointe piégée. Son poste est compromis depuis trois
+      jours. L'entreprise fonctionne avec un VPN qui donne accès à tout le réseau interne.
+    start: debut
+    nodes:
+      debut:
+        text: Qu'est-ce qui rend la situation particulièrement grave ?
+        options:
+          - text: "Depuis ce poste, l'attaquant voit tout le réseau interne et peut se déplacer vers les bases, les outils d'administration et la CI."
+            next: detection
+            points: 3
+          - text: Le poste du développeur contient du code source.
+            next: detection
+            points: 1
+            feedback: "C'est un problème, mais le plus grave est l'accès à tout le reste depuis ce point d'entrée."
+      detection:
+        text: Comment l'équipe aurait-elle pu le détecter plus tôt ?
+        options:
+          - text: "Des journaux centralisés et des alertes : connexions inhabituelles depuis ce poste vers des serveurs qu'il n'utilise jamais, exports de données, nouveaux comptes."
+            next: architecture
+            points: 3
+          - text: Un antivirus plus récent.
+            next: architecture
+            points: 1
+      architecture:
+        text: Quelle évolution d'architecture limite ce type d'incident à l'avenir ?
+        options:
+          - text: "Zero trust : chaque accès authentifié et autorisé selon l'identité et l'appareil, micro-segmentation, accès aux outils par un proxy d'identité plutôt qu'un VPN qui ouvre tout."
+            next: resolu
+            points: 3
+          - text: Interdire les pièces jointes.
+            next: interdire
+            points: 0
+      interdire:
+        ending: partial
+        text: "🟡 Une porte se ferme ; le prochain attaquant passera par un lien, une dépendance ou un mot de passe réutilisé, et trouvera le même réseau ouvert."
+      resolu:
+        ending: success
+        text: "✅ Un poste compromis n'atteint plus que les quelques services auxquels son utilisateur a droit, et chaque accès inhabituel déclenche une alerte."
+    explanation: |
+      La plupart des intrusions commencent par un seul point d'entrée, puis se déplacent
+      latéralement. Défense en profondeur et zero trust limitent ce déplacement ; la
+      journalisation réduit le temps de détection.
+
+  - id: securite.n4.journaux.find-bug
+    type: find-bug
+    title: Le journal qui fuit
+    skills: [journalisation-securite]
+    difficulty: 2
+    language: kotlin
+    prompt: Touche la ligne de journalisation qui crée elle-même une fuite de données.
+    code: |
+      fun connecter(email: String, motDePasse: String, ip: String): Session {
+          log.info("tentative de connexion email=$email ip=$ip")
+          val utilisateur = utilisateurs.trouver(email)
+          if (utilisateur == null || !hacheur.verifier(motDePasse, utilisateur.empreinte)) {
+              log.warn("échec de connexion email=$email motDePasse=$motDePasse ip=$ip")
+              throw IdentifiantsInvalides()
+          }
+          log.info("connexion réussie utilisateur=${utilisateur.id} ip=$ip")
+          return sessions.creer(utilisateur)
+      }
+    bug_lines: [5]
+    explanation: |
+      Le mot de passe saisi part dans les journaux, lisibles par bien plus de monde que la
+      base. Et un échec contient souvent un **vrai** mot de passe avec une faute de frappe,
+      ou celui d'un autre site. Journaliser l'événement, l'e-mail et l'IP, jamais le secret.
+
+  - id: securite.n4.tests.match
+    type: match
+    title: Quel test de sécurité ?
+    skills: [tests-securite]
+    difficulty: 3
+    prompt: Relie chaque besoin au type de test le plus adapté.
+    pairs:
+      - left: Repérer une requête SQL concaténée à chaque pull request
+        right: SAST
+      - left: Savoir si une bibliothèque utilisée a une CVE publiée
+        right: SCA
+      - left: Trouver les plantages d'un analyseur de fichiers PDF
+        right: Fuzzing
+      - left: Tester l'application déployée en préproduction depuis l'extérieur
+        right: DAST
+      - left: Chercher des failles de logique métier enchaînées
+        right: Test d'intrusion
+    explanation: |
+      Démonstration réelle : 100 000 entrées aléatoires ont fait apparaître un
+      `ZeroDivisionError` inattendu dans un petit analyseur, dès la première entrée (`0`).

@@ -1,65 +1,126 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: securite
 title: Sécurité
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Penser comme un attaquant pour construire comme un défenseur : mots de passe, failles web,
+  cryptographie appliquée, secrets, modélisation des menaces et réponse à incident.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: confidentialite
-    title: Confidentialité
-  - id: integrite
-    title: Intégrité
-  - id: disponibilite
-    title: Disponibilité
-  - id: mots-de-passe
-    title: Mots de passe
-  - id: hachage-vs-chiffrement
-    title: Hachage vs chiffrement
-  - id: https
-    title: HTTPS
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: owasp-top-10-injections
-    title: 'OWASP Top 10 : injections'
-  - id: xss
-    title: XSS
-  - id: csrf
-    title: CSRF
-  - id: controle-d-acces-defaillant
-    title: Contrôle d'accès défaillant
-  - id: validation-des-entrees
-    title: Validation des entrées
-- level: 3
-  title: Approfondir
-  skills:
-  - id: authentification-et-autorisation
-    title: Authentification et autorisation
-  - id: gestion-des-secrets
-    title: Gestion des secrets
-  - id: cryptographie-appliquee-aes-rsa
-    title: Cryptographie appliquée (AES, RSA, signatures)
-- level: 4
-  title: Concevoir
-  skills:
-  - id: modelisation-des-menaces-stride
-    title: Modélisation des menaces (STRIDE)
-  - id: securite-des-conteneurs-et-de
-    title: Sécurité des conteneurs et de Kubernetes
-  - id: chaine-logicielle
-    title: Chaîne logicielle
-  - id: sast-dast-sca
-    title: SAST/DAST/SCA
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: securite-des-la-conception
-    title: Sécurité dès la conception
-  - id: reponse-a-incident-de-securite
-    title: Réponse à incident de sécurité
-  - id: bases-du-pentest-ethique
-    title: Bases du pentest éthique
-  - id: rgpd
-    title: RGPD
+  - level: 1
+    title: Les bases
+    skills:
+      - id: triade-cia
+        title: Confidentialité, intégrité, disponibilité
+      - id: hachage-chiffrement
+        title: Encodage, hachage et chiffrement
+      - id: mots-de-passe
+        title: Stocker des mots de passe
+      - id: authentification-forte
+        title: MFA et passkeys
+    boss:
+      id: securite.n1.boss
+      title: "Boss : le mot de passe en clair"
+      exercises:
+        - securite.n1.cia.match
+        - securite.n1.mots-de-passe.qcm-stockage
+        - securite.n1.mfa.qcm-hameconnage
+        - securite.n1.mots-de-passe.qcm-sel
+        - securite.n1.hachage.match
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: Les failles web
+    skills:
+      - id: injections
+        title: Injections (SQL, commandes)
+      - id: xss
+        title: Cross-site scripting (XSS)
+      - id: csrf
+        title: Cross-site request forgery (CSRF)
+      - id: controle-acces
+        title: Contrôle d'accès défaillant (IDOR)
+      - id: ssrf
+        title: Server-side request forgery (SSRF)
+    boss:
+      id: securite.n2.boss
+      title: "Boss : l'injection"
+      exercises:
+        - securite.n2.injections.predict-sql
+        - securite.n2.xss.bug-gabarit
+        - securite.n2.failles.match
+        - securite.n2.controle-acces.scenario-idor
+        - securite.n2.ssrf.qcm-metadonnees
+        - securite.n2.commande.qcm
+      pass_ratio: 0.8
+      time_limit_min: 12
+
+  - level: 3
+    title: Protéger l'application
+    skills:
+      - id: autorisation
+        title: Autorisation (RBAC, ABAC)
+      - id: secrets
+        title: Gérer les secrets
+      - id: crypto-appliquee
+        title: Cryptographie appliquée
+      - id: dependances
+        title: Dépendances vulnérables
+    boss:
+      id: securite.n3.boss
+      title: "Boss : la clé poussée"
+      exercises:
+        - securite.n3.autorisation.match
+        - securite.n3.secrets.scenario-cle-poussee
+        - securite.n3.crypto.qcm-gcm
+        - securite.n3.dependances.qcm
+        - securite.n3.crypto.find-bug-jeton
+        - securite.n3.crypto.qcm-ecb
+      pass_ratio: 0.8
+      time_limit_min: 12
+
+  - level: 4
+    title: Concevoir sûr
+    skills:
+      - id: modelisation-menaces
+        title: Modélisation des menaces (STRIDE)
+      - id: defense-profondeur
+        title: Défense en profondeur et zero trust
+      - id: tests-securite
+        title: SAST, DAST, SCA et fuzzing
+      - id: journalisation-securite
+        title: Journaliser et détecter
+    boss:
+      id: securite.n4.boss
+      title: "Boss : le poste compromis"
+      exercises:
+        - securite.n4.stride.match
+        - securite.n4.defense.scenario-poste
+        - securite.n4.tests.qcm-sast
+        - securite.n4.journaux.find-bug
+        - securite.n4.tests.match
+      pass_ratio: 0.8
+      time_limit_min: 11
+
+  - level: 5
+    title: Expert
+    skills:
+      - id: reponse-incident
+        title: Réponse à incident de sécurité
+      - id: pentest
+        title: Bases du test d'intrusion éthique
+      - id: vie-privee
+        title: RGPD et protection de la vie privée
+      - id: facteur-humain
+        title: Ingénierie sociale et facteur humain
+    boss:
+      id: securite.n5.boss
+      title: "Boss : l'intrusion du vendredi"
+      exercises:
+        - securite.n5.incident.scenario-intrusion
+        - securite.n5.pentest.qcm-autorisation
+        - securite.n5.rgpd.match
+        - securite.n5.humain.qcm-fraude
+        - securite.n5.rgpd.qcm-pseudonymisation
+        - securite.n5.incident.match-etapes
+      pass_ratio: 0.8
+      time_limit_min: 12

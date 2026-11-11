@@ -1,0 +1,161 @@
+exercises:
+  - id: securite.n5.incident.scenario-intrusion
+    type: scenario
+    title: Un serveur qui parle tout seul
+    skills: [reponse-incident]
+    difficulty: 5
+    prompt: |
+      Vendredi 18 h, une alerte : un serveur d'application envoie depuis une heure de gros
+      volumes de données vers une IP inconnue à l'étranger.
+    start: debut
+    nodes:
+      debut:
+        text: Quelle est ta première action ?
+        options:
+          - text: "Ouvrir un incident, prévenir l'équipe de réponse, et isoler le serveur du réseau sans l'éteindre, pour arrêter l'exfiltration en gardant les preuves en mémoire."
+            next: identifiants
+            points: 3
+          - text: Éteindre le serveur et le réinstaller tout de suite.
+            next: reinstaller
+            points: 0
+            feedback: "Les preuves (mémoire, processus, connexions) disparaissent, et on ne saura ni comment l'attaquant est entré ni ce qu'il a pris."
+      reinstaller:
+        text: "Le serveur est réinstallé. Deux jours plus tard, le même comportement réapparaît sur un autre serveur. Que s'est-il passé ?"
+        options:
+          - text: L'attaquant avait d'autres accès (identifiants volés, autres machines) et la faille d'entrée n'a pas été identifiée.
+            next: identifiants
+            points: 1
+      identifiants:
+        text: "Les journaux montrent que l'attaquant a utilisé les identifiants d'un compte de service. Que fais-tu ensuite ?"
+        options:
+          - text: "Révoquer et remplacer ce compte et tous les secrets accessibles depuis ce serveur, rechercher ses autres connexions, identifier la faille d'entrée et les données concernées."
+            next: notification
+            points: 3
+          - text: Changer seulement le mot de passe du compte.
+            next: notification
+            points: 1
+            feedback: "Clés d'API, jetons et clés SSH accessibles depuis le serveur sont aussi à considérer comme compromis."
+      notification:
+        text: "L'analyse montre que des données de clients (noms, e-mails, adresses) ont été exfiltrées. Quelle obligation ?"
+        options:
+          - text: "Notifier la CNIL dans les 72 heures, et informer les clients si le risque pour eux est élevé, avec le délégué à la protection des données et le juridique."
+            next: resolu
+            points: 3
+          - text: Attendre la fin de l'enquête complète, qui peut prendre des semaines, avant de notifier.
+            next: tard
+            points: 0
+      tard:
+        ending: failure
+        text: "❌ La notification arrive hors délai : une sanction s'ajoute à l'incident, et les clients l'apprennent par la presse."
+      resolu:
+        ending: success
+        text: "✅ Exfiltration stoppée en une heure, accès révoqués, faille corrigée, notification dans les délais, et un post-mortem qui conduit au zero trust pour les comptes de service."
+    explanation: |
+      Contenir en préservant les preuves, éradiquer tous les accès, rétablir depuis des
+      sources sûres, notifier dans les délais (72 heures pour l'autorité au titre du RGPD),
+      puis apprendre.
+
+  - id: securite.n5.pentest.qcm-autorisation
+    type: qcm
+    title: Tester le site d'un concurrent
+    skills: [pentest]
+    difficulty: 2
+    prompt: "Un développeur veut « juste vérifier » si le site d'un concurrent est vulnérable aux injections SQL, sans rien casser. Qu'en penses-tu ?"
+    choices:
+      - id: a
+        text: "C'est illégal sans l'autorisation écrite du propriétaire, même sans dégât : s'entraîner sur des plateformes prévues pour (Root Me, Juice Shop) ou dans un programme de bug bounty."
+        correct: true
+      - id: b
+        text: C'est acceptable si on ne garde aucune donnée.
+      - id: c
+        text: C'est acceptable si on prévient le concurrent ensuite.
+      - id: d
+        text: C'est légal si le site est public.
+    explanation: |
+      L'accès frauduleux à un système est un délit (articles 323-1 et suivants du Code pénal
+      en France), indépendamment de l'intention. Un test d'intrusion se fait avec une
+      convention signée et un périmètre précis.
+
+  - id: securite.n5.rgpd.match
+    type: match
+    title: Les principes du RGPD en pratique
+    skills: [vie-privee]
+    difficulty: 3
+    prompt: Relie chaque décision technique au principe du RGPD qu'elle applique.
+    pairs:
+      - left: Ne plus demander la date de naissance, inutile au service
+        right: Minimisation
+      - left: Supprimer automatiquement les comptes inactifs depuis 3 ans
+        right: Limitation de la conservation
+      - left: Ne pas réutiliser les e-mails de facturation pour de la publicité sans consentement
+        right: Limitation des finalités
+      - left: Un bouton « exporter mes données » qui génère un fichier complet
+        right: Droit d'accès et portabilité
+    explanation: |
+      Le RGPD se traduit en exigences concrètes sur le modèle de données, les tâches
+      planifiées et les fonctionnalités ; il se prévoit dès la conception.
+
+  - id: securite.n5.rgpd.qcm-pseudonymisation
+    type: qcm
+    title: Pseudonymiser, est-ce anonymiser ?
+    skills: [vie-privee]
+    difficulty: 4
+    prompt: "L'équipe data remplace les noms par des identifiants aléatoires, mais garde code postal, date de naissance et sexe. Les données sont-elles anonymes au sens du RGPD ?"
+    choices:
+      - id: a
+        text: "Non : elles sont pseudonymisées ; le recoupement de quelques attributs suffit souvent à réidentifier une personne, et le RGPD s'applique toujours."
+        correct: true
+      - id: b
+        text: Oui, il n'y a plus de nom.
+      - id: c
+        text: Oui, si les identifiants sont aléatoires.
+      - id: d
+        text: Non, mais seulement si les données sortent de l'entreprise.
+    explanation: |
+      Des recherches ont montré qu'une grande majorité des personnes est identifiable par la
+      combinaison code postal + date de naissance + sexe. L'anonymisation véritable doit
+      rendre la réidentification raisonnablement impossible.
+
+  - id: securite.n5.humain.qcm-fraude
+    type: qcm
+    title: L'urgence du directeur
+    skills: [facteur-humain]
+    difficulty: 3
+    prompt: "La comptabilité reçoit un e-mail du « directeur général », en déplacement, qui demande un virement urgent et confidentiel vers un nouveau fournisseur. Quelle défense est la plus efficace ?"
+    choices:
+      - id: a
+        text: "Une procédure qui impose une validation par un autre canal (rappel à un numéro connu) pour tout nouveau bénéficiaire ou changement d'IBAN, quelle que soit l'urgence annoncée."
+        correct: true
+      - id: b
+        text: Vérifier que l'adresse e-mail semble correcte.
+        feedback: "Les adresses se falsifient ou se ressemblent ; et la boîte du dirigeant peut être réellement compromise."
+      - id: c
+        text: Répondre à l'e-mail pour demander confirmation.
+        feedback: "La réponse part chez l'attaquant, qui confirmera."
+      - id: d
+        text: Faire le virement si le montant est faible.
+    explanation: |
+      La fraude au président exploite l'urgence et l'autorité. La parade est un processus
+      qui ne dépend pas du jugement de chacun à chaud : une double validation hors bande,
+      que personne ne doit pouvoir contourner.
+
+  - id: securite.n5.incident.match-etapes
+    type: match
+    title: Les étapes d'une réponse à incident
+    skills: [reponse-incident]
+    difficulty: 3
+    prompt: Relie chaque action à l'étape de la réponse à incident.
+    pairs:
+      - left: Avoir des sauvegardes hors ligne testées avant tout incident
+        right: Préparation
+      - left: Isoler du réseau la machine compromise
+        right: Confinement
+      - left: Supprimer les comptes et clés SSH ajoutés par l'attaquant
+        right: Éradication
+      - left: Reconstruire les serveurs depuis des images sûres
+        right: Rétablissement
+      - left: Rédiger le post-mortem et suivre les actions
+        right: Retour d'expérience
+    explanation: |
+      Chaque étape a son piège : effacer les preuves pendant le confinement, oublier un accès
+      pendant l'éradication, réutiliser une machine compromise au rétablissement.

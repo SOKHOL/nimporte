@@ -1,0 +1,169 @@
+exercises:
+  - id: reseau-web.n2.rest.review-api
+    type: code-review
+    title: "Revue : une API qui n'est pas très REST"
+    skills: [rest]
+    difficulty: 3
+    language: text
+    prompt: Voici les routes d'une API de commandes. Trouve au moins 3 problèmes.
+    code: |
+      GET  /getCommande?id=42            → 200 {"commande": {...}}
+      POST /creerCommande                → 200 {"id": 43}
+      GET  /supprimerCommande?id=42      → 200 {"ok": true}
+      POST /commandes/42                 → 200 {"erreur": "commande introuvable"}
+      GET  /commandes?page=2             → 200 [...]
+    issues:
+      - lines: [1, 2]
+        category: conception
+        description: "Des verbes dans les URL : `GET /commandes/42` et `POST /commandes`, la méthode porte déjà l'action."
+      - lines: [2]
+        category: conception
+        description: "Une création renvoie `201 Created` avec un en-tête `Location: /commandes/43`."
+      - lines: [3]
+        category: securite
+        description: "Une suppression par GET : un robot, un préchargement ou un cache peut la déclencher. Utiliser `DELETE /commandes/42`."
+      - lines: [4]
+        category: bug
+        description: "Une erreur avec le code 200 : clients, caches et supervision croient à un succès. Répondre `404`."
+    min_found: 3
+    explanation: |
+      Des ressources au pluriel, la méthode HTTP pour l'action, et des codes qui disent la
+      vérité. Les clients, les proxys et les outils s'appuient sur ces conventions.
+
+  - id: reseau-web.n2.cookies.match
+    type: match
+    title: Les attributs d'un cookie
+    skills: [cookies-sessions]
+    difficulty: 3
+    prompt: Relie chaque attribut du cookie de session à la menace qu'il réduit.
+    pairs:
+      - left: HttpOnly
+        right: Un script injecté (XSS) qui lit document.cookie
+      - left: Secure
+        right: L'interception sur un réseau Wi-Fi en HTTP
+      - left: SameSite=Lax
+        right: Un autre site qui déclenche une action à ta place (CSRF)
+      - left: Max-Age=3600
+        right: Une session volée utilisable indéfiniment
+    explanation: |
+      Cookie réel émis par le serveur de test : `session=8f3a9c; Path=/; HttpOnly; Secure;
+      SameSite=Lax; Max-Age=3600`.
+
+  - id: reseau-web.n2.cors.qcm-curl
+    type: qcm
+    title: CORS protège-t-il l'API ?
+    skills: [cors]
+    difficulty: 4
+    prompt: |
+      L'API n'autorise en CORS que `https://app.exemple.com`. Un attaquant appelle
+      `DELETE /produits/42` avec curl, depuis son ordinateur. Que se passe-t-il ?
+    choices:
+      - id: a
+        text: "La requête arrive au serveur et est traitée selon l'authentification : CORS n'est appliqué que par les navigateurs."
+        correct: true
+      - id: b
+        text: Le serveur rejette la requête car l'origine n'est pas autorisée.
+        feedback: "Le serveur renvoie des en-têtes CORS, il ne bloque rien ; c'est le navigateur qui décide de laisser lire la réponse."
+      - id: c
+        text: curl refuse d'envoyer la requête.
+      - id: d
+        text: La requête échoue au preflight.
+        feedback: "curl n'envoie pas de preflight."
+    explanation: |
+      CORS empêche une page d'un autre site de lire des réponses avec les cookies de
+      l'utilisateur. La protection de l'API reste l'authentification et l'autorisation.
+
+  - id: reseau-web.n2.cache.qcm-304
+    type: qcm
+    title: La réponse vide
+    skills: [cache-http]
+    difficulty: 3
+    language: text
+    prompt: Que signifie cet échange ?
+    code: |
+      GET /produits/42
+      If-None-Match: "019d34d2a31a0556"
+
+      HTTP/1.1 304 Not Modified
+      ETag: "019d34d2a31a0556"
+      (0 octet de corps)
+    choices:
+      - id: a
+        text: "La copie du client est toujours valide : il la réutilise, sans retélécharger le corps."
+        correct: true
+      - id: b
+        text: Le produit a été supprimé.
+      - id: c
+        text: Le serveur est en maintenance.
+      - id: d
+        text: Le client doit relancer la requête sans cache.
+    explanation: |
+      Échange réel : 200 avec 42 octets la première fois, puis 304 avec 0 octet en envoyant
+      l'ETag. Le serveur a vérifié la version sans renvoyer les données.
+
+  - id: reseau-web.n2.cache.scenario-panier
+    type: scenario
+    title: Le panier d'un autre
+    skills: [cache-http, cookies-sessions]
+    difficulty: 4
+    prompt: |
+      Après la mise en place d'un CDN, des clients voient le panier d'autres clients en
+      ouvrant `/api/panier`.
+    start: debut
+    nodes:
+      debut:
+        text: "La réponse de `/api/panier` contient `Cache-Control: public, max-age=300`. Que se passe-t-il ?"
+        options:
+          - text: "Le CDN met en cache la première réponse et la sert à tous ceux qui demandent la même URL pendant 5 minutes."
+            next: correction
+            points: 3
+          - text: Les cookies de session sont mélangés par le navigateur.
+            next: navigateur
+            points: 0
+      navigateur:
+        text: "En contournant le CDN, chacun voit bien son propre panier. Où est donc le problème ?"
+        options:
+          - text: Dans le cache partagé du CDN, autorisé par `public`.
+            next: correction
+            points: 1
+      correction:
+        text: Que corriges-tu ?
+        options:
+          - text: "`Cache-Control: private, no-store` sur toute réponse qui dépend de l'utilisateur, puis purge du cache du CDN."
+            next: resolu
+            points: 3
+          - text: Réduire max-age à 10 secondes.
+            next: reduit
+            points: 0
+      reduit:
+        ending: failure
+        text: "❌ Les fuites sont plus courtes, mais continuent : c'est toujours une fuite de données personnelles."
+      resolu:
+        ending: success
+        text: "✅ Le CDN ne garde plus aucune réponse personnelle."
+    explanation: |
+      `public` autorise les caches partagés. Une réponse personnalisée doit être `private`
+      (cache du navigateur seulement) ou `no-store`. Ce type d'erreur est une fuite de données
+      à déclarer au titre du RGPD.
+
+  - id: reseau-web.n2.rest.qcm-action
+    type: qcm
+    title: Annuler une commande
+    skills: [rest]
+    difficulty: 2
+    prompt: "Comment exposer l'annulation d'une commande (qui rembourse le client mais garde la commande dans l'historique) ?"
+    choices:
+      - id: a
+        text: "POST /commandes/42/annulation (l'annulation devient une ressource créée)"
+        correct: true
+      - id: b
+        text: "DELETE /commandes/42"
+        feedback: "La commande n'est pas supprimée : elle reste dans l'historique, avec un statut."
+      - id: c
+        text: "GET /commandes/42/annuler"
+        feedback: Jamais d'action qui modifie quelque chose avec GET.
+      - id: d
+        text: "POST /annulerCommande"
+    explanation: |
+      Une action métier qui ne correspond pas à créer, lire, remplacer ou supprimer se
+      modélise souvent comme une sous-ressource créée par POST.

@@ -1,0 +1,104 @@
+exercises:
+  - id: securite.n1.mots-de-passe.qcm-stockage
+    type: qcm
+    title: Stocker un mot de passe
+    skills: [mots-de-passe, hachage-chiffrement]
+    difficulty: 2
+    prompt: Comment stocker les mots de passe des utilisateurs ?
+    choices:
+      - id: a
+        text: "Avec Argon2id (ou bcrypt, scrypt) : un hachage lent, avec un sel aléatoire par utilisateur."
+        correct: true
+      - id: b
+        text: Chiffrés avec AES, la clé étant dans la configuration du serveur.
+        feedback: "Le jour où la base fuit, la clé fuit souvent avec elle, et tous les mots de passe sont lisibles."
+      - id: c
+        text: Hachés avec SHA-256.
+        feedback: "Trop rapide : 3 millions d'essais par seconde mesurés en Python, des milliards sur une carte graphique."
+      - id: d
+        text: Encodés en Base64.
+        feedback: "Base64 se décode instantanément : ce n'est pas de la sécurité."
+    explanation: |
+      Mesure réelle : SHA-256 permet 3 millions d'essais par seconde ; PBKDF2 à 600 000
+      itérations, 12,6. Un hachage lent et salé rend l'attaque d'une base volée des centaines
+      de milliers de fois plus coûteuse.
+
+  - id: securite.n1.hachage.match
+    type: match
+    title: Encoder, hacher ou chiffrer ?
+    skills: [hachage-chiffrement]
+    difficulty: 2
+    prompt: Relie chaque besoin à l'opération adaptée.
+    pairs:
+      - left: Mettre une image dans un JSON
+        right: Encoder (Base64)
+      - left: Vérifier qu'un fichier téléchargé n'a pas été altéré
+        right: Hacher (SHA-256) et comparer l'empreinte
+      - left: Stocker un numéro de carte qu'il faudra relire
+        right: Chiffrer (AES-GCM), clé dans un gestionnaire de secrets
+      - left: Vérifier un mot de passe à la connexion
+        right: Hacher lentement avec un sel (Argon2id)
+    explanation: |
+      Encoder ne protège rien ; hacher est irréversible ; chiffrer est réversible avec la clé.
+
+  - id: securite.n1.mots-de-passe.qcm-sel
+    type: qcm
+    title: À quoi sert le sel ?
+    skills: [mots-de-passe]
+    difficulty: 3
+    prompt: "Deux utilisateurs ont le mot de passe « soleil123 ». À quoi sert un sel aléatoire par utilisateur ?"
+    choices:
+      - id: a
+        text: "À ce que leurs empreintes soient différentes : les tables précalculées sont inutiles, et casser l'un ne casse pas l'autre."
+        correct: true
+      - id: b
+        text: À rendre le hachage réversible pour l'administrateur.
+      - id: c
+        text: À chiffrer le mot de passe.
+      - id: d
+        text: À remplacer un algorithme lent.
+        feedback: "Le sel et la lenteur se complètent ; le sel ne ralentit pas un essai."
+    explanation: |
+      Réel : le même mot de passe avec deux sels donne `b5b693952aaa4803…` et
+      `0b496ef6cd77cb54…`. Le sel n'est pas secret : il est stocké à côté de l'empreinte.
+
+  - id: securite.n1.mfa.qcm-hameconnage
+    type: qcm
+    title: Le faux site de la banque
+    skills: [authentification-forte]
+    difficulty: 3
+    prompt: "Un utilisateur arrive sur un faux site parfaitement imité. Quel second facteur l'empêche de donner accès à son compte ?"
+    choices:
+      - id: a
+        text: "Une passkey ou une clé FIDO2 : la signature est liée au vrai nom de domaine et ne fonctionne pas sur le faux site."
+        correct: true
+      - id: b
+        text: Un code reçu par SMS.
+        feedback: "Il le saisira sur le faux site, qui l'utilisera aussitôt sur le vrai."
+      - id: c
+        text: Un code TOTP d'une application d'authentification.
+        feedback: "Même problème : le faux site relaie le code en temps réel."
+      - id: d
+        text: Une question secrète.
+    explanation: |
+      Les passkeys sont le seul facteur courant qui résiste à l'hameçonnage par
+      construction : rien à recopier, et une signature valable pour un seul domaine.
+
+  - id: securite.n1.cia.match
+    type: match
+    title: Quelle propriété est touchée ?
+    skills: [triade-cia]
+    difficulty: 2
+    prompt: Relie chaque incident à la propriété de sécurité qu'il atteint.
+    pairs:
+      - left: Les données de 2 millions de clients sont publiées sur un forum
+        right: Confidentialité
+      - left: Un attaquant modifie l'IBAN de virements dans la base
+        right: Intégrité
+      - left: Un rançongiciel chiffre tous les serveurs
+        right: Disponibilité (et souvent confidentialité, par une fuite avant le chiffrement)
+      - left: Un employé efface les journaux pour couvrir ses traces
+        right: Intégrité (des journaux)
+    explanation: |
+      La triade CIA aide à classer les risques et à choisir les protections : chiffrement,
+      signatures et contrôle d'accès, redondance et sauvegardes.

@@ -1,0 +1,146 @@
+exercises:
+  - id: securite.n3.secrets.scenario-cle-poussee
+    type: scenario
+    title: La clé poussée sur GitHub
+    skills: [secrets]
+    difficulty: 4
+    prompt: |
+      Un développeur s'aperçoit qu'il a poussé il y a 20 minutes, dans un dépôt public, un
+      fichier contenant la clé d'API de production du prestataire de paiement.
+    start: debut
+    nodes:
+      debut:
+        text: Quelle est la première action ?
+        options:
+          - text: "Révoquer immédiatement la clé chez le prestataire et en créer une nouvelle, injectée par le gestionnaire de secrets."
+            next: suite
+            points: 3
+          - text: Supprimer le fichier dans un nouveau commit.
+            next: commit
+            points: 0
+            feedback: "Le secret reste dans l'historique, et des robots l'ont peut-être déjà récupéré."
+      commit:
+        text: "`git log -p -S` retrouve la clé dans l'historique, et le dépôt a déjà été cloné 3 fois. Que fais-tu ?"
+        options:
+          - text: Je révoque la clé et j'en crée une nouvelle.
+            next: suite
+            points: 2
+      suite:
+        text: La clé est révoquée. Et ensuite ?
+        options:
+          - text: "Vérifier dans les journaux du prestataire si la clé a été utilisée par un tiers, ajouter un détecteur de secrets en CI et sur les postes, puis rédiger un post-mortem."
+            next: resolu
+            points: 3
+          - text: Réécrire l'historique Git et considérer l'incident clos.
+            next: historique
+            points: 1
+            feedback: "Utile en complément, mais il faut savoir si la clé a été exploitée, et empêcher la récidive."
+      historique:
+        ending: partial
+        text: "🟡 L'historique est propre, mais personne ne sait si la clé a servi pendant 20 minutes, et rien n'empêche que ça recommence."
+      resolu:
+        ending: success
+        text: "✅ La clé compromise ne sert plus à rien, aucun usage suspect n'est trouvé, et un détecteur bloque désormais ce type de commit."
+    explanation: |
+      Démonstration réelle : un secret supprimé dans un commit suivant reste visible avec
+      `git log -p --all -S`. Un secret publié est compromis : on le révoque d'abord.
+
+  - id: securite.n3.crypto.qcm-gcm
+    type: qcm
+    title: Chiffrer ne suffit pas
+    skills: [crypto-appliquee]
+    difficulty: 4
+    prompt: "Pourquoi préférer AES-GCM à AES-CBC « seul » pour chiffrer des messages ?"
+    choices:
+      - id: a
+        text: "GCM est authentifié : toute modification du chiffré est détectée au déchiffrement, alors qu'un chiffrement seul peut être altéré sans que ça se voie."
+        correct: true
+      - id: b
+        text: GCM utilise une clé plus longue.
+      - id: c
+        text: CBC n'est plus supporté nulle part.
+      - id: d
+        text: GCM ne nécessite pas de clé.
+    explanation: |
+      Démonstration réelle : en modifiant un seul bit d'un message AES-GCM, le déchiffrement
+      échoue avec `InvalidTag`. Sans authentification, un attaquant peut parfois modifier un
+      montant sans connaître la clé.
+
+  - id: securite.n3.crypto.qcm-ecb
+    type: qcm
+    title: Deux blocs identiques
+    skills: [crypto-appliquee]
+    difficulty: 3
+    prompt: "On chiffre deux fois de suite le même bloc de 16 octets avec AES en mode ECB. Que constate-t-on ?"
+    choices:
+      - id: a
+        text: "Les deux blocs chiffrés sont identiques : la structure des données transparaît."
+        correct: true
+      - id: b
+        text: Ils sont différents, grâce au chiffrement.
+        feedback: "C'est le cas avec GCM ou CBC, qui utilisent un nonce ou un vecteur d'initialisation ; pas en ECB."
+      - id: c
+        text: Le second bloc n'est pas chiffré.
+      - id: d
+        text: Une erreur, ECB refuse les doublons.
+    explanation: |
+      Réel : en ECB `42621ea3c2dea0a0` deux fois ; en GCM `d08f492575830669` puis
+      `17ebfa529deb53d0`. ECB est à proscrire.
+
+  - id: securite.n3.crypto.find-bug-jeton
+    type: find-bug
+    title: Le lien de réinitialisation
+    skills: [crypto-appliquee]
+    difficulty: 3
+    language: python
+    prompt: Ce code génère le jeton envoyé par e-mail pour réinitialiser un mot de passe. Touche la ligne dangereuse.
+    code: |
+      import random, string
+
+      def jeton_reinitialisation():
+          lettres = string.ascii_letters + string.digits
+          return "".join(random.choice(lettres) for _ in range(32))
+    bug_lines: [5]
+    explanation: |
+      Le module `random` est un générateur **prévisible** (Mersenne Twister) : avec assez de
+      sorties observées, on peut prédire les suivantes. Pour tout ce qui protège un accès :
+      `secrets.token_urlsafe(32)`.
+
+  - id: securite.n3.dependances.qcm
+    type: qcm
+    title: Deux dépendances, combien de failles ?
+    skills: [dependances]
+    difficulty: 3
+    prompt: "Un projet déclare seulement `requests==2.19.0` et `jinja2==2.10`. Un audit avec pip-audit trouve des vulnérabilités connues dans 4 paquets. Pourquoi 4 et pas 2 ?"
+    choices:
+      - id: a
+        text: "Les dépendances transitives (urllib3, idna…) installées par requests ont aussi leurs vulnérabilités."
+        correct: true
+      - id: b
+        text: pip-audit compte chaque vulnérabilité deux fois.
+      - id: c
+        text: Le projet a d'autres dépendances cachées dans le code.
+      - id: d
+        text: C'est une erreur de l'outil.
+    explanation: |
+      Audit réel : requests 5, jinja2 6, urllib3 12, idna 2, soit 25 vulnérabilités sur 7
+      paquets installés. On surveille l'arbre complet, pas seulement ce qu'on a déclaré.
+
+  - id: securite.n3.autorisation.match
+    type: match
+    title: Choisir un modèle d'autorisation
+    skills: [autorisation]
+    difficulty: 3
+    prompt: Relie chaque règle au modèle d'autorisation qui l'exprime le plus naturellement.
+    pairs:
+      - left: Les comptables peuvent valider les factures
+        right: RBAC (rôles)
+      - left: Un médecin lit le dossier de ses patients, pendant son service, depuis l'hôpital
+        right: ABAC (attributs et contexte)
+      - left: On peut modifier un document si on est éditeur du dossier qui le contient
+        right: ReBAC (relations)
+      - left: Ce qui n'est pas explicitement autorisé est interdit
+        right: Refus par défaut (tous les modèles)
+    explanation: |
+      Les modèles se combinent souvent ; l'important est une décision centralisée, côté
+      serveur, à chaque requête.

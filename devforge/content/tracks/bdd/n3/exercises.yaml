@@ -1,0 +1,183 @@
+exercises:
+  - id: bdd.n3.transactions.scenario-stock
+    type: scenario
+    title: Le stock qui ne baisse pas assez
+    skills: [transactions, isolation]
+    difficulty: 4
+    prompt: |
+      Le soir du Black Friday, la boutique a vendu 130 consoles alors qu'il en restait 100.
+      Le code de vente fait ceci, dans une transaction en READ COMMITTED.
+    start: debut
+    nodes:
+      debut:
+        text: |
+          ```kotlin
+          val stock = jdbc.queryForObject("select quantite from stock where produit = ?", Int::class.java, id)
+          if (stock > 0) jdbc.update("update stock set quantite = ? where produit = ?", stock - 1, id)
+          ```
+          Quel est le problème ?
+        options:
+          - text: "Deux ventes simultanées lisent la même quantité et écrivent la même valeur : une vente est perdue (mise à jour perdue)."
+            next: correction
+            points: 3
+          - text: Il manque un index sur la colonne produit.
+            next: index
+            points: 0
+            feedback: Un index accélère la lecture, il ne protège pas des écritures concurrentes.
+      index:
+        text: "Avec l'index, le problème persiste. En test, deux requêtes lancées en même temps donnent une quantité de 9 au lieu de 8. Pourquoi ?"
+        options:
+          - text: Les deux transactions lisent 10, calculent 9 et écrivent 9.
+            next: correction
+            points: 2
+      correction:
+        text: Quelle correction choisis-tu ?
+        options:
+          - text: "Une seule instruction atomique : update stock set quantite = quantite - 1 where produit = ? and quantite > 0, puis vérifier qu'une ligne a été modifiée."
+            next: resolu
+            points: 3
+          - text: "select … for update, puis l'update, dans la même transaction."
+            next: resolu-verrou
+            points: 2
+          - text: Ajouter un délai aléatoire avant chaque vente.
+            next: delai
+            points: 0
+      delai:
+        ending: failure
+        text: "❌ Les ventes sont plus lentes, et les survendes continuent, un peu moins souvent."
+      resolu-verrou:
+        ending: success
+        text: "✅ Plus de survente : la ligne est verrouillée entre la lecture et l'écriture. (Un peu plus de contention qu'avec l'écriture atomique.)"
+      resolu:
+        ending: success
+        text: "✅ Plus de survente : la base décrémente sous verrou et refuse quand le stock est à 0."
+    explanation: |
+      Démonstration réelle : deux ventes « lire, calculer, écrire » en READ COMMITTED laissent
+      9 au lieu de 8 ; avec `quantite = quantite - 1`, on obtient bien 8. Lire puis écrire une
+      valeur calculée par l'application est la source classique des mises à jour perdues.
+
+  - id: bdd.n3.index.qcm-lower
+    type: qcm
+    title: L'index ignoré
+    skills: [index, explain]
+    difficulty: 3
+    language: sql
+    prompt: "Il existe un index sur acheteurs(email). Pourquoi cette requête lit-elle toute la table ?"
+    code: |
+      select * from acheteurs where lower(email) = 'client77@exemple.com';
+      -- Seq Scan on acheteurs … Execution Time: 21.179 ms
+    choices:
+      - id: a
+        text: "L'index est trié sur email, pas sur lower(email) : la base ne peut pas l'utiliser pour une expression. Il faut un index sur lower(email)."
+        correct: true
+      - id: b
+        text: L'index est corrompu.
+      - id: c
+        text: PostgreSQL n'utilise pas les index sur les colonnes texte.
+        feedback: "Réel : `where email = '…'` utilise l'index et prend 0,13 ms."
+      - id: d
+        text: Il faut lancer VACUUM.
+    explanation: |
+      Mesures réelles : 21,2 ms avec `lower(email)`, 0,13 ms avec `email = …`. Un index sur
+      l'expression (`create index on acheteurs (lower(email))`) rend la première requête
+      aussi rapide.
+
+  - id: bdd.n3.isolation.match
+    type: match
+    title: Anomalies et remèdes
+    skills: [isolation, transactions]
+    difficulty: 4
+    prompt: Relie chaque situation au remède adapté.
+    pairs:
+      - left: "Deux ventes lisent 10 et écrivent 9"
+        right: "update … set quantite = quantite - 1 (écriture atomique)"
+      - left: "Deux médecins se retirent en même temps, il n'en reste aucun de garde"
+        right: SERIALIZABLE (ou verrouiller les lignes lues)
+      - left: "Une transaction échoue avec le code SQL 40001"
+        right: Réessayer la transaction entière
+      - left: "Réserver une place précise sans qu'un autre la prenne entre la lecture et l'écriture"
+        right: "select … for update"
+    explanation: |
+      Démonstrations réelles : en REPEATABLE READ, les deux médecins sont validés (0 de
+      garde) ; en SERIALIZABLE, le second est refusé (« could not serialize access due to
+      read/write dependencies »).
+
+  - id: bdd.n3.explain.qcm-seq
+    type: qcm
+    title: Une lecture séquentielle, un problème ?
+    skills: [explain, index]
+    difficulty: 4
+    prompt: |
+      `explain analyze select count(*) from commandes where montant > 20` montre un
+      `Parallel Seq Scan`, alors que la condition garde 99 % des lignes. Faut-il créer un
+      index sur montant ?
+    choices:
+      - id: a
+        text: "Non : quand presque toutes les lignes sont gardées, lire la table en séquence est plus rapide que de passer par un index ; l'optimiseur a raison."
+        correct: true
+      - id: b
+        text: Oui, tout Seq Scan est un problème.
+      - id: c
+        text: Oui, et forcer son utilisation avec un paramètre.
+      - id: d
+        text: Non, car les index ne fonctionnent pas avec >.
+        feedback: "Un B-tree gère très bien les plages ; c'est la sélectivité qui compte ici."
+    explanation: |
+      Un index paie quand la condition est sélective. Pour 99 % des lignes, il ajouterait des
+      allers-retours entre index et table. Réel : 45 ms en lecture séquentielle parallèle.
+
+  - id: bdd.n3.orm.qcm-n-plus-1
+    type: qcm
+    title: 101 requêtes
+    skills: [orm-n-plus-1]
+    difficulty: 3
+    language: kotlin
+    prompt: Combien de requêtes SQL ce code envoie-t-il pour 100 acheteurs, avec un chargement paresseux des commandes ?
+    code: |
+      val acheteurs = repo.findByPays("BE")     // 100 acheteurs
+      acheteurs.forEach { println(it.commandes.size) }
+    choices:
+      - id: a
+        text: "101 : une pour la liste, puis une par acheteur."
+        correct: true
+      - id: b
+        text: "1"
+      - id: c
+        text: "2"
+        feedback: "Ce serait le cas avec un chargement groupé (`where acheteur_id in (…)`)."
+      - id: d
+        text: "200"
+    explanation: |
+      Mesure réelle : 101 requêtes en 5,8 ms contre 1 requête en 0,3 ms, sur la même
+      machine ; avec le réseau, l'écart devient de dizaines de millisecondes. `join fetch`,
+      entity graph ou chargement groupé.
+
+  - id: bdd.n3.transactions.qcm-http
+    type: qcm
+    title: Un appel dans la transaction
+    skills: [transactions]
+    difficulty: 3
+    language: kotlin
+    prompt: Quel est le problème de ce code ?
+    code: |
+      @Transactional
+      fun payer(commande: Commande) {
+          commandes.marquerEnPaiement(commande.id)
+          val reponse = banque.debiter(commande.montant)   // appel HTTP, 2 à 30 secondes
+          commandes.enregistrerPaiement(commande.id, reponse)
+      }
+    choices:
+      - id: a
+        text: "La transaction reste ouverte pendant l'appel HTTP : verrous et connexion gardés des secondes, et si la transaction échoue après le débit, la base est annulée mais pas la banque."
+        correct: true
+      - id: b
+        text: "@Transactional ne fonctionne pas sur une fonction qui fait un appel HTTP."
+      - id: c
+        text: Il faudrait deux annotations @Transactional.
+      - id: d
+        text: Aucun, c'est la bonne façon de garantir l'atomicité.
+        feedback: "Une transaction de base ne peut pas annuler un débit bancaire."
+    explanation: |
+      Transactions courtes, sans appel externe : enregistrer l'intention, appeler la banque
+      hors transaction avec une clé d'idempotence, puis enregistrer le résultat dans une
+      seconde transaction.

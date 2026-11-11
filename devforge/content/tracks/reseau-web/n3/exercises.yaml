@@ -1,0 +1,150 @@
+exercises:
+  - id: reseau-web.n3.tcp.scenario-40ms
+    type: scenario
+    title: Les 40 millisecondes mystérieuses
+    skills: [tcp-udp, http2-http3]
+    difficulty: 5
+    prompt: |
+      Un service interne répond en 0,2 ms d'après ses propres mesures, mais les clients
+      mesurent environ 44 ms par requête, même sur la même machine.
+    start: debut
+    nodes:
+      debut:
+        text: "Le temps est perdu entre l'écriture de la réponse et sa réception. Quelle hypothèse explores-tu ?"
+        options:
+          - text: "Une interaction entre l'algorithme de Nagle (côté serveur) et l'accusé de réception retardé (côté client)."
+            next: verification
+            points: 3
+          - text: Le service est surchargé.
+            next: charge
+            points: 0
+            feedback: "Le service mesure 0,2 ms de traitement, et la latence est constante même sans charge."
+      charge:
+        text: "Avec une seule requête à la fois, sur une machine inoccupée : toujours 44 ms. Que remarques-tu dans le code du serveur ?"
+        options:
+          - text: Il écrit les en-têtes puis le corps en deux appels séparés.
+            next: verification
+            points: 2
+      verification:
+        text: "Le serveur écrit bien la réponse en deux petits envois. Comment le confirmer et corriger ?"
+        options:
+          - text: "Activer TCP_NODELAY sur les connexions du serveur (et/ou écrire la réponse en un seul envoi), puis remesurer."
+            next: resolu
+            points: 3
+          - text: Augmenter le nombre de threads du serveur.
+            next: threads
+            points: 0
+      threads:
+        ending: failure
+        text: "❌ Toujours 44 ms : le temps est perdu dans TCP, pas dans le serveur."
+      resolu:
+        ending: success
+        text: "✅ 0,17 ms par requête après activation de TCP_NODELAY."
+    explanation: |
+      Mesure réelle : 44,01 ms par requête avec Nagle actif, 0,17 ms avec TCP_NODELAY, sur le
+      même serveur. Nagle retient le second petit envoi tant que le premier n'est pas
+      acquitté, et le client retarde son acquittement d'environ 40 ms.
+
+  - id: reseau-web.n3.tls.qcm-garanties
+    type: qcm
+    title: Ce que garantit HTTPS
+    skills: [tls]
+    difficulty: 2
+    prompt: "Un utilisateur se connecte à https://banque.exemple.com depuis un Wi-Fi public. Que garantit TLS ?"
+    choices:
+      - id: a
+        text: "Que les échanges sont chiffrés, non modifiés en route, et que le serveur est bien banque.exemple.com (si le certificat est valide)."
+        correct: true
+      - id: b
+        text: Que le site n'a pas de faille de sécurité.
+        feedback: "TLS protège le transport, pas l'application : une injection SQL passe très bien en HTTPS."
+      - id: c
+        text: Que personne ne peut savoir quel site il visite.
+        feedback: "Le nom du site est généralement visible (SNI, DNS), même si le contenu ne l'est pas."
+      - id: d
+        text: Que ses données sont chiffrées dans la base de la banque.
+    explanation: |
+      Confidentialité, intégrité, authentification du serveur : rien de plus. La sécurité de
+      l'application et du stockage est un autre sujet.
+
+  - id: reseau-web.n3.tls.qcm-reutilisation
+    type: qcm
+    title: Le coût d'une connexion
+    skills: [tls, tcp-udp]
+    difficulty: 3
+    prompt: "Un service appelle une API HTTPS 500 fois par seconde, en ouvrant une nouvelle connexion à chaque appel. Quelle optimisation vient en premier ?"
+    choices:
+      - id: a
+        text: "Réutiliser les connexions (keep-alive, pool de connexions HTTP) pour ne pas refaire la poignée de main TCP et TLS à chaque fois."
+        correct: true
+      - id: b
+        text: Passer à un chiffrement plus faible.
+      - id: c
+        text: Désactiver TLS sur le réseau interne.
+        feedback: "Le réseau interne n'est pas sûr par nature ; et le gain viendrait surtout de la réutilisation."
+      - id: d
+        text: Compresser les requêtes.
+    explanation: |
+      Mesures réelles en local : poignée de main TCP + TLS 2,81 ms ; requête sur une nouvelle
+      connexion 2,34 ms contre 0,17 ms sur une connexion réutilisée. Sur un vrai réseau,
+      chaque nouvelle connexion ajoute en plus un ou deux allers-retours.
+
+  - id: reseau-web.n3.http2.match
+    type: match
+    title: Les versions de HTTP
+    skills: [http2-http3]
+    difficulty: 3
+    prompt: Relie chaque caractéristique à la version de HTTP qui l'introduit.
+    pairs:
+      - left: Texte, une requête à la fois par connexion
+        right: HTTP/1.1
+      - left: Multiplexage de nombreuses requêtes sur une seule connexion TCP
+        right: HTTP/2
+      - left: Transport QUIC sur UDP, une perte ne bloque que son flux
+        right: HTTP/3
+      - left: Négociée pendant la poignée de main TLS avec ALPN (« h2 »)
+        right: Le choix entre HTTP/1.1 et HTTP/2
+    explanation: |
+      Sortie réelle : `ALPN: server accepted h2`, puis `HTTP/2 200`. HTTP/3 est annoncé par
+      l'en-tête Alt-Svc et utilisé à la connexion suivante.
+
+  - id: reseau-web.n3.websockets.qcm
+    type: qcm
+    title: Ouvrir un WebSocket
+    skills: [websockets]
+    difficulty: 3
+    language: text
+    prompt: Quelle réponse du serveur indique que la connexion WebSocket est établie ?
+    choices:
+      - id: a
+        text: "HTTP/1.1 101 Switching Protocols, avec Upgrade: websocket et Sec-WebSocket-Accept"
+        correct: true
+      - id: b
+        text: "HTTP/1.1 200 OK"
+      - id: c
+        text: "HTTP/1.1 201 Created"
+      - id: d
+        text: "Aucune réponse : la connexion WebSocket ne passe pas par HTTP."
+        feedback: "Elle commence justement par une requête HTTP qui demande un changement de protocole."
+    explanation: |
+      Échange réel : la clé `dGhlIHNhbXBsZSBub25jZQ==` donne `Sec-WebSocket-Accept:
+      s3pPLMBiTxaQ9kYGzzhZRbK+xOo=`, puis le serveur envoie la trame `0x81 0x07 bonjour`.
+
+  - id: reseau-web.n3.tcp.match-protocoles
+    type: match
+    title: TCP ou UDP ?
+    skills: [tcp-udp]
+    difficulty: 2
+    prompt: Relie chaque usage au protocole de transport habituellement utilisé.
+    pairs:
+      - left: Télécharger un fichier, où chaque octet compte
+        right: TCP
+      - left: Une requête DNS courte
+        right: UDP (avec repli sur TCP pour les grosses réponses)
+      - left: Un appel vidéo, où une image en retard ne sert plus à rien
+        right: UDP (RTP)
+      - left: HTTP/3
+        right: QUIC, sur UDP
+    explanation: |
+      TCP garantit l'ordre et la livraison au prix d'attentes ; UDP laisse l'application
+      décider de ce qui vaut la peine d'être retransmis.

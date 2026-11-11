@@ -1,0 +1,155 @@
+exercises:
+  - id: bdd.n5.mvcc.qcm-taille
+    type: qcm
+    title: La table qui double
+    skills: [mvcc-wal]
+    difficulty: 4
+    prompt: "Une table de 3,5 Mo (100 000 lignes). On exécute `update compte set solde = solde + 1` sur toutes les lignes. Quelle taille a-t-elle ensuite, avant tout VACUUM ?"
+    choices:
+      - id: a
+        text: "Environ 7 Mo : chaque ligne existe maintenant en deux versions."
+        correct: true
+      - id: b
+        text: "3,5 Mo : les lignes sont modifiées sur place."
+        feedback: "C'est le fonctionnement d'InnoDB (avec un undo log), pas celui de PostgreSQL."
+      - id: c
+        text: "1,7 Mo"
+      - id: d
+        text: "350 Mo"
+    explanation: |
+      Mesure réelle : 3 544 kB → 7 080 kB, puis 10 Mo après un second update. VACUUM rend la
+      place réutilisable sans réduire le fichier ; VACUUM FULL réécrit la table (3 544 kB),
+      sous verrou exclusif.
+
+  - id: bdd.n5.mvcc.scenario-gonflement
+    type: scenario
+    title: La base qui ralentit chaque jour
+    skills: [mvcc-wal]
+    difficulty: 5
+    prompt: |
+      Depuis une semaine, les requêtes sur la table `sessions` (très modifiée) ralentissent un
+      peu plus chaque jour, et la table est passée de 2 Go à 40 Go, pour le même nombre de
+      lignes.
+    start: debut
+    nodes:
+      debut:
+        text: "`pg_stat_user_tables` montre 300 millions de lignes mortes. L'autovacuum tourne, mais ne nettoie presque rien. Que cherches-tu ?"
+        options:
+          - text: "Une transaction ouverte depuis longtemps, qui empêche de supprimer les versions créées après son début."
+            next: trouve
+            points: 3
+          - text: Un bug de l'autovacuum ; je lance VACUUM FULL.
+            next: full
+            points: 0
+            feedback: "VACUUM FULL ne pourra pas non plus supprimer des versions encore visibles, et il verrouille toute la table."
+      full:
+        text: "VACUUM FULL bloque la table 20 minutes, et la taille ne baisse presque pas. Que regardes-tu ?"
+        options:
+          - text: "Les plus vieilles transactions ouvertes dans pg_stat_activity."
+            next: trouve
+            points: 1
+      trouve:
+        text: "pg_stat_activity montre une connexion « idle in transaction » depuis 8 jours, ouverte par un outil de reporting. Que fais-tu ?"
+        options:
+          - text: "Je la termine (pg_terminate_backend), puis je fixe idle_in_transaction_session_timeout et une alerte sur l'âge des transactions."
+            next: resolu
+            points: 3
+          - text: Je redémarre la base.
+            next: redemarrage
+            points: 1
+      redemarrage:
+        ending: partial
+        text: "🟡 Le nettoyage reprend, après une coupure pour tout le monde ; et l'outil de reporting recommencera."
+      resolu:
+        ending: success
+        text: "✅ L'autovacuum nettoie les lignes mortes, et aucune transaction ne pourra plus rester ouverte plus de 10 minutes sans rien faire."
+    explanation: |
+      Avec le MVCC, une transaction ouverte garde visibles toutes les versions créées depuis
+      son début ; VACUUM ne peut pas les supprimer. Démonstration réelle : 2 lignes mortes
+      après deux updates, 0 après VACUUM, quand aucune transaction ne les retient.
+
+  - id: bdd.n5.stockage.match
+    type: match
+    title: B-tree ou LSM-tree ?
+    skills: [structures-stockage, choisir-stockage]
+    difficulty: 4
+    prompt: Relie chaque notion du stockage à sa définition.
+    pairs:
+      - left: B-tree
+        right: Des pages modifiées sur place ; idéal pour les lectures
+      - left: LSM-tree
+        right: Des fichiers triés immuables ; idéal pour les écritures
+      - left: Compaction
+        right: La fusion en arrière-plan des fichiers d'un LSM-tree
+      - left: Filtre de Bloom
+        right: Dire très vite qu'une clé n'est sûrement pas dans un fichier
+      - left: WAL
+        right: Le journal écrit avant les données, rejoué après un plantage
+    explanation: |
+      Le B-tree favorise les lectures, le LSM-tree les écritures. RocksDB, Cassandra et
+      ScyllaDB sont des LSM ; PostgreSQL, MySQL et SQLite des B-tree.
+
+  - id: bdd.n5.wal.qcm-pitr
+    type: qcm
+    title: Le DELETE de 14 h 32
+    skills: [mvcc-wal]
+    difficulty: 3
+    prompt: "À 14 h 32, quelqu'un a supprimé toutes les commandes du mois. La dernière sauvegarde complète date de 3 h du matin. Que permet un archivage continu du WAL ?"
+    choices:
+      - id: a
+        text: "Restaurer la sauvegarde de 3 h puis rejouer le WAL jusqu'à 14 h 31 min 59 s, juste avant la suppression."
+        correct: true
+      - id: b
+        text: "Rien de plus : on perd tout ce qui s'est passé depuis 3 h."
+        feedback: "C'est le cas sans archivage du WAL."
+      - id: c
+        text: Annuler automatiquement le DELETE.
+      - id: d
+        text: Récupérer les lignes depuis une réplique.
+        feedback: "La réplique a déjà rejoué le DELETE en quelques millisecondes."
+    explanation: |
+      La restauration à un instant précis (PITR) combine sauvegarde complète et journal
+      archivé. Une réplique protège d'une panne matérielle, pas d'une erreur humaine.
+
+  - id: bdd.n5.distribue.qcm-newsql
+    type: qcm
+    title: SQL réparti sur trois continents
+    skills: [bases-distribuees]
+    difficulty: 4
+    prompt: "Une base NewSQL réplique chaque donnée sur des nœuds à Paris, New York et Singapour. Pourquoi les écritures y sont-elles plus lentes qu'avec une base unique à Paris ?"
+    choices:
+      - id: a
+        text: "Chaque écriture doit être confirmée par une majorité de répliques (consensus) : au moins un aller-retour entre continents, des dizaines à des centaines de millisecondes."
+        correct: true
+      - id: b
+        text: Le SQL est plus lent à analyser quand il est distribué.
+      - id: c
+        text: Les données sont compressées avant l'envoi.
+      - id: d
+        text: Ce n'est pas le cas, une base NewSQL est toujours plus rapide.
+    explanation: |
+      La cohérence forte entre régions se paie en latence (PACELC : sans panne, choisir
+      entre latence et cohérence). On place souvent les données près de leurs utilisateurs
+      pour limiter les allers-retours lointains.
+
+  - id: bdd.n5.choisir.qcm
+    type: qcm
+    title: Une nouvelle application
+    skills: [choisir-stockage]
+    difficulty: 3
+    prompt: "Une équipe de 4 personnes démarre une application de gestion (commandes, clients, factures). Un collègue propose MongoDB, Cassandra et Neo4j « pour être prêts à grandir ». Que conseilles-tu ?"
+    choices:
+      - id: a
+        text: "PostgreSQL (et un cache si besoin) : il couvre ces besoins relationnels et transactionnels ; on ajoutera un autre stockage quand un besoin mesuré le justifiera."
+        correct: true
+      - id: b
+        text: Les trois, chacune pour une partie des données.
+        feedback: "Trois systèmes à sauvegarder, superviser et maîtriser, et des transactions impossibles entre eux."
+      - id: c
+        text: Cassandra seule, pour l'échelle.
+        feedback: "Des factures et des commandes ont besoin de transactions et de requêtes imprévues."
+      - id: d
+        text: Des fichiers JSON sur le disque.
+    explanation: |
+      On choisit selon les requêtes, la cohérence, les volumes et la capacité d'exploitation.
+      Chaque base de plus a un coût opérationnel réel.

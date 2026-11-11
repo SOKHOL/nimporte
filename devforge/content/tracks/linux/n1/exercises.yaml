@@ -1,0 +1,114 @@
+exercises:
+  - id: linux.n1.permissions.qcm-754
+    type: qcm
+    title: Lire des permissions
+    skills: [permissions]
+    difficulty: 2
+    language: bash
+    prompt: "Après `chmod 754 script.sh`, que peut faire un utilisateur qui n'est ni le propriétaire ni dans le groupe ?"
+    code: |
+      $ ls -l script.sh
+      -rwxr-xr--  1 ada dev  120 nov. 10 09:00 script.sh
+    choices:
+      - id: a
+        text: Seulement le lire.
+        correct: true
+      - id: b
+        text: Le lire et l'exécuter.
+        feedback: C'est le droit du groupe (5 = r-x).
+      - id: c
+        text: Le lire, l'écrire et l'exécuter.
+        feedback: C'est le droit du propriétaire (7 = rwx).
+      - id: d
+        text: Rien du tout.
+    explanation: |
+      7 (propriétaire) = rwx, 5 (groupe) = r-x, 4 (autres) = r--. Sortie réelle de `ls -l`
+      après `chmod 754` : `-rwxr-xr--`.
+
+  - id: linux.n1.permissions.match
+    type: match
+    title: Les bonnes permissions
+    skills: [permissions]
+    difficulty: 2
+    prompt: Relie chaque fichier aux permissions adaptées.
+    pairs:
+      - left: Ta clé SSH privée
+        right: "600"
+      - left: Un script que tout le monde peut lancer
+        right: "755"
+      - left: Un fichier de configuration lisible par tous
+        right: "644"
+      - left: Un dossier de téléchargement « pour que ça marche »
+        right: 777, presque toujours une erreur
+    explanation: |
+      Moindre privilège : chacun n'a que les droits dont il a besoin. SSH refuse d'ailleurs
+      d'utiliser une clé privée lisible par d'autres que son propriétaire.
+
+  - id: linux.n1.redirections.qcm-ordre
+    type: qcm
+    title: L'ordre des redirections
+    skills: [pipes-redirections]
+    difficulty: 4
+    language: bash
+    prompt: Où part le message d'erreur de `ls` dans chacune de ces commandes ?
+    code: |
+      ls absent > f1 2>&1
+      ls absent 2>&1 > f2
+    choices:
+      - id: a
+        text: "Dans f1 pour la première ; à l'écran pour la seconde (f2 reste vide)."
+        correct: true
+      - id: b
+        text: Dans le fichier pour les deux.
+        feedback: "Les redirections s'appliquent de gauche à droite : dans la seconde, `2>&1` copie la sortie standard alors qu'elle pointe encore vers l'écran."
+      - id: c
+        text: À l'écran pour les deux.
+      - id: d
+        text: Dans f2 pour la seconde, à l'écran pour la première.
+    explanation: |
+      `2>&1` signifie « envoie les erreurs là où va la sortie standard **en ce moment** ».
+      Vérifié : f1 contient le message, f2 fait 0 octet et le message s'affiche à l'écran.
+
+  - id: linux.n1.pipes.parsons-erreurs
+    type: parsons
+    title: Compter les erreurs par composant
+    skills: [pipes-redirections]
+    difficulty: 3
+    language: bash
+    prompt: |
+      Les lignes du journal ressemblent à `2026-11-10 08:00:05 ERROR base délai dépassé`.
+      Remets dans l'ordre le pipeline qui affiche le nombre d'erreurs par composant, du plus
+      fréquent au moins fréquent. Une ligne est un piège.
+    lines:
+      - grep ERROR app.log
+      - "| awk '{print $4}'"
+      - "| sort"
+      - "| uniq -c"
+      - "| sort -rn"
+    distractors:
+      - "| uniq -c | sort"
+    explanation: |
+      On garde les erreurs, on extrait le 4ᵉ champ (le composant), on trie pour regrouper les
+      doublons (`uniq` ne fusionne que des lignes **voisines**), on compte, puis on trie les
+      nombres en ordre décroissant. Sortie réelle : `3 base`, puis `1 paiement`.
+
+  - id: linux.n1.navigation.qcm-rm
+    type: qcm
+    title: Supprimer pour de bon
+    skills: [navigation]
+    difficulty: 1
+    prompt: Que se passe-t-il pour un fichier supprimé avec `rm` sur un serveur Linux ?
+    choices:
+      - id: a
+        text: Il est supprimé définitivement, sans passer par une corbeille.
+        correct: true
+      - id: b
+        text: Il part dans la corbeille, récupérable pendant 30 jours.
+      - id: c
+        text: Il est seulement masqué.
+      - id: d
+        text: Il est déplacé dans /tmp.
+    explanation: |
+      `rm` (et surtout `rm -rf`) est définitif. Réflexes : vérifier le chemin avec `ls`
+      avant, ne jamais lancer `rm -rf` avec une variable qui pourrait être vide, et avoir des
+      sauvegardes.

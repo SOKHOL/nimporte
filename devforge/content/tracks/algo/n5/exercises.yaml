@@ -1,0 +1,141 @@
+exercises:
+  - id: algo.n5.trie.predict-prefixes
+    type: predict-output
+    title: L'autocomplétion
+    skills: [tries]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Trie {
+          private class Noeud {
+              val enfants = sortedMapOf<Char, Noeud>()
+              var finDeMot = false
+          }
+
+          private val racine = Noeud()
+
+          fun ajouter(mot: String) {
+              var n = racine
+              for (c in mot) n = n.enfants.getOrPut(c) { Noeud() }
+              n.finDeMot = true
+          }
+
+          fun commencantPar(prefixe: String): List<String> {
+              var n = racine
+              for (c in prefixe) n = n.enfants[c] ?: return emptyList()
+              val resultats = mutableListOf<String>()
+              fun parcourir(noeud: Noeud, mot: String) {
+                  if (noeud.finDeMot) resultats += mot
+                  for ((c, enfant) in noeud.enfants) parcourir(enfant, mot + c)
+              }
+              parcourir(n, prefixe)
+              return resultats
+          }
+      }
+
+      fun main() {
+          val t = Trie()
+          listOf("kotlin", "kotlinx", "koin", "java", "kafka").forEach(t::ajouter)
+          println(t.commencantPar("ko"))
+          println(t.commencantPar("py"))
+      }
+    choices:
+      - id: a
+        text: "`[koin, kotlin, kotlinx]` / `[]`"
+        correct: true
+      - id: b
+        text: "`[kotlin, kotlinx, koin]` / `[]`"
+        feedback: "Les enfants sont rangés dans un `sortedMapOf` : « i » vient avant « t »."
+      - id: c
+        text: "`[kotlin, koin]` / `[]`"
+        feedback: "« kotlin » est un mot complet, et « kotlinx » continue après lui : les deux sont trouvés."
+      - id: d
+        text: "`[koin, kotlin, kotlinx, kafka]` / `[]`"
+    explanation: |
+      On descend jusqu'au nœud du préfixe, puis on collecte tous les mots en dessous. L'ordre
+      alphabétique vient du `sortedMapOf`. Pour « py », aucun nœud : liste vide. Sortie vérifiée.
+
+  - id: algo.n5.probabilistes.qcm-bloom
+    type: qcm
+    title: Le filtre de Bloom
+    skills: [probabilistes]
+    difficulty: 3
+    prompt: Un filtre de Bloom répond « présent » pour une clé. Que peut-on en conclure ?
+    choices:
+      - id: a
+        text: La clé est probablement présente ; une vérification est nécessaire, car des faux positifs sont possibles.
+        correct: true
+      - id: b
+        text: La clé est certainement présente.
+      - id: c
+        text: La clé est certainement absente.
+        feedback: C'est la réponse « absent » qui est certaine, jamais « présent ».
+      - id: d
+        text: Rien du tout, le filtre répond au hasard.
+    explanation: |
+      Un filtre de Bloom ne donne jamais de faux négatif : « absent » est sûr. « Présent »
+      peut être un faux positif, dont on règle la probabilité avec la taille du filtre. On
+      l'utilise pour éviter un accès coûteux quand la réponse est « sûrement pas ».
+
+  - id: algo.n5.structures.match
+    type: match
+    title: La structure avancée adaptée
+    skills: [tries, probabilistes, union-find]
+    difficulty: 3
+    prompt: Relie chaque besoin à la structure adaptée.
+    pairs:
+      - left: Proposer des mots pendant la frappe
+        right: Trie
+      - left: Compter les visiteurs uniques d'un site avec très peu de mémoire
+        right: HyperLogLog
+      - left: Éviter de lire le disque pour des clés qui n'existent pas
+        right: Filtre de Bloom
+      - left: Savoir si deux ordinateurs d'un réseau sont reliés, pendant qu'on ajoute des câbles
+        right: Union-find
+    explanation: |
+      Ces structures sont moins connues mais très présentes dans les bases de données, les
+      moteurs de recherche et les outils d'analyse.
+
+  - id: algo.n5.amortie.qcm-arraylist
+    type: qcm
+    title: Le coût d'un ajout
+    skills: [analyse-amortie]
+    difficulty: 4
+    prompt: Une ArrayList double sa capacité quand elle est pleine, ce qui demande de copier tous ses éléments. Quel est le coût d'un ajout ?
+    choices:
+      - id: a
+        text: O(1) amorti, car sur n ajouts le total des copies reste inférieur à 2n.
+        correct: true
+      - id: b
+        text: O(n) à chaque ajout.
+        feedback: La copie n'a lieu que lors d'un doublement, de plus en plus rare.
+      - id: c
+        text: O(log n).
+      - id: d
+        text: O(n²) au total.
+    explanation: |
+      Copies cumulées : 1 + 2 + 4 + … + n < 2n, réparties sur n ajouts : O(1) par ajout en
+      moyenne. Mais l'ajout qui déclenche le doublement est ponctuellement lent ; si la
+      taille est connue, `ArrayList(capacite)` évite toutes les copies.
+
+  - id: algo.n5.union-find.qcm
+    type: qcm
+    title: Des groupes qui fusionnent
+    skills: [union-find]
+    difficulty: 3
+    prompt: Avec la compression des chemins et l'union par rang, combien coûte une opération d'union-find ?
+    choices:
+      - id: a
+        text: Un temps quasi constant (fonction d'Ackermann inverse, inférieure à 5 en pratique).
+        correct: true
+      - id: b
+        text: O(n)
+      - id: c
+        text: O(n log n)
+      - id: d
+        text: O(n²)
+    explanation: |
+      La compression des chemins rattache chaque nœud directement à la racine de son groupe
+      lors des recherches ; l'union par rang garde les arbres plats. Ensemble, elles rendent
+      chaque opération pratiquement constante.

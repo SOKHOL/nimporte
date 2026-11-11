@@ -1,0 +1,211 @@
+exercises:
+  - id: linux.n5.appels-systeme.qcm-tampon
+    type: qcm
+    title: 100 000 petites écritures
+    skills: [appels-systeme]
+    difficulty: 4
+    language: python
+    prompt: |
+      Ce programme écrit 100 000 octets un par un dans un fichier ouvert sans tampon.
+      Combien d'appels système `write` fait-il, environ ?
+    code: |
+      with open("sortie.bin", "wb", buffering=0) as f:
+          for _ in range(100_000):
+              f.write(b"x")
+    choices:
+      - id: a
+        text: Environ 100 000.
+        correct: true
+      - id: b
+        text: Un seul, à la fermeture du fichier.
+        feedback: C'est ce qui se passerait (presque) avec un tampon.
+      - id: c
+        text: Environ 25, un par page de 4 Kio.
+      - id: d
+        text: Aucun, Python écrit directement sur le disque.
+        feedback: Aucun programme n'écrit directement sur le disque ; tout passe par le noyau.
+    explanation: |
+      Mesure réelle avec `strace -c` : 100 006 appels `write` sans tampon, 8 avec un tampon
+      de 64 Kio, et environ 50 ms contre 11 ms. Chaque appel système fait passer le
+      processeur en mode noyau ; on regroupe les petites écritures.
+
+  - id: linux.n5.memoire.qcm-rss
+    type: qcm
+    title: 8 Go qui ne coûtent rien
+    skills: [ordonnanceur]
+    difficulty: 4
+    language: python
+    prompt: |
+      Après ce `mmap` de 8 Go, la taille virtuelle (VmSize) du processus passe à 8,4 Go,
+      mais sa mémoire résidente (VmRSS) reste à environ 11 Mo. Pourquoi ?
+    code: |
+      import mmap
+      m = mmap.mmap(-1, 8 * 1024**3)
+    choices:
+      - id: a
+        text: "Les pages ne sont attribuées physiquement qu'au premier accès ; tant qu'on n'y écrit pas, elles n'occupent pas de RAM."
+        correct: true
+      - id: b
+        text: Le noyau a compressé les 8 Go.
+      - id: c
+        text: Les 8 Go ont été placés dans le swap.
+        feedback: "La machine de test n'a même pas de swap (`Swap: 0`)."
+      - id: d
+        text: La mesure de VmRSS est fausse.
+    explanation: |
+      Mesure réelle : VmRSS 11 460 kB juste après le `mmap`, puis 216 260 kB après avoir
+      écrit dans 200 Mo. Chaque premier accès à une page provoque un défaut de page, et le
+      noyau fournit alors une page physique. C'est ce qui permet l'overcommit… et rend
+      nécessaire l'OOM killer.
+
+  - id: linux.n5.ordonnanceur.scenario-throttling
+    type: scenario
+    title: Lent à 40 % de CPU
+    skills: [ordonnanceur, conteneurs-linux]
+    difficulty: 5
+    prompt: |
+      Une API Java tourne dans Kubernetes avec `limits.cpu: 1`. Le CPU moyen du pod est de
+      40 %, mais le p99 de latence monte régulièrement à 300 ms, contre 20 ms en
+      temps normal.
+    start: debut
+    nodes:
+      debut:
+        text: Le CPU est à 40 %, la mémoire est stable, le GC est calme. Quelle piste explores-tu ?
+        options:
+          - text: Le throttling CPU du cgroup, qui ne se voit pas dans une moyenne.
+            next: mesure
+            points: 3
+          - text: Le réseau entre les pods.
+            next: reseau
+            points: 1
+            feedback: Piste raisonnable, mais les traces montrent que le temps est passé dans le service lui-même.
+      reseau:
+        text: Les traces distribuées montrent que les 300 ms se passent à l'intérieur de l'API, sans appel externe lent. Et maintenant ?
+        options:
+          - text: Je regarde si le conteneur est bridé par son quota CPU.
+            next: mesure
+            points: 2
+      mesure:
+        text: |
+          ```
+          $ cat /sys/fs/cgroup/cpu.stat
+          nr_periods 120000
+          nr_throttled 41000
+          throttled_usec 2870000000
+          ```
+          Le service utilise 8 threads de traitement. Que se passe-t-il ?
+        options:
+          - text: "Les 8 threads épuisent les 100 ms de quota en environ 12,5 ms, puis tout le conteneur est gelé jusqu'à la période suivante : un tiers des périodes sont bridées."
+            next: correction
+            points: 3
+          - text: La machine physique est surchargée.
+            next: fausse-piste
+            points: 0
+            feedback: "nr_throttled vient du quota du conteneur, pas de la machine."
+      fausse-piste:
+        text: Les autres pods du même nœud ont une latence normale. Que regardes-tu ?
+        options:
+          - text: Le quota CPU propre à ce conteneur et le nombre de threads qui le consomment.
+            next: correction
+            points: 1
+      correction:
+        text: Que changes-tu ?
+        options:
+          - text: "Je supprime ou relève la limite CPU (en gardant une request), et je dimensionne les pools de threads sur le quota réel."
+            next: resolu
+            points: 3
+          - text: Je double le nombre de threads pour traiter plus vite.
+            next: pire
+            points: 0
+            feedback: "Plus de threads épuisent le quota encore plus vite : le gel est plus long."
+      resolu:
+        ending: success
+        text: "✅ nr_throttled tombe presque à zéro, et le p99 revient à 20 ms."
+      pire:
+        ending: failure
+        text: "❌ Le quota est épuisé en 6 ms au lieu de 12,5 : le p99 dépasse maintenant 500 ms."
+    explanation: |
+      Une limite CPU de conteneur est un quota par période de 100 ms. Une moyenne de 40 %
+      cache des rafales où tous les threads sont gelés. Le signe : `nr_throttled` dans
+      `cpu.stat` (ou `container_cpu_cfs_throttled_periods_total`).
+
+  - id: linux.n5.durcissement.revue-sshd
+    type: code-review
+    title: "Revue : la configuration SSH d'un nouveau serveur"
+    skills: [durcissement, ssh]
+    difficulty: 3
+    language: text
+    prompt: Ce `sshd_config` vient d'être déployé sur un serveur exposé à Internet. Trouve au moins 2 problèmes.
+    code: |
+      Port 22
+      PermitRootLogin yes
+      PasswordAuthentication yes
+      PubkeyAuthentication yes
+      X11Forwarding yes
+      MaxAuthTries 10
+    issues:
+      - lines: [2]
+        category: securite
+        description: "La connexion directe en root donne tout à qui devine un seul mot de passe, et rend les actions anonymes. `PermitRootLogin no`, puis `sudo` depuis un compte nominatif."
+      - lines: [3]
+        category: securite
+        description: "Les mots de passe sont devinables par des robots qui essaient en continu. `PasswordAuthentication no` : clés seulement."
+      - lines: [6]
+        category: securite
+        description: "10 essais par connexion facilitent la force brute ; 3 suffisent."
+      - lines: [5]
+        category: securite
+        description: "Le transfert X11 est inutile sur un serveur et élargit la surface d'attaque."
+    min_found: 2
+    explanation: |
+      Un serveur SSH exposé reçoit des milliers d'essais par jour. Clés uniquement, pas de
+      root, peu d'essais, rien d'inutile ; ensuite un pare-feu, et éventuellement fail2ban ou
+      un accès par VPN ou bastion seulement.
+
+  - id: linux.n5.durcissement.match
+    type: match
+    title: Chaque mesure, sa menace
+    skills: [durcissement]
+    difficulty: 4
+    prompt: Relie chaque mesure de durcissement à ce qu'elle empêche.
+    pairs:
+      - left: Envoyer les journaux hors de la machine
+        right: Un attaquant qui efface ses traces
+      - left: CAP_NET_BIND_SERVICE au lieu de root
+        right: Un service compromis qui obtient tous les droits
+      - left: Pare-feu qui refuse tout par défaut
+        right: Un service exposé par erreur
+      - left: Mises à jour de sécurité automatiques
+        right: L'exploitation de failles connues
+      - left: ProtectSystem=strict dans le fichier unit
+        right: Un service qui modifie les fichiers du système
+    explanation: |
+      Le durcissement empile des défenses indépendantes (défense en profondeur) : si l'une
+      cède, les autres limitent les dégâts. `systemd-analyze security` aide à repérer les
+      services trop exposés.
+
+  - id: linux.n5.ebpf.qcm-strace
+    type: qcm
+    title: Observer en production
+    skills: [ebpf, appels-systeme]
+    difficulty: 4
+    prompt: |
+      Tu veux savoir quels fichiers ouvre un service qui traite 5 000 requêtes par seconde,
+      en production. Pourquoi préférer un outil eBPF (opensnoop, bpftrace) à strace ?
+    choices:
+      - id: a
+        text: "strace arrête le processus à chaque appel système ; eBPF exécute un petit programme vérifié dans le noyau, à faible coût."
+        correct: true
+      - id: b
+        text: strace ne voit pas les ouvertures de fichiers.
+        feedback: "Si : `strace -e trace=openat`. Le problème est son coût."
+      - id: c
+        text: eBPF n'a pas besoin de droits particuliers.
+        feedback: Charger un programme eBPF demande des privilèges élevés (root ou CAP_BPF).
+      - id: d
+        text: strace ne fonctionne pas dans les conteneurs.
+    explanation: |
+      Mesure réelle : un programme qui fait 100 000 appels système passe de 0,07 s à 6 s sous
+      strace, environ 80 fois plus lent. eBPF agrège dans le noyau et ne remonte que le
+      résultat ; c'est la base des outils modernes d'observabilité, de réseau (Cilium) et de
+      sécurité (Falco, Tetragon).

@@ -1,0 +1,111 @@
+exercises:
+  - id: algo.n1.recherche.qcm-etapes
+    type: qcm
+    title: Combien d'étapes ?
+    skills: [recherche, analyse-complexite]
+    difficulty: 2
+    prompt: Une recherche dichotomique dans une liste triée d'un million d'éléments fait au plus combien d'étapes ?
+    choices:
+      - id: a
+        text: environ 20
+        correct: true
+      - id: b
+        text: environ 1 000
+      - id: c
+        text: environ 500 000
+        feedback: C'est le nombre moyen pour une recherche linéaire.
+      - id: d
+        text: environ 1 000 000
+    explanation: |
+      Chaque étape divise l'espace de recherche par deux : 2²⁰ ≈ 1 million, donc 20 étapes.
+      Mesuré pour ce cours : 20 étapes pour trouver le dernier élément, 20 pour conclure
+      qu'un élément est absent.
+
+  - id: algo.n1.recherche.bug-borne
+    type: find-bug
+    title: Le dernier élément introuvable
+    skills: [recherche]
+    difficulty: 3
+    language: kotlin
+    prompt: "Cette recherche trouve 5 dans `[1, 3, 5, 7]`, mais pas 7 (elle renvoie -1). Touche la ligne fautive."
+    code: |
+      fun recherche(triee: List<Int>, cible: Int): Int {
+          var bas = 0
+          var haut = triee.size - 1
+          while (bas < haut) {
+              val milieu = bas + (haut - bas) / 2
+              when {
+                  triee[milieu] == cible -> return milieu
+                  triee[milieu] < cible -> bas = milieu + 1
+                  else -> haut = milieu - 1
+              }
+          }
+          return -1
+      }
+    bug_lines: [4]
+    hints:
+      - Que se passe-t-il quand il ne reste qu'un seul candidat, c'est-à-dire quand bas == haut ?
+    explanation: |
+      Quand `bas == haut`, il reste un candidat à examiner, mais `bas < haut` arrête la
+      boucle. Testé : 7 introuvable dans `[1, 3, 5, 7]`. Correction : `while (bas <= haut)`.
+
+  - id: algo.n1.recherche.qcm-debordement
+    type: qcm
+    title: Un milieu qui déborde
+    skills: [recherche]
+    difficulty: 4
+    prompt: Pourquoi écrire `bas + (haut - bas) / 2` plutôt que `(bas + haut) / 2` ?
+    choices:
+      - id: a
+        text: Sur de très grands tableaux, bas + haut peut dépasser Int.MAX_VALUE et devenir négatif.
+        correct: true
+      - id: b
+        text: C'est plus rapide.
+      - id: c
+        text: Le résultat est arrondi différemment.
+      - id: d
+        text: C'est une simple question de style.
+    explanation: |
+      Ce bug est resté une vingtaine d'années dans `Arrays.binarySearch` de Java, avant
+      d'apparaître sur des tableaux de plus d'un milliard d'éléments. `haut - bas` ne
+      déborde jamais.
+
+  - id: algo.n1.tris.match
+    type: match
+    title: Les tris
+    skills: [tris-simples]
+    difficulty: 2
+    prompt: Relie chaque tri à son principe.
+    pairs:
+      - left: Tri par sélection
+        right: Chercher le plus petit, le mettre en tête, recommencer sur le reste
+      - left: Tri par insertion
+        right: Insérer chaque élément à sa place dans la partie déjà triée
+      - left: Tri à bulles
+        right: Échanger les voisins mal ordonnés jusqu'à ce que rien ne bouge
+      - left: sorted() de Kotlin
+        right: Un tri en O(n log n), stable, à utiliser en pratique
+    explanation: |
+      Les trois tris simples sont en O(n²). Le tri par insertion garde un intérêt réel : il
+      est très rapide sur de petits tableaux et sur des données presque triées.
+
+  - id: algo.n1.tris.qcm-stable
+    type: qcm
+    title: Un tri stable
+    skills: [tris-simples]
+    difficulty: 3
+    prompt: Une liste de joueurs est déjà triée par nom. On la trie ensuite par score avec `sortedBy { it.score }`. Que deviennent deux joueurs qui ont le même score ?
+    choices:
+      - id: a
+        text: Ils restent dans l'ordre alphabétique, car le tri de Kotlin est stable.
+        correct: true
+      - id: b
+        text: Leur ordre est aléatoire.
+      - id: c
+        text: Le plus récent passe devant.
+      - id: d
+        text: Ils sont fusionnés.
+    explanation: |
+      Un tri **stable** conserve l'ordre d'origine des éléments égaux. C'est ce qui permet
+      de trier sur plusieurs critères en plusieurs passes ; ou en une seule avec
+      `sortedWith(compareBy({ it.score }, { it.nom }))`.

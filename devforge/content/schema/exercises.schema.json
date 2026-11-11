@@ -109,7 +109,7 @@
         },
         "difficulty": { "type": "integer", "minimum": 1, "maximum": 5 },
         "xp": { "type": "integer", "minimum": 1 },
-        "language": { "enum": ["kotlin", "java", "python", "c", "rust", "bash", "dockerfile", "yaml", "sql", "text"] },
+        "language": { "enum": ["kotlin", "java", "python", "javascript", "c", "rust", "bash", "dockerfile", "yaml", "sql", "text"] },
         "prompt": { "$ref": "#/$defs/text" },
         "code": { "$ref": "#/$defs/text" },
         "hints": { "$ref": "#/$defs/texts" },

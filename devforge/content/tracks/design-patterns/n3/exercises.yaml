@@ -1,0 +1,264 @@
+exercises:
+  - id: design-patterns.n3.command.predict-annuler
+    type: predict-output
+    title: Annuler, annuler, écrire
+    skills: [command]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      interface Commande {
+          fun executer()
+          fun annuler()
+      }
+
+      class Editeur {
+          val texte = StringBuilder()
+      }
+
+      class Ecrire(private val editeur: Editeur, private val mot: String) : Commande {
+          override fun executer() { editeur.texte.append(mot) }
+          override fun annuler() { editeur.texte.setLength(editeur.texte.length - mot.length) }
+      }
+
+      fun main() {
+          val editeur = Editeur()
+          val historique = ArrayDeque<Commande>()
+          fun faire(commande: Commande) {
+              commande.executer()
+              historique.addLast(commande)
+          }
+
+          faire(Ecrire(editeur, "Dev"))
+          faire(Ecrire(editeur, "Forge"))
+          faire(Ecrire(editeur, "!!"))
+          historique.removeLast().annuler()
+          historique.removeLast().annuler()
+          faire(Ecrire(editeur, "Ops"))
+          println(editeur.texte)
+      }
+    choices:
+      - id: a
+        text: "`DevOps`"
+        correct: true
+      - id: b
+        text: "`DevForgeOps`"
+        feedback: Deux annulations retirent « !! » puis « Forge ».
+      - id: c
+        text: "`Ops`"
+      - id: d
+        text: "`DevForge!!Ops`"
+    explanation: |
+      Chaque action est un objet rangé dans l'historique. Les deux annulations retirent les
+      deux dernières (« !! » puis « Forge ») ; il reste « Dev », auquel on ajoute « Ops ».
+      Sortie vérifiée.
+
+  - id: design-patterns.n3.chain.predict-maillons
+    type: predict-output
+    title: La traversée des maillons
+    skills: [chain-of-responsibility]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun interface Maillon {
+          fun traiter(requete: String, suivant: (String) -> String): String
+      }
+
+      fun chaine(maillons: List<Maillon>, fin: (String) -> String): (String) -> String =
+          maillons.foldRight(fin) { maillon, suivant -> { requete -> maillon.traiter(requete, suivant) } }
+
+      fun main() {
+          val journal = Maillon { requete, suivant ->
+              println("→ $requete")
+              val reponse = suivant(requete)
+              println("← $reponse")
+              reponse
+          }
+          val droits = Maillon { requete, suivant ->
+              if (requete.startsWith("/admin")) "403" else suivant(requete)
+          }
+          val appeler = chaine(listOf(journal, droits)) { "200" }
+          appeler("/accueil")
+          appeler("/admin")
+      }
+    choices:
+      - id: a
+        text: "`→ /accueil` / `← 200` / `→ /admin` / `← 403`"
+        correct: true
+      - id: b
+        text: "`→ /accueil` / `← 200` / `→ /admin`"
+        feedback: Le maillon des droits répond « 403 » ; le journal, qui l'entoure, affiche quand même la réponse.
+      - id: c
+        text: "`→ /accueil` / `← 200` / `403`"
+      - id: d
+        text: "`← 200` / `→ /accueil` / `← 403` / `→ /admin`"
+    explanation: |
+      `journal` est le premier maillon : il affiche la requête, appelle la suite, puis
+      affiche la réponse. Pour `/admin`, le maillon `droits` coupe la chaîne et répond
+      « 403 » sans aller plus loin. C'est le fonctionnement des intercepteurs d'OkHttp.
+      Sortie vérifiée.
+
+  - id: design-patterns.n3.iterator.predict-sequence
+    type: predict-output
+    title: Une séquence paresseuse
+    skills: [iterator]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val nombres = sequence {
+              println("calcul du premier")
+              yield(1)
+              println("calcul du second")
+              yield(2)
+          }
+          println("avant")
+          println(nombres.first())
+      }
+    choices:
+      - id: a
+        text: "`avant` / `calcul du premier` / `1`"
+        correct: true
+      - id: b
+        text: "`calcul du premier` / `calcul du second` / `avant` / `1`"
+        feedback: Une séquence ne calcule rien à sa création.
+      - id: c
+        text: "`avant` / `calcul du premier` / `calcul du second` / `1`"
+        feedback: "`first()` s'arrête dès le premier élément ; le second n'est jamais calculé."
+      - id: d
+        text: "`avant` / `1`"
+    explanation: |
+      Une séquence est un itérateur paresseux : le bloc ne s'exécute qu'à la demande, et
+      s'arrête à chaque `yield`. Rien n'est calculé avant `first()`, et rien après le
+      premier élément. Sortie vérifiée.
+
+  - id: design-patterns.n3.composite.predict-taille
+    type: predict-output
+    title: Le poids d'un dossier
+    skills: [composite]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      sealed interface Element {
+          fun taille(): Long
+      }
+
+      class Fichier(val nom: String, private val octets: Long) : Element {
+          override fun taille() = octets
+      }
+
+      class Dossier(val nom: String, private val enfants: List<Element>) : Element {
+          override fun taille() = enfants.sumOf { it.taille() }
+      }
+
+      fun main() {
+          val projet = Dossier(
+              "projet",
+              listOf(
+                  Fichier("README.md", 2_000),
+                  Dossier("src", listOf(Fichier("Main.kt", 5_000), Fichier("Util.kt", 3_000))),
+                  Dossier("vide", emptyList()),
+              ),
+          )
+          println(projet.taille())
+      }
+    choices:
+      - id: a
+        text: "`10000`"
+        correct: true
+      - id: b
+        text: "`2000`"
+        feedback: Un dossier additionne la taille de tous ses enfants, y compris des sous-dossiers.
+      - id: c
+        text: "`8000`"
+      - id: d
+        text: Une erreur, car le dossier vide n'a pas d'enfants.
+        feedback: "`sumOf` sur une liste vide donne 0."
+    explanation: |
+      Composite : fichiers et dossiers partagent l'interface `Element`. Le dossier racine
+      additionne 2 000 + (5 000 + 3 000) + 0 = 10 000, par récursion. Sortie vérifiée.
+
+  - id: design-patterns.n3.template.predict-rapport
+    type: predict-output
+    title: L'algorithme figé
+    skills: [template-method]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      abstract class Rapport {
+          fun generer(): String = entete() + corps() + pied()
+          protected open fun entete() = "[début]"
+          protected abstract fun corps(): String
+          protected open fun pied() = "[fin]"
+      }
+
+      class RapportVentes : Rapport() {
+          override fun corps() = " ventes: 42 "
+          override fun pied() = "[confidentiel]"
+      }
+
+      fun main() {
+          println(RapportVentes().generer())
+      }
+    choices:
+      - id: a
+        text: "`[début] ventes: 42 [confidentiel]`"
+        correct: true
+      - id: b
+        text: "`[début] ventes: 42 [fin]`"
+        feedback: "`pied()` est redéfinie dans `RapportVentes`."
+      - id: c
+        text: "` ventes: 42 [confidentiel]`"
+        feedback: "`entete()` n'est pas redéfinie : la version par défaut s'applique."
+      - id: d
+        text: Une erreur, car `generer` n'est pas `open`.
+    explanation: |
+      L'ordre des étapes est fixé par `generer()` ; les sous-classes ne changent que les
+      étapes ouvertes. Sortie vérifiée.
+
+  - id: design-patterns.n3.match-patterns
+    type: match
+    title: Neuf patterns, neuf situations
+    skills: [command, state, mediator, bridge, flyweight, iterator]
+    difficulty: 3
+    prompt: Relie chaque pattern à la situation qu'il résout.
+    pairs:
+      - left: Command
+        right: Proposer « Annuler » et « Rétablir » dans un éditeur
+      - left: State
+        right: Une commande qui se comporte différemment selon qu'elle est payée, expédiée ou livrée
+      - left: Mediator
+        right: Un formulaire dont les champs s'activent et se désactivent les uns les autres
+      - left: Bridge
+        right: Des formes à dessiner à l'écran, en PDF ou en SVG, sans multiplier les classes
+      - left: Flyweight
+        right: Afficher un million de caractères en partageant un seul objet par glyphe
+      - left: Iterator
+        right: Parcourir une collection sans connaître sa structure interne
+    explanation: |
+      Le nom compte moins que le réflexe : reconnaître la forme du problème, et savoir
+      qu'une solution éprouvée existe.
+
+  - id: design-patterns.n3.state.qcm-sealed
+    type: qcm
+    title: State en Kotlin
+    skills: [state]
+    difficulty: 3
+    prompt: Pourquoi une `sealed interface` est-elle idéale pour représenter les états d'un écran (`Chargement`, `Pret`, `Erreur`) ?
+    choices:
+      - id: a
+        text: Le compilateur connaît tous les états possibles et oblige chaque `when` à les traiter tous.
+        correct: true
+      - id: b
+        text: Elle est plus rapide qu'une classe normale.
+      - id: c
+        text: Elle empêche l'écran de changer d'état.
+      - id: d
+        text: Elle sauvegarde automatiquement l'état sur le disque.
+    explanation: |
+      Une hiérarchie scellée est fermée : ajouter un état `HorsLigne` fait apparaître une
+      erreur de compilation partout où il n'est pas encore géré. Impossible d'oublier un cas.

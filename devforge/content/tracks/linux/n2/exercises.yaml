@@ -1,0 +1,142 @@
+exercises:
+  - id: linux.n2.scripts.bug-set-e
+    type: find-bug
+    title: Le script qui continue
+    skills: [scripts-bash]
+    difficulty: 3
+    language: bash
+    prompt: |
+      Ce script de nettoyage a un jour effacé le mauvais dossier, parce que `/var/app/cache`
+      n'existait pas sur ce serveur. Touche la ligne qui échoue sans que le script s'arrête.
+    code: |
+      #!/usr/bin/env bash
+      cd /var/app/cache
+      rm -rf ./*
+      echo "cache vidé"
+    bug_lines: [2]
+    hints:
+      - Que fait bash, par défaut, quand une commande échoue ?
+    explanation: |
+      Sans `set -e`, le `cd` échoue mais le script continue, et `rm -rf ./*` s'exécute dans
+      le dossier courant. Vérifié : un script sans `set -e` affiche « je continue quand
+      même » après un `cd` impossible. Ajouter `set -euo pipefail` juste après la première
+      ligne, ou écrire `cd /var/app/cache || exit 1`.
+
+  - id: linux.n2.scripts.qcm-guillemets
+    type: qcm
+    title: Les guillemets
+    skills: [scripts-bash]
+    difficulty: 2
+    language: bash
+    prompt: Que se passe-t-il avec la première commande ?
+    code: |
+      f="mon rapport.txt"
+      ls $f
+      ls "$f"
+    choices:
+      - id: a
+        text: "ls reçoit deux arguments, « mon » et « rapport.txt », et ne les trouve pas ; la seconde commande fonctionne."
+        correct: true
+      - id: b
+        text: Les deux commandes fonctionnent.
+      - id: c
+        text: Les deux échouent.
+      - id: d
+        text: La première supprime le fichier.
+    explanation: |
+      Sans guillemets, le shell découpe la valeur sur les espaces. Vérifié : `ls: cannot access
+      'mon'` puis `ls: cannot access 'rapport.txt'`. Règle : toujours `"$variable"`.
+
+  - id: linux.n2.processus.qcm-signaux
+    type: qcm
+    title: Arrêter un processus
+    skills: [processus-signaux]
+    difficulty: 3
+    prompt: Un serveur doit finir les requêtes en cours avant de s'arrêter. Quel signal lui envoyer en premier, et pourquoi ?
+    choices:
+      - id: a
+        text: SIGTERM (kill), qu'il peut intercepter pour terminer proprement ; SIGKILL seulement s'il ne répond pas.
+        correct: true
+      - id: b
+        text: SIGKILL (kill -9), c'est plus rapide.
+        feedback: "SIGKILL ne peut pas être intercepté : aucune requête n'est terminée, aucune ressource libérée."
+      - id: c
+        text: SIGSTOP.
+        feedback: SIGSTOP met le processus en pause, il ne l'arrête pas.
+      - id: d
+        text: Aucun, il faut redémarrer la machine.
+    explanation: |
+      Vérifié : avec `trap … TERM`, le script affiche son message de nettoyage et sort avec le
+      code 0 ; avec `kill -9`, il disparaît avec le code 137 (128 + 9). Kubernetes fait la même
+      chose : SIGTERM, un délai de grâce, puis SIGKILL.
+
+  - id: linux.n2.texte.match
+    type: match
+    title: Le bon outil de texte
+    skills: [texte]
+    difficulty: 2
+    prompt: Relie chaque besoin à l'outil adapté.
+    pairs:
+      - left: Garder les lignes qui contiennent « ERROR »
+        right: grep
+      - left: "Remplacer « http: » par « https: » dans un fichier"
+        right: sed
+      - left: Additionner la deuxième colonne
+        right: awk
+      - left: Trouver les fichiers .log de plus de 7 jours
+        right: find
+      - left: Compter les lignes identiques voisines
+        right: uniq -c
+    explanation: |
+      Chaque outil fait une chose bien ; le pipe les combine. Vérifié :
+      `awk '{s += $2} END {print s}'` sur « a 10 / b 32 / c 5 » affiche 47.
+
+  - id: linux.n2.scripts.trous-entete
+    type: fill-blanks
+    title: L'en-tête d'un script sûr
+    skills: [scripts-bash]
+    difficulty: 2
+    language: bash
+    prompt: Complète l'en-tête pour que le script s'arrête à la première erreur, refuse les variables non définies, et détecte les échecs au milieu d'un pipe.
+    code: |
+      #!/usr/bin/env bash
+      set -{{1}} {{2}}
+    blanks:
+      "1":
+        answers: [eu]
+        options: [eu, x, v, n]
+      "2":
+        answers: ["-o pipefail"]
+        options: ["-o pipefail", "-o noclobber", "-o vi", "-o posix"]
+    explanation: |
+      `-e` arrête au premier échec, `-u` refuse les variables non définies, `-o pipefail`
+      fait échouer un pipeline dont une commande échoue. (`-x`, lui, affiche chaque commande
+      exécutée : utile pour déboguer.)
+
+  - id: linux.n2.environnement.qcm-export
+    type: qcm
+    title: La variable disparue
+    skills: [environnement]
+    difficulty: 3
+    language: bash
+    prompt: Après avoir lancé ce script avec `bash env.sh`, que vaut `$COULEUR` dans ton terminal ?
+    code: |
+      # env.sh
+      export COULEUR=bleu
+      echo "dans le script : $COULEUR"
+    choices:
+      - id: a
+        text: "Elle est vide : le script tourne dans un processus enfant, qui a modifié sa propre copie de l'environnement."
+        correct: true
+      - id: b
+        text: "`bleu`, grâce à `export`."
+        feedback: "`export` rend la variable visible aux processus **lancés par** le script, pas à son parent."
+      - id: c
+        text: "`bleu`, mais seulement dans les nouveaux terminaux."
+      - id: d
+        text: Une erreur, la variable n'existe pas.
+    explanation: |
+      Vérifié : `dans le script : bleu`, puis une valeur vide dans le terminal ; après
+      `source ./env.sh` (le script s'exécute alors dans le shell courant), la valeur est
+      `bleu`. Un enfant reçoit une **copie** de l'environnement et ne peut jamais modifier
+      celui de son parent.

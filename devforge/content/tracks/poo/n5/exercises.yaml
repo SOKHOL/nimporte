@@ -1,0 +1,124 @@
+exercises:
+  - id: poo.n5.traits.predict-diamant
+    type: predict-output
+    title: Le canard
+    skills: [traits-mixins]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      interface Volant {
+          fun deplacer() = "vole"
+      }
+
+      interface Nageant {
+          fun deplacer() = "nage"
+      }
+
+      class Canard : Volant, Nageant {
+          override fun deplacer() = super<Volant>.deplacer() + " et " + super<Nageant>.deplacer()
+      }
+
+      fun main() {
+          println(Canard().deplacer())
+      }
+    choices:
+      - id: a
+        text: "`vole et nage`"
+        correct: true
+      - id: b
+        text: "`vole`"
+        feedback: Kotlin ne choisit jamais implicitement ; ici la redéfinition appelle les deux.
+      - id: c
+        text: "`nage et vole`"
+      - id: d
+        text: Une erreur de compilation à cause du diamant.
+        feedback: Le diamant est justement résolu par la redéfinition explicite.
+    explanation: |
+      `super<Volant>` et `super<Nageant>` désignent chaque implémentation par défaut. Sans
+      redéfinition, le compilateur exige qu'on en écrive une. Sortie vérifiée.
+
+  - id: poo.n5.prototypes.predict-js
+    type: predict-output
+    title: Le prototype modifié
+    skills: [prototypes]
+    difficulty: 3
+    language: javascript
+    prompt: Qu'affiche ce programme JavaScript ?
+    code: |
+      const animal = {
+        crier() {
+          return `${this.nom} fait du bruit`;
+        },
+      };
+
+      const chien = Object.create(animal);
+      chien.nom = "Rex";
+      console.log(chien.crier());
+
+      animal.crier = function () {
+        return `${this.nom} aboie`;
+      };
+      console.log(chien.crier());
+      console.log(Object.getPrototypeOf(chien) === animal);
+    choices:
+      - id: a
+        text: "`Rex fait du bruit` / `Rex aboie` / `true`"
+        correct: true
+      - id: b
+        text: "`Rex fait du bruit` / `Rex fait du bruit` / `true`"
+        feedback: "`chien` ne copie pas `animal` : il le consulte à chaque appel, donc voit la modification."
+      - id: c
+        text: "`undefined fait du bruit` / `undefined aboie` / `false`"
+      - id: d
+        text: "`Rex fait du bruit` / `Rex aboie` / `false`"
+    explanation: |
+      `Object.create(animal)` crée un objet dont le prototype **est** `animal` : pas de copie.
+      Quand on cherche `crier` sur `chien`, JavaScript remonte au prototype, à chaque appel.
+      Modifier le prototype change donc immédiatement tous ses héritiers. Sortie vérifiée avec Node.
+
+  - id: poo.n5.critique.qcm-quand
+    type: qcm
+    title: Le bon paradigme
+    skills: [critique-poo]
+    difficulty: 3
+    prompt: |
+      Tu dois transformer chaque nuit 50 millions de lignes de ventes (filtrer, convertir les
+      devises, agréger par pays). Quelle approche est la plus naturelle ?
+    choices:
+      - id: a
+        text: Une chaîne de transformations fonctionnelles sur des données simples (filter, map, groupBy, fold).
+        correct: true
+      - id: b
+        text: Une hiérarchie de classes LigneDeVente, LigneDeVenteConvertie, LigneDeVenteAgregee…
+        feedback: Des objets qui ne protègent aucune règle ajoutent des couches sans valeur.
+      - id: c
+        text: Un objet par ligne avec des méthodes de mise à jour.
+      - id: d
+        text: Un Singleton qui contient toutes les lignes.
+    explanation: |
+      Un traitement de données est une suite de transformations : la programmation
+      fonctionnelle l'exprime directement, se teste facilement et se parallélise bien. La
+      POO reste précieuse pour un domaine riche en règles et en états.
+
+  - id: poo.n5.critique.qcm-ecs
+    type: qcm
+    title: Les moteurs de jeu
+    skills: [critique-poo]
+    difficulty: 4
+    prompt: Pourquoi beaucoup de moteurs de jeu abandonnent-ils une hiérarchie d'objets (Personnage, Ennemi, Projectile…) au profit du modèle ECS ?
+    choices:
+      - id: a
+        text: Les composants rangés en tableaux contigus sont parcourus bien plus vite par le processeur, et se combinent sans héritage.
+        correct: true
+      - id: b
+        text: Les langages des moteurs de jeu n'ont pas de classes.
+      - id: c
+        text: L'héritage est interdit dans les jeux vidéo.
+      - id: d
+        text: ECS consomme plus de mémoire, ce qui est plus rapide.
+    explanation: |
+      Dans ECS, une entité n'est qu'un identifiant ; ses composants (position, vitesse, vie)
+      sont rangés dans des tableaux, et des systèmes les traitent en lot. Le parcours est
+      contigu en mémoire (voir *Gestion de la mémoire*, niveau 5), et ajouter un comportement,
+      c'est ajouter un composant, sans toucher à aucune hiérarchie.

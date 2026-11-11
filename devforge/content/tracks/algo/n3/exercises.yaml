@@ -1,0 +1,137 @@
+exercises:
+  - id: algo.n3.arbres.qcm-infixe
+    type: qcm
+    title: Le parcours infixe
+    skills: [arbres]
+    difficulty: 2
+    prompt: On insère 50, 30, 70, 20, 40, 60, 80 dans un arbre binaire de recherche. Que donne le parcours infixe (gauche, nœud, droite) ?
+    choices:
+      - id: a
+        text: "`[20, 30, 40, 50, 60, 70, 80]`"
+        correct: true
+      - id: b
+        text: "`[50, 30, 70, 20, 40, 60, 80]`"
+        feedback: C'est l'ordre d'insertion, qui correspond ici à un parcours en largeur.
+      - id: c
+        text: "`[50, 30, 20, 40, 70, 60, 80]`"
+        feedback: C'est le parcours préfixe (nœud, gauche, droite).
+      - id: d
+        text: "`[80, 70, 60, 50, 40, 30, 20]`"
+    explanation: |
+      Dans un arbre de recherche, tout ce qui est à gauche est plus petit et tout ce qui est
+      à droite plus grand : le parcours infixe donne toujours les valeurs triées. Résultat
+      vérifié.
+
+  - id: algo.n3.arbres.qcm-degenere
+    type: qcm
+    title: L'arbre qui devient une liste
+    skills: [arbres]
+    difficulty: 3
+    prompt: On insère 1, 2, 3, 4, 5, 6, 7 dans cet ordre dans un arbre binaire de recherche simple. Quelle est sa hauteur ?
+    choices:
+      - id: a
+        text: "7, chaque nœud n'a qu'un enfant à droite"
+        correct: true
+      - id: b
+        text: 3, l'arbre est équilibré
+        feedback: "C'est le cas pour l'ordre 50, 30, 70… ; avec des valeurs croissantes, l'arbre ne fait que descendre à droite."
+      - id: c
+        text: "1"
+      - id: d
+        text: "4"
+    explanation: |
+      Mesuré : hauteur 3 pour un ordre équilibré, 7 pour des valeurs croissantes. L'arbre
+      dégénère en liste et chaque opération passe en O(n). Les arbres auto-équilibrés
+      (rouge-noir dans `TreeMap`) se réorganisent pour garder une hauteur en O(log n).
+
+  - id: algo.n3.tas.predict-priorite
+    type: predict-output
+    title: La file de priorité
+    skills: [tas]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import java.util.PriorityQueue
+
+      fun main() {
+          val tas = PriorityQueue(listOf(5, 1, 8, 3, 9, 2))
+          println(List(3) { tas.poll() })
+      }
+    choices:
+      - id: a
+        text: "`[1, 2, 3]`"
+        correct: true
+      - id: b
+        text: "`[5, 1, 8]`"
+        feedback: Une file de priorité ne rend pas les éléments dans l'ordre d'insertion.
+      - id: c
+        text: "`[9, 8, 5]`"
+        feedback: Par défaut, PriorityQueue rend le plus petit en premier.
+      - id: d
+        text: "`[1, 3, 5]`"
+    explanation: |
+      Un tas rend toujours le plus petit élément restant, en O(log n). Pour le plus grand en
+      premier : `PriorityQueue(compareByDescending { it })`. Sortie vérifiée.
+
+  - id: algo.n3.backtracking.qcm-permutations
+    type: qcm
+    title: Combien de permutations ?
+    skills: [backtracking]
+    difficulty: 2
+    prompt: Combien de permutations la fonction de backtracking de la leçon produit-elle pour les lettres a, b, c, d ?
+    choices:
+      - id: a
+        text: "24"
+        correct: true
+      - id: b
+        text: "16"
+        feedback: 4² ; mais chaque lettre n'est utilisée qu'une fois.
+      - id: c
+        text: "12"
+      - id: d
+        text: "4"
+    explanation: |
+      4! = 4 × 3 × 2 × 1 = 24. Pour a, b, c, le programme donne réellement 6 permutations.
+      Avec 10 éléments, 3 628 800 : le backtracking explose vite, d'où l'importance d'élaguer.
+
+  - id: algo.n3.tris.match
+    type: match
+    title: Les tris efficaces
+    skills: [tris-efficaces]
+    difficulty: 3
+    prompt: Relie chaque tri à sa caractéristique.
+    pairs:
+      - left: Tri fusion
+        right: Toujours O(n log n) et stable, mais demande de la mémoire en plus
+      - left: Tri rapide
+        right: Très rapide en moyenne, O(n²) si le pivot est toujours mal choisi
+      - left: Tri par tas
+        right: Toujours O(n log n), en place, mais pas stable
+      - left: TimSort (Java, Python)
+        right: Fusion et insertion combinées, excellent sur des données partiellement triées
+    explanation: |
+      Aucun tri n'est meilleur partout : les bibliothèques choisissent selon les données
+      (TimSort pour les objets, une variante du tri rapide pour les types primitifs en Java).
+
+  - id: algo.n3.tris.qcm-pire-cas
+    type: qcm
+    title: Le pire cas du tri rapide
+    skills: [tris-efficaces]
+    difficulty: 4
+    prompt: Un tri rapide qui prend toujours le premier élément comme pivot reçoit une liste déjà triée. Que se passe-t-il ?
+    choices:
+      - id: a
+        text: Chaque partition ne retire qu'un élément ; le tri passe en O(n²).
+        correct: true
+      - id: b
+        text: Il est instantané, la liste est déjà triée.
+      - id: c
+        text: Il est en O(n log n), comme toujours.
+      - id: d
+        text: Il plante.
+        feedback: Il peut effectivement déborder la pile en version récursive sur une très grande liste, mais le problème de fond est la complexité.
+    explanation: |
+      Le pivot est le plus petit élément : un côté est vide, l'autre contient tout le reste.
+      Parade : un pivot aléatoire, ou la « médiane de trois ». Ce cas n'a rien de rare :
+      trier des données déjà triées est fréquent.

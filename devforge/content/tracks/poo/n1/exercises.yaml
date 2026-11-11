@@ -179,3 +179,60 @@ exercises:
       On crée le compte, on dépose **avant** de retirer (sinon `check` lève
       « Solde insuffisant »), puis on affiche. `compte.solde = 70` ne compile pas
       (`private set`), et `CompteBancaire` n'a pas de constructeur avec un solde initial.
+
+  - id: poo.n1.constructeurs.predict-ordre-init
+    type: predict-output
+    title: Dans quel ordre ?
+    skills: [constructeurs]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Compte(val titulaire: String) {
+          init { println("1. init : $titulaire") }
+          val solde = 0.also { println("2. propriété solde") }
+          init { println("3. second init") }
+
+          constructor(titulaire: String, depot: Int) : this(titulaire) {
+              println("4. constructeur secondaire : dépôt de $depot")
+          }
+      }
+
+      fun main() {
+          Compte("Ada", 100)
+      }
+    choices:
+      - id: a
+        text: "`1. init : Ada` / `2. propriété solde` / `3. second init` / `4. constructeur secondaire : dépôt de 100`"
+        correct: true
+      - id: b
+        text: "`4. constructeur secondaire : dépôt de 100` / `1. init : Ada` / `2. propriété solde` / `3. second init`"
+        feedback: "Le constructeur secondaire délègue d'abord au principal (`: this(titulaire)`) ; son corps s'exécute en dernier."
+      - id: c
+        text: "`2. propriété solde` / `1. init : Ada` / `3. second init` / `4. constructeur secondaire : dépôt de 100`"
+        feedback: Les propriétés ne passent pas avant les blocs init ; tout suit l'ordre d'écriture.
+      - id: d
+        text: "`1. init : Ada` / `3. second init` / `2. propriété solde` / `4. constructeur secondaire : dépôt de 100`"
+    explanation: |
+      Le constructeur secondaire appelle d'abord le principal. Celui-ci exécute les blocs `init`
+      et les initialiseurs de propriétés dans l'ordre où ils sont écrits ; ensuite seulement
+      vient le corps du constructeur secondaire. Sortie vérifiée.
+
+  - id: poo.n1.classes-objets.match-propriete-methode
+    type: match
+    title: Propriété ou méthode ?
+    skills: [proprietes-methodes, classes-objets]
+    difficulty: 2
+    prompt: Relie chaque élément de la classe `Commande` à la forme la plus adaptée.
+    pairs:
+      - left: Le montant total, calculé à partir des lignes
+        right: "val total: Int get() = …"
+      - left: Le statut, lisible par tous, modifié seulement par la commande
+        right: "var statut … private set"
+      - left: Envoyer la facture par e-mail
+        right: "fun envoyerFacture()"
+      - left: L'identifiant, fixé à la création
+        right: "val id: String (constructeur)"
+    explanation: |
+      Une propriété décrit un état bon marché à lire ; une méthode, une action. `private set`
+      garde le contrôle des changements dans la classe, et ce qui ne change jamais est un `val`.

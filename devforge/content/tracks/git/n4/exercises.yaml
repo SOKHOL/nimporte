@@ -1,0 +1,87 @@
+exercises:
+  - id: git.n4.conventions.qcm-version
+    type: qcm
+    title: Quelle prochaine version ?
+    skills: [messages-commits, versions-tags]
+    difficulty: 3
+    language: text
+    prompt: La dernière version est 1.4.2. Depuis, voici les commits. Quelle est la prochaine version selon le versionnage sémantique ?
+    code: |
+      fix(session): corrige le chronomètre
+      feat(profil): ajoute le radar de compétences
+      docs: met à jour le README
+    choices:
+      - id: a
+        text: 1.5.0
+        correct: true
+      - id: b
+        text: 1.4.3
+        feedback: "Il y a un `feat` : une nouveauté compatible fait monter la version mineure."
+      - id: c
+        text: 2.0.0
+        feedback: Aucun changement incompatible (`!` ou `BREAKING CHANGE`) n'est signalé.
+      - id: d
+        text: 1.4.2, car docs ne compte pas.
+    explanation: |
+      Le changement le plus fort l'emporte : `feat` → version mineure, et le correctif repart
+      à 0. Des outils comme semantic-release calculent cela automatiquement à partir des
+      messages de commit.
+
+  - id: git.n4.workflows.match
+    type: match
+    title: Le bon workflow
+    skills: [workflows]
+    difficulty: 3
+    prompt: Relie chaque situation au workflow le plus adapté.
+    pairs:
+      - left: Une équipe qui déploie en production plusieurs fois par jour
+        right: Trunk-based, avec des feature flags
+      - left: Une équipe qui livre chaque fonctionnalité après une revue
+        right: GitHub Flow
+      - left: Une application installée, avec des versions tous les trois mois et des correctifs sur les anciennes
+        right: GitFlow
+    explanation: |
+      Le workflow suit le rythme de livraison. Plus on livre souvent, plus les branches
+      doivent être courtes.
+
+  - id: git.n4.hooks.qcm
+    type: qcm
+    title: Un hook pour bloquer les secrets
+    skills: [hooks]
+    difficulty: 3
+    prompt: Un hook pre-commit local refuse les commits contenant des clés d'API. Est-ce suffisant pour protéger le dépôt ?
+    choices:
+      - id: a
+        text: Non, il peut être absent sur certaines machines ou contourné avec --no-verify ; il faut aussi une vérification côté serveur ou en CI.
+        correct: true
+      - id: b
+        text: Oui, les hooks sont partagés automatiquement avec le dépôt.
+        feedback: Le dossier .git/hooks n'est pas versionné ; chacun doit les installer.
+      - id: c
+        text: Oui, Git refuse toujours de pousser une clé d'API.
+      - id: d
+        text: Non, les hooks ne fonctionnent qu'avec GitHub.
+    explanation: |
+      Les hooks locaux sont une aide précieuse (retour immédiat), pas une garantie. La
+      barrière fiable s'exécute là où personne ne peut la contourner : la CI, ou la protection
+      contre les secrets de la plateforme (comme le push protection de GitHub).
+
+  - id: git.n4.conventions.fill
+    type: fill-blanks
+    title: Un message conventionnel
+    skills: [messages-commits]
+    difficulty: 2
+    language: text
+    prompt: Complète ce message pour une nouvelle fonctionnalité du module profil, qui casse la compatibilité de l'API.
+    code: |
+      {{1}}(profil){{2}}: remplace le score par un radar de compétences
+    blanks:
+      "1":
+        answers: [feat]
+        options: [feat, fix, docs, chore]
+      "2":
+        answers: ["!"]
+        options: ["!", "?", "+", "#"]
+    explanation: |
+      `feat` pour une fonctionnalité, la portée entre parenthèses, et `!` pour signaler un
+      changement incompatible : la prochaine version sera majeure.

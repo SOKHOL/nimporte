@@ -50,24 +50,39 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 ## Ce qui existe déjà
 
 - La carte des 31 parcours et de leurs prérequis : [`content/curriculum.yaml`](content/curriculum.yaml).
-- 9 parcours pilotes détaillés compétence par compétence : POO, Design patterns,
-  Architecture, System design, DevOps, **Gestion de la mémoire, JVM, Threads et
-  concurrence, Métaprogrammation et AOP**.
-- **33 leçons et 148 exercices**, couvrant 9 types d'exercices, et 5 boss.
-  **Complets du niveau 1 au niveau 5** :
+- 13 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
+  POO, Design patterns, Architecture, System design, DevOps, **Gestion de la mémoire,
+  JVM, Threads et concurrence, Métaprogrammation et AOP**.
+- **64 leçons et 296 exercices**, couvrant 9 types d'exercices, et 5 boss.
+  **10 parcours complets du niveau 1 au niveau 5** :
+  - fondations : types, boucles, collections, exceptions, complexité, nullabilité,
+    génériques, fonctions d'ordre supérieur, apprendre n'importe quel langage ;
+  - algorithmes : recherche et tris, piles, files, hachage, fenêtres glissantes, arbres,
+    tas, graphes, programmation dynamique, tries, union-find ;
+  - Git : commits, branches, fusions et conflits, rebase, reflog, bisect, flux d'équipe,
+    les objets internes de Git ;
+  - Linux : fichiers, permissions, pipes, scripts bash fiables, signaux, systemd, réseau,
+    SSH, diagnostic (charge, mémoire, strace, lsof, inodes), cgroups, namespaces, appels
+    système, mémoire virtuelle, durcissement, eBPF ;
+  - POO : encapsulation, égalité, héritage et composition, SOLID, immutabilité,
+    modélisation d'un domaine, traits, prototypes, au-delà de la POO ;
+  - design patterns : les 23 patterns du GoF, patterns d'entreprise, patterns de
+    résilience en production ;
   - mémoire : pile et tas, gestion manuelle en C, comptage de références, possession en
-    Rust, ramasse-miettes, fuites, caches du processeur, faux partage, allocateurs ;
+    Rust, ramasse-miettes, fuites, mémoire hors tas, caches du processeur, faux partage,
+    allocateurs ;
   - JVM : bytecode, zones mémoire, chargement des classes, JIT, stack traces, G1 et ZGC,
     jcmd, jstat, Flight Recorder, JVM en conteneur, escape analysis, GraalVM, FFM ;
   - concurrence : threads, `volatile`, interblocages, modèle mémoire Java, pools,
-    `CompletableFuture`, coroutines, threads virtuels, algorithmes sans verrou, acteurs ;
+    `CompletableFuture`, verrous avancés, `ThreadLocal`, coroutines, flux réactifs et
+    contre-pression, threads virtuels, algorithmes sans verrou, acteurs ;
   - métaprogrammation : annotations, réflexion, proxies, AOP, `@Transactional`, agents
     Java, plugins du compilateur, KSP, DSL Kotlin, macros.
 
-  Et en partie : POO (niveaux 1 à 3), design patterns (1 et 2), architecture, system
-  design et DevOps.
+  Et en partie : architecture, system design et DevOps.
 
-  Tous les extraits (Kotlin, C, Python, Rust) ont été exécutés pour vérifier les réponses attendues.
+  Tous les extraits (Kotlin, C, Python, Rust, JavaScript) ont été exécutés pour vérifier les
+  réponses attendues, et les sorties citées dans les cours Git et Linux sont des sorties réelles.
 - Un validateur (schémas + cohérence) avec ses tests, lancé par GitHub Actions.
 
 ## Structure

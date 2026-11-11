@@ -1,67 +1,64 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: linux
 title: Linux et shell
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Le terminal, les fichiers, les processus et les outils qui font tourner presque tous
+  les serveurs du monde ; jusqu'à diagnostiquer une machine en production.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: arborescence
-    title: Arborescence
-  - id: fichiers
-    title: Fichiers
-  - id: permissions
-    title: Permissions
-  - id: pipes
-    title: Pipes
-  - id: redirections
-    title: Redirections
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: processus
-    title: Processus
-  - id: signaux
-    title: Signaux
-  - id: variables-d-environnement
-    title: Variables d'environnement
-  - id: grep-sed-awk-find
-    title: Grep/sed/awk/find
-  - id: scripts-bash
-    title: Scripts bash
-- level: 3
-  title: Approfondir
-  skills:
-  - id: systemd
-    title: Systemd
-  - id: journaux
-    title: Journaux
-  - id: reseau-ss-curl-dig
-    title: Réseau (ss, curl, dig)
-  - id: ssh-et-cles
-    title: SSH et clés
-  - id: cron
-    title: Cron
-  - id: paquets
-    title: Paquets
-- level: 4
-  title: Concevoir
-  skills:
-  - id: diagnostic-de-performance-top-vmstat
-    title: Diagnostic de performance (top, vmstat, iostat, strace, lsof)
-  - id: systemes-de-fichiers
-    title: Systèmes de fichiers
-  - id: cgroups-et-namespaces
-    title: Cgroups et namespaces
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: appels-systeme
-    title: Appels système
-  - id: ordonnanceur
-    title: Ordonnanceur
-  - id: durcissement
-    title: Durcissement
-  - id: ebpf-apercu
-    title: EBPF (aperçu)
+  - level: 1
+    title: Le terminal
+    skills:
+      - id: navigation
+        title: Naviguer dans les fichiers
+      - id: permissions
+        title: Les permissions
+      - id: pipes-redirections
+        title: Pipes et redirections
+
+  - level: 2
+    title: Les outils du quotidien
+    skills:
+      - id: texte
+        title: grep, sort, uniq, awk, sed, find
+      - id: scripts-bash
+        title: Écrire des scripts bash fiables
+      - id: processus-signaux
+        title: Processus et signaux
+      - id: environnement
+        title: Variables d'environnement
+
+  - level: 3
+    title: Administrer une machine
+    skills:
+      - id: systemd
+        title: Services avec systemd et journalctl
+      - id: reseau-commandes
+        title: Le réseau en ligne de commande
+      - id: ssh
+        title: SSH et clés
+      - id: planification
+        title: Tâches planifiées (cron, timers)
+
+  - level: 4
+    title: Diagnostiquer
+    skills:
+      - id: charge-performance
+        title: Charge, CPU, mémoire, disque
+      - id: strace-lsof
+        title: strace et lsof
+      - id: systemes-fichiers
+        title: Disques, inodes et systèmes de fichiers
+      - id: conteneurs-linux
+        title: cgroups et namespaces
+
+  - level: 5
+    title: Sous le capot
+    skills:
+      - id: appels-systeme
+        title: Appels système
+      - id: ordonnanceur
+        title: L'ordonnanceur et la mémoire virtuelle
+      - id: durcissement
+        title: Durcir un serveur
+      - id: ebpf
+        title: eBPF, l'observabilité moderne

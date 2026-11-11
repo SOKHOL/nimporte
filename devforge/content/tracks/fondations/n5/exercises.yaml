@@ -1,0 +1,91 @@
+exercises:
+  - id: fondations.n5.paradigmes.match
+    type: match
+    title: Les paradigmes
+    skills: [paradigmes]
+    difficulty: 2
+    prompt: Relie chaque paradigme à son idée.
+    pairs:
+      - left: Impératif
+        right: Une suite d'instructions qui modifient l'état
+      - left: Orienté objet
+        right: Des objets qui protègent leur état et collaborent
+      - left: Fonctionnel
+        right: Des fonctions pures sur des données immuables
+      - left: Déclaratif
+        right: Décrire le résultat voulu, pas les étapes (SQL, Compose)
+      - left: Logique
+        right: Des faits et des règles dont la machine déduit les solutions
+    explanation: |
+      Un même problème s'exprime différemment selon le paradigme. Kotlin permet d'en
+      combiner plusieurs : objet pour le domaine, fonctionnel pour les transformations,
+      déclaratif pour l'interface.
+
+  - id: fondations.n5.langages.predict-python
+    type: predict-output
+    title: Les entiers de Python
+    skills: [comparer-langages]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme Python ?
+    code: |
+      print(2**63)
+      print(-7 // 2)
+      print(7 / 2)
+    choices:
+      - id: a
+        text: "`9223372036854775808` / `-4` / `3.5`"
+        correct: true
+      - id: b
+        text: "`-9223372036854775808` / `-3` / `3`"
+        feedback: Python agrandit ses entiers sans limite ; `//` arrondit vers le bas ; `/` donne toujours un flottant.
+      - id: c
+        text: "`9223372036854775808` / `-3` / `3.5`"
+        feedback: "`//` arrondit vers le bas (-4), alors que Kotlin tronque vers zéro (-3)."
+      - id: d
+        text: Une OverflowError.
+    explanation: |
+      Les entiers Python n'ont pas de limite : 2⁶³ s'affiche exactement (en Kotlin, un Long
+      déborderait). `//` arrondit vers moins l'infini : -3,5 devient -4. Et `/` donne toujours
+      un flottant. Sortie vérifiée.
+
+  - id: fondations.n5.langages.match-erreurs
+    type: match
+    title: Comment chaque langage gère les erreurs
+    skills: [comparer-langages]
+    difficulty: 3
+    prompt: Relie chaque langage à sa façon principale de signaler une erreur.
+    pairs:
+      - left: Go
+        right: "Une valeur d'erreur retournée avec le résultat (val, err :=)"
+      - left: Rust
+        right: "Un type Result<T, E> que le compilateur oblige à traiter"
+      - left: Kotlin
+        right: Des exceptions non vérifiées, et le type Result en option
+      - left: Java
+        right: Des exceptions, dont certaines vérifiées à la compilation
+    explanation: |
+      Retourner l'erreur rend le chemin d'échec visible dans le code ; les exceptions
+      allègent le code mais cachent ce chemin. Chaque langage fait un compromis différent.
+
+  - id: fondations.n5.apprendre.qcm-methode
+    type: qcm
+    title: Apprendre Go en une semaine
+    skills: [apprendre-langage]
+    difficulty: 2
+    prompt: Tu dois être opérationnel en Go la semaine prochaine. Quelle démarche est la plus efficace ?
+    choices:
+      - id: a
+        text: Les bases en une soirée, puis répondre aux questions clés (erreurs, mémoire, concurrence, outils), lire du code réel et écrire un petit projet complet.
+        correct: true
+      - id: b
+        text: Lire un livre de 800 pages en entier avant d'écrire une ligne de code.
+      - id: c
+        text: Traduire mot à mot son code Kotlin en Go.
+        feedback: On garde les idiomes de l'ancien langage, qui ne conviennent pas au nouveau.
+      - id: d
+        text: Regarder des vidéos sans pratiquer.
+    explanation: |
+      Un expert ne réapprend pas à programmer : il cherche comment le nouveau langage répond
+      aux questions qu'il connaît déjà, puis apprend ses idiomes en lisant du vrai code et
+      en construisant quelque chose de complet.

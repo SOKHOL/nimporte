@@ -1,0 +1,199 @@
+exercises:
+  - id: fondations.n2.collections.predict-notes
+    type: predict-output
+    title: Filtrer, transformer, résumer
+    skills: [collections]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          val notes = listOf(12, 7, 15, 9, 18, 7)
+          println(notes.filter { it >= 10 }.map { it * 2 }.sum())
+          println(notes.toSet().size)
+      }
+    choices:
+      - id: a
+        text: "`90` / `5`"
+        correct: true
+      - id: b
+        text: "`45` / `6`"
+        feedback: "Les notes gardées (12, 15, 18) sont doublées avant la somme ; et l'ensemble supprime le 7 en double."
+      - id: c
+        text: "`90` / `6`"
+      - id: d
+        text: "`136` / `5`"
+    explanation: |
+      `filter` garde 12, 15 et 18 ; `map` les double (24, 30, 36) ; `sum` donne 90. `toSet()`
+      supprime le doublon 7 : il reste 5 éléments. Sortie vérifiée.
+
+  - id: fondations.n2.recursivite.predict-chiffres
+    type: predict-output
+    title: Une fonction qui s'appelle
+    skills: [recursivite]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun sommeChiffres(n: Int): Int = if (n < 10) n else n % 10 + sommeChiffres(n / 10)
+
+      fun main() {
+          println(sommeChiffres(2026))
+      }
+    choices:
+      - id: a
+        text: "`10`"
+        correct: true
+      - id: b
+        text: "`2026`"
+      - id: c
+        text: "`6`"
+        feedback: "C'est le premier chiffre traité (2026 % 10) ; la récursion ajoute les autres."
+      - id: d
+        text: Une StackOverflowError.
+        feedback: "Le cas de base `n < 10` arrête la récursion : 2026 → 202 → 20 → 2."
+    explanation: |
+      6 + sommeChiffres(202) = 6 + 2 + sommeChiffres(20) = 6 + 2 + 0 + sommeChiffres(2) =
+      6 + 2 + 0 + 2 = 10. Sortie vérifiée.
+
+  - id: fondations.n2.exceptions.predict-finally
+    type: predict-output
+    title: Le dernier mot à finally
+    skills: [exceptions]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun lire(): String {
+          try {
+              println("lecture")
+              return "contenu"
+          } finally {
+              println("fermeture")
+          }
+      }
+
+      fun main() {
+          println(lire())
+      }
+    choices:
+      - id: a
+        text: "`lecture` / `fermeture` / `contenu`"
+        correct: true
+      - id: b
+        text: "`lecture` / `contenu`"
+        feedback: "`finally` s'exécute toujours, même après un `return`."
+      - id: c
+        text: "`lecture` / `contenu` / `fermeture`"
+        feedback: "`finally` s'exécute avant que `lire()` rende la main ; `main` affiche le résultat ensuite."
+      - id: d
+        text: "`fermeture` / `lecture` / `contenu`"
+    explanation: |
+      Le `return` prépare la valeur, puis `finally` s'exécute, puis la fonction rend la main
+      et `main` affiche « contenu ». C'est ce qui garantit la fermeture des ressources.
+      Sortie vérifiée.
+
+  - id: fondations.n2.recursivite.bug-factorielle
+    type: find-bug
+    title: La récursion sans fin
+    skills: [recursivite]
+    difficulty: 2
+    language: kotlin
+    prompt: "`factorielle(5)` provoque une StackOverflowError. Touche la ligne responsable."
+    code: |
+      fun factorielle(n: Int): Long {
+          if (n == 0) return 1
+          return n * factorielle(n + 1)
+      }
+    bug_lines: [3]
+    explanation: |
+      Le problème doit **rapetisser** à chaque appel pour atteindre le cas de base. Ici,
+      `n + 1` s'en éloigne : 5, 6, 7… jusqu'au débordement de la pile. Correction :
+      `n * factorielle(n - 1)`.
+
+  - id: fondations.n2.chaines.qcm-concatenation
+    type: qcm
+    title: Construire une longue chaîne
+    skills: [chaines]
+    difficulty: 3
+    language: kotlin
+    prompt: Pourquoi ce code devient-il très lent pour 100 000 lignes ?
+    code: |
+      var rapport = ""
+      for (ligne in lignes) {
+          rapport += ligne + "\n"
+      }
+    choices:
+      - id: a
+        text: Les String sont immuables ; chaque `+=` recopie toute la chaîne déjà construite.
+        correct: true
+      - id: b
+        text: La boucle for est lente en Kotlin.
+      - id: c
+        text: Le caractère \n est coûteux.
+      - id: d
+        text: Il n'est pas lent, le compilateur optimise toujours ce cas.
+        feedback: Il optimise une concaténation isolée, pas une accumulation dans une boucle.
+    explanation: |
+      À chaque tour, une nouvelle chaîne est créée en copiant l'ancienne : le coût total
+      grandit comme le carré du nombre de lignes. Solution :
+      `val rapport = buildString { for (ligne in lignes) appendLine(ligne) }`, ou
+      `lignes.joinToString("\n")`.
+
+  - id: fondations.n2.collections.match
+    type: match
+    title: La bonne collection
+    skills: [collections]
+    difficulty: 1
+    prompt: Relie chaque besoin à la collection adaptée.
+    pairs:
+      - left: Garder l'ordre d'arrivée des messages, doublons compris
+        right: List
+      - left: Savoir très vite si un pseudo est déjà pris
+        right: Set
+      - left: Retrouver le score d'un joueur à partir de son nom
+        right: Map
+    explanation: |
+      Choisir la bonne collection est la première optimisation : chercher dans un `Set` ou
+      une `Map` est quasi instantané, chercher dans une `List` oblige à la parcourir (voir
+      le niveau 3).
+
+  - id: fondations.n2.portee.predict-masquage
+    type: predict-output
+    title: Portée et capture
+    skills: [portee]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          var compteur = 0
+          val incrementer = { compteur++ }
+          incrementer()
+          incrementer()
+          println(compteur)
+
+          val x = 1
+          run {
+              val x = 2
+              println(x)
+          }
+          println(x)
+      }
+    choices:
+      - id: a
+        text: "`2` / `2` / `1`"
+        correct: true
+      - id: b
+        text: "`0` / `2` / `1`"
+        feedback: "La lambda capture la variable elle-même, pas une copie de sa valeur : elle modifie bien `compteur`."
+      - id: c
+        text: "`2` / `2` / `2`"
+        feedback: "Le `x` déclaré dans le bloc masque l'extérieur seulement à l'intérieur du bloc ; dehors, `x` vaut toujours 1."
+      - id: d
+        text: Erreur de compilation, `x` est déclaré deux fois.
+        feedback: "Kotlin l'autorise parce que le second `x` est dans une portée imbriquée (l'IDE signale tout de même le masquage, souvent source de confusion)."
+    explanation: |
+      Une lambda **capture** les variables de la portée où elle est créée : elle lit et
+      modifie le vrai `compteur`. Un nom déclaré dans un bloc **masque** le même nom extérieur
+      jusqu'à la fin du bloc seulement. Sortie vérifiée.

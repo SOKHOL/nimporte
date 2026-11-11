@@ -1,0 +1,152 @@
+exercises:
+  - id: algo.n2.piles.predict-parentheses
+    type: predict-output
+    title: Des parenthèses équilibrées
+    skills: [piles-files]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun equilibre(texte: String): Boolean {
+          val pile = ArrayDeque<Char>()
+          val paires = mapOf(')' to '(', ']' to '[', '}' to '{')
+          for (c in texte) {
+              when (c) {
+                  '(', '[', '{' -> pile.addLast(c)
+                  ')', ']', '}' -> if (pile.removeLastOrNull() != paires[c]) return false
+              }
+          }
+          return pile.isEmpty()
+      }
+
+      fun main() {
+          println(listOf("(a[b]{c})", "(]", "((", "f(x) = [1, 2]").map { equilibre(it) })
+      }
+    choices:
+      - id: a
+        text: "`[true, false, false, true]`"
+        correct: true
+      - id: b
+        text: "`[true, false, true, true]`"
+        feedback: "Pour « (( », la pile n'est pas vide à la fin : il manque deux fermantes."
+      - id: c
+        text: "`[true, true, false, true]`"
+        feedback: "« (] » ferme avec un crochet ce qui a été ouvert avec une parenthèse."
+      - id: d
+        text: "`[false, false, false, false]`"
+    explanation: |
+      Chaque ouvrante est empilée ; chaque fermante doit correspondre à la dernière ouvrante.
+      À la fin, la pile doit être vide. Sortie vérifiée.
+
+  - id: algo.n2.hachage.predict-deux-somme
+    type: predict-output
+    title: La somme cherchée
+    skills: [tables-hachage]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun deuxSomme(nombres: List<Int>, cible: Int): Pair<Int, Int>? {
+          val vus = HashMap<Int, Int>()
+          for ((i, n) in nombres.withIndex()) {
+              vus[cible - n]?.let { return it to i }
+              vus[n] = i
+          }
+          return null
+      }
+
+      fun main() {
+          println(deuxSomme(listOf(2, 7, 11, 15), 18))
+      }
+    choices:
+      - id: a
+        text: "`(1, 2)`"
+        correct: true
+      - id: b
+        text: "`(7, 11)`"
+        feedback: La fonction renvoie les indices, pas les valeurs.
+      - id: c
+        text: "`(0, 3)`"
+        feedback: 2 + 15 = 17, pas 18.
+      - id: d
+        text: "`null`"
+    explanation: |
+      En arrivant sur 11 (indice 2), on cherche 18 − 11 = 7, déjà vu à l'indice 1 : réponse
+      `(1, 2)`, en une seule passe, O(n) au lieu de O(n²). Sortie vérifiée.
+
+  - id: algo.n2.fenetre.predict-semaine
+    type: predict-output
+    title: La meilleure fenêtre
+    skills: [deux-pointeurs]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun meilleureSemaine(ventes: IntArray, k: Int): Int {
+          var somme = ventes.take(k).sum()
+          var meilleure = somme
+          for (i in k until ventes.size) {
+              somme += ventes[i] - ventes[i - k]
+              meilleure = maxOf(meilleure, somme)
+          }
+          return meilleure
+      }
+
+      fun main() {
+          println(meilleureSemaine(intArrayOf(3, 1, 4, 1, 5, 9, 2, 6), 3))
+      }
+    choices:
+      - id: a
+        text: "`17`"
+        correct: true
+      - id: b
+        text: "`16`"
+        feedback: "5 + 9 + 2 = 16, mais la fenêtre suivante, 9 + 2 + 6, fait mieux."
+      - id: c
+        text: "`15`"
+      - id: d
+        text: "`31`"
+        feedback: C'est la somme totale ; on cherche 3 éléments consécutifs.
+    explanation: |
+      Fenêtres de 3 : 8, 6, 10, 15, 16, 17. À chaque pas, on ajoute l'élément qui entre et on
+      retire celui qui sort : O(n) au lieu de O(n·k). Sortie vérifiée.
+
+  - id: algo.n2.structures.match
+    type: match
+    title: La bonne structure
+    skills: [piles-files, tables-hachage, listes-chainees]
+    difficulty: 2
+    prompt: Relie chaque besoin à la structure adaptée.
+    pairs:
+      - left: Implémenter « Annuler » dans un éditeur
+        right: Une pile
+      - left: Traiter les commandes dans leur ordre d'arrivée
+        right: Une file
+      - left: Savoir en O(1) si un utilisateur est déjà connecté
+        right: Une table de hachage
+      - left: Insérer souvent en tête, sans jamais accéder au milieu
+        right: Une liste chaînée
+    explanation: |
+      Le choix de la structure détermine la complexité de tout le reste. Avant d'optimiser
+      un algorithme, vérifie qu'il utilise la bonne structure.
+
+  - id: algo.n2.hachage.qcm-doublons
+    type: qcm
+    title: Détecter un doublon vite
+    skills: [tables-hachage]
+    difficulty: 2
+    prompt: Quelle est la façon la plus efficace de savoir si une liste de n éléments contient un doublon ?
+    choices:
+      - id: a
+        text: Ajouter les éléments dans un HashSet en s'arrêtant dès qu'un ajout échoue (O(n)).
+        correct: true
+      - id: b
+        text: Comparer chaque élément à tous les autres (O(n²)).
+      - id: c
+        text: Trier puis comparer les voisins (O(n log n)).
+        feedback: Correct et sans mémoire supplémentaire, mais plus lent que le HashSet.
+      - id: d
+        text: Faire une recherche dichotomique pour chaque élément.
+    explanation: |
+      `HashSet.add` renvoie `false` si l'élément y est déjà : une seule passe, O(n) en
+      moyenne. Le tri reste une bonne option si la mémoire est très contrainte.

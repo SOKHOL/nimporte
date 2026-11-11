@@ -1,0 +1,138 @@
+exercises:
+  - id: fondations.n3.complexite.match
+    type: match
+    title: Reconnaître une complexité
+    skills: [complexite]
+    difficulty: 2
+    prompt: Relie chaque opération à sa complexité.
+    pairs:
+      - left: Lire l'élément d'indice 500 d'une ArrayList
+        right: O(1)
+      - left: Chercher un mot dans un dictionnaire trié en ouvrant au milieu, puis au milieu de la moitié…
+        right: O(log n)
+      - left: Calculer la somme d'une liste
+        right: O(n)
+      - left: Trier une liste avec un bon algorithme
+        right: O(n log n)
+      - left: Comparer chaque élément d'une liste à tous les autres
+        right: O(n²)
+    explanation: |
+      La complexité ne dit pas combien de millisecondes : elle dit comment le temps
+      **grandit** avec les données. C'est elle qui décide si un programme tiendra un million
+      d'utilisateurs.
+
+  - id: fondations.n3.structures.qcm-mesure
+    type: qcm
+    title: 765 ms contre 1 ms
+    skills: [structures-adaptees, complexite]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Faire 10 000 recherches dans 100 000 nombres prend 765 ms avec `liste.contains(x)`
+      et 1 ms avec `ensemble.contains(x)` (un HashSet). Pourquoi ?
+    code: |
+      val liste = (0 until 100_000).toList()
+      val ensemble = liste.toHashSet()
+    choices:
+      - id: a
+        text: La liste est parcourue élément par élément (O(n)) ; le HashSet calcule directement où chercher (O(1)).
+        correct: true
+      - id: b
+        text: Le HashSet est trié, donc il fait une recherche dichotomique.
+        feedback: Un HashSet n'est pas trié ; il utilise le hashCode pour trouver la bonne case.
+      - id: c
+        text: Le JIT n'optimise pas les listes.
+      - id: d
+        text: La liste contient des doublons.
+    explanation: |
+      Mesures réelles. Une recherche dans une liste coûte en moyenne n/2 comparaisons ; dans
+      un HashSet, un calcul de hash et une ou deux comparaisons. Dans une boucle, la
+      différence devient celle entre O(n²) et O(n).
+
+  - id: fondations.n3.complexite.qcm-boucles
+    type: qcm
+    title: Deux boucles
+    skills: [complexite]
+    difficulty: 2
+    language: kotlin
+    prompt: Quelle est la complexité de cette fonction ?
+    code: |
+      fun aDesDoublons(liste: List<Int>): Boolean {
+          for (i in liste.indices) {
+              for (j in i + 1 until liste.size) {
+                  if (liste[i] == liste[j]) return true
+              }
+          }
+          return false
+      }
+    choices:
+      - id: a
+        text: O(n²)
+        correct: true
+      - id: b
+        text: O(n)
+      - id: c
+        text: O(log n)
+      - id: d
+        text: O(1)
+    explanation: |
+      Pour chaque élément, on parcourt tous les suivants : environ n²/2 comparaisons, soit
+      O(n²). Version O(n) : `liste.size != liste.toSet().size`, ou un HashSet rempli au fur
+      et à mesure.
+
+  - id: fondations.n3.nullabilite.predict-elvis
+    type: predict-output
+    title: Naviguer dans les null
+    skills: [nullabilite]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      data class Adresse(val ville: String?)
+      data class Client(val adresse: Adresse?)
+
+      fun main() {
+          val a = Client(Adresse("Lyon"))
+          val b = Client(null)
+          val c = Client(Adresse(null))
+          println(a.adresse?.ville ?: "inconnue")
+          println(b.adresse?.ville ?: "inconnue")
+          println(c.adresse?.ville?.length ?: -1)
+      }
+    choices:
+      - id: a
+        text: "`Lyon` / `inconnue` / `-1`"
+        correct: true
+      - id: b
+        text: "`Lyon` / `null` / `null`"
+        feedback: "`?:` remplace le null par la valeur de droite."
+      - id: c
+        text: "`Lyon` / une NullPointerException"
+        feedback: "`?.` ne lève jamais d'exception : il produit null et passe la main à `?:`."
+      - id: d
+        text: "`Lyon` / `inconnue` / `0`"
+    explanation: |
+      `?.` continue seulement si la valeur n'est pas nulle, sinon produit `null`. `?:` fournit
+      alors une valeur par défaut. Aucune exception possible. Sortie vérifiée.
+
+  - id: fondations.n3.typage.qcm
+    type: qcm
+    title: Quand l'erreur apparaît-elle ?
+    skills: [typage]
+    difficulty: 2
+    prompt: Une fonction rarement appelée passe un texte là où un nombre est attendu. Quand l'erreur est-elle détectée ?
+    choices:
+      - id: a
+        text: En Kotlin, à la compilation ; en Python, seulement quand cette ligne est exécutée.
+        correct: true
+      - id: b
+        text: Dans les deux langages, à la compilation.
+      - id: c
+        text: Dans les deux langages, seulement à l'exécution.
+      - id: d
+        text: Jamais, les deux langages convertissent automatiquement.
+    explanation: |
+      Le typage statique attrape les erreurs de type avant toute exécution. En typage
+      dynamique, une erreur sur un chemin rarement emprunté peut dormir des mois avant
+      d'exploser en production : d'où l'importance des tests (et des annotations de type,
+      comme les *type hints* de Python ou TypeScript).

@@ -1,0 +1,153 @@
+exercises:
+  - id: algo.n4.graphes.predict-bfs
+    type: predict-output
+    title: Les degrés de séparation
+    skills: [graphes]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun bfs(graphe: Map<String, List<String>>, depart: String): Map<String, Int> {
+          val distances = mutableMapOf(depart to 0)
+          val file = ArrayDeque(listOf(depart))
+          while (file.isNotEmpty()) {
+              val courant = file.removeFirst()
+              for (voisin in graphe[courant].orEmpty()) {
+                  if (voisin !in distances) {
+                      distances[voisin] = distances.getValue(courant) + 1
+                      file.addLast(voisin)
+                  }
+              }
+          }
+          return distances
+      }
+
+      fun main() {
+          val amis = mapOf("Ada" to listOf("Bob", "Cy"), "Bob" to listOf("Dan"), "Cy" to listOf("Dan"), "Dan" to listOf("Eve"))
+          println(bfs(amis, "Ada"))
+      }
+    choices:
+      - id: a
+        text: "`{Ada=0, Bob=1, Cy=1, Dan=2, Eve=3}`"
+        correct: true
+      - id: b
+        text: "`{Ada=0, Bob=1, Cy=2, Dan=3, Eve=4}`"
+        feedback: Bob et Cy sont tous deux des voisins directs d'Ada.
+      - id: c
+        text: "`{Ada=0, Bob=1, Cy=1, Dan=3, Eve=4}`"
+        feedback: Dan est découvert depuis Bob au niveau 2 ; le chemin par Cy n'est pas plus court.
+      - id: d
+        text: "`{Ada=0, Bob=1, Cy=1, Dan=2}`"
+    explanation: |
+      BFS explore niveau par niveau : Ada (0), puis ses voisins (1), puis leurs voisins non
+      encore vus (2), etc. Chaque nœud reçoit sa distance minimale en nombre d'étapes.
+      Sortie vérifiée.
+
+  - id: algo.n4.dijkstra.qcm-distances
+    type: qcm
+    title: Le plus court chemin
+    skills: [plus-court-chemin]
+    difficulty: 3
+    prompt: "Routes : A→B (4), A→C (1), C→B (2), C→D (5), B→D (1). Quelles distances Dijkstra calcule-t-il depuis A ?"
+    choices:
+      - id: a
+        text: "A=0, B=3, C=1, D=4"
+        correct: true
+      - id: b
+        text: "A=0, B=4, C=1, D=5"
+        feedback: Passer par C pour aller à B coûte 1 + 2 = 3, moins que la route directe de 4.
+      - id: c
+        text: "A=0, B=3, C=1, D=6"
+        feedback: D se rejoint par B (3 + 1 = 4), plus court que par C (1 + 5 = 6).
+      - id: d
+        text: "A=0, B=4, C=1, D=6"
+    explanation: |
+      Dijkstra traite toujours le nœud le plus proche connu : C (1), puis B (3, via C), puis
+      D (4, via B). Résultat vérifié en exécutant l'algorithme.
+
+  - id: algo.n4.topologique.qcm-ordre
+    type: qcm
+    title: Dans quel ordre compiler ?
+    skills: [tri-topologique]
+    difficulty: 3
+    prompt: |
+      Dépendances : model → domain, domain → data et app, data → app, markdown → app
+      (« A → B » signifie « B a besoin de A »). Quel ordre de compilation est valide ?
+    choices:
+      - id: a
+        text: markdown, model, domain, data, app
+        correct: true
+      - id: b
+        text: app, data, domain, model, markdown
+        feedback: C'est l'ordre inverse ; app a besoin de tous les autres.
+      - id: c
+        text: model, data, domain, markdown, app
+        feedback: data a besoin de domain, qui doit donc passer avant.
+      - id: d
+        text: domain, model, markdown, data, app
+    explanation: |
+      Le tri topologique prend d'abord ce qui n'a aucune dépendance restante (markdown,
+      model), puis ce qui se libère (domain, data), et enfin app. C'est l'ordre réellement
+      calculé, et ce que fait Gradle avec les modules de cette app.
+
+  - id: algo.n4.dp.qcm-fibonacci
+    type: qcm
+    title: Mémoriser change tout
+    skills: [programmation-dynamique]
+    difficulty: 3
+    prompt: Calculer fib(30) avec la version récursive naïve demande 2 692 537 appels. Combien en demande la version qui mémorise les résultats ?
+    choices:
+      - id: a
+        text: environ 60
+        correct: true
+      - id: b
+        text: environ 30 000
+      - id: c
+        text: environ 1 million
+      - id: d
+        text: Autant, la mémorisation ne change que la mémoire utilisée.
+    explanation: |
+      Mesuré : 59 appels. Sans mémoire, fib(28) est recalculé 2 fois, fib(27) 3 fois… la
+      croissance est exponentielle. Avec mémoire, chaque valeur n'est calculée qu'une fois :
+      O(n). C'est toute l'idée de la programmation dynamique.
+
+  - id: algo.n4.glouton.qcm-monnaie
+    type: qcm
+    title: Quand le glouton se trompe
+    skills: [glouton, programmation-dynamique]
+    difficulty: 3
+    prompt: Pour rendre 6 avec des pièces de 1, 3 et 4, combien de pièces donne l'algorithme glouton (toujours la plus grosse pièce possible), et combien en faut-il au minimum ?
+    choices:
+      - id: a
+        text: Glouton 3 (4 + 1 + 1), minimum 2 (3 + 3)
+        correct: true
+      - id: b
+        text: Glouton 2, minimum 2
+      - id: c
+        text: Glouton 6, minimum 2
+      - id: d
+        text: Glouton 2 (3 + 3), minimum 2
+        feedback: Le glouton prend d'abord 4, la plus grosse pièce possible, et ne revient jamais en arrière.
+    explanation: |
+      Résultats réels : 3 pièces pour le glouton, 2 pour la programmation dynamique. Le
+      glouton est optimal pour certains systèmes (comme l'euro), pas pour tous : il faut le
+      prouver avant de lui faire confiance.
+
+  - id: algo.n4.graphes.match
+    type: match
+    title: Le bon algorithme de graphe
+    skills: [graphes, plus-court-chemin, tri-topologique]
+    difficulty: 3
+    prompt: Relie chaque problème à l'algorithme adapté.
+    pairs:
+      - left: Le plus petit nombre de correspondances entre deux stations
+        right: Parcours en largeur (BFS)
+      - left: Le trajet routier le plus court en kilomètres
+        right: Dijkstra
+      - left: L'ordre de compilation de modules interdépendants
+        right: Tri topologique
+      - left: Savoir si une dépendance circulaire existe
+        right: Parcours en profondeur (DFS) avec détection de cycle
+    explanation: |
+      Reconnaître un graphe caché dans un problème (stations, routes, modules) est souvent
+      l'étape la plus difficile. Ensuite, l'algorithme est connu.

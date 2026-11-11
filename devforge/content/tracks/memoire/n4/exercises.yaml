@@ -134,3 +134,100 @@ exercises:
       Dans une `WeakHashMap`, quand une clé n'est plus accessible ailleurs, le GC la
       libère et l'entrée disparaît. Attention : si la **valeur** référence la clé,
       la clé reste accessible et rien n'est libéré.
+
+  - id: memoire.n4.hors-tas.qcm-direct
+    type: qcm
+    title: 200 Mo invisibles
+    skills: [hors-tas]
+    difficulty: 4
+    language: java
+    prompt: |
+      Ce programme est lancé avec `-XX:MaxDirectMemorySize=256m`. Juste après la première
+      allocation, il mesure le tas utilisé. Que se passe-t-il ?
+    code: |
+      ByteBuffer b1 = ByteBuffer.allocateDirect(200 * 1024 * 1024);
+      Runtime r = Runtime.getRuntime();
+      System.out.println((r.totalMemory() - r.freeMemory()) / (1024 * 1024) + " Mo de tas");
+      ByteBuffer b2 = ByteBuffer.allocateDirect(200 * 1024 * 1024);
+    choices:
+      - id: a
+        text: "Le tas utilisé n'est que de quelques Mo ; la seconde allocation lève une OutOfMemoryError « Cannot reserve … bytes of direct buffer memory »."
+        correct: true
+      - id: b
+        text: Le tas utilisé est d'environ 200 Mo ; la seconde allocation réussit.
+        feedback: "`allocateDirect` alloue hors du tas : seul un petit objet `DirectByteBuffer` est sur le tas."
+      - id: c
+        text: Le tas utilisé est d'environ 200 Mo ; la seconde allocation lève « Java heap space ».
+      - id: d
+        text: Les deux allocations réussissent, la limite ne concerne que le tas.
+        feedback: "`MaxDirectMemorySize` limite justement les buffers directs."
+    explanation: |
+      Mesure réelle : `tas utilisé : 2 Mo`, puis `OutOfMemoryError: Cannot reserve 209715200
+      bytes of direct buffer memory (allocated: 209715200, limit: 268435456)`. Un heap dump
+      ne montrerait presque rien : c'est pour ça que les problèmes de mémoire hors tas sont
+      difficiles à trouver.
+
+  - id: memoire.n4.hors-tas.scenario-rss
+    type: scenario
+    title: Le tas est sage, le conteneur meurt
+    skills: [hors-tas, heap-dump]
+    difficulty: 5
+    prompt: |
+      Une passerelle basée sur Netty tourne avec `-Xmx1g` dans un conteneur limité à 1,5 Go.
+      Elle est tuée (OOMKilled) environ une fois par jour, aux heures de pointe.
+    start: debut
+    nodes:
+      debut:
+        text: Les métriques montrent un tas qui ne dépasse jamais 700 Mo. Par quoi commences-tu ?
+        options:
+          - text: Je compare la RSS du processus à la taille du tas, pour savoir où est l'écart.
+            next: ecart
+            points: 3
+          - text: Je prends un heap dump.
+            next: dump
+            points: 1
+            feedback: Le tas n'est pas le problème ici, le dump ne montrera pas grand-chose.
+      dump:
+        text: Le heap dump fait 650 Mo et ne contient rien de suspect, à part quelques milliers de petits objets DirectByteBuffer. Que regardes-tu ?
+        options:
+          - text: La mémoire réelle du processus et ce qu'elle contient hors du tas.
+            next: ecart
+            points: 2
+      ecart:
+        text: |
+          Aux heures de pointe, la RSS atteint 1,45 Go pour 700 Mo de tas. Tu relances avec
+          `-XX:NativeMemoryTracking=summary` et compares deux `summary.diff`. La ligne
+          `Other` passe de 150 Mo à 620 Mo. Qu'est-ce que c'est, probablement ?
+        options:
+          - text: Les buffers directs de Netty, dont la limite par défaut vaut -Xmx, soit 1 Go en plus du tas.
+            next: correction
+            points: 3
+          - text: Une fuite dans le tas, mal comptée par NMT.
+            next: fausse-piste
+            points: 0
+      fausse-piste:
+        text: "Le tas reste à 700 Mo pendant toute la montée. Que t'indique le MBean java.nio:type=BufferPool,name=direct ?"
+        options:
+          - text: Que la mémoire directe utilisée suit exactement la croissance de la ligne Other.
+            next: correction
+            points: 1
+      correction:
+        text: Comment corriges-tu ?
+        options:
+          - text: "Je fixe -XX:MaxDirectMemorySize (par exemple 256m), je règle la taille des pools Netty, et je garde tas + direct + metaspace + piles sous la limite du conteneur avec de la marge."
+            next: resolu
+            points: 3
+          - text: Je passe -Xmx à 1,4g pour que la JVM ait plus de place.
+            next: pire
+            points: 0
+            feedback: "Un tas plus grand laisse moins de place hors tas, et relève aussi la limite des buffers directs."
+      resolu:
+        ending: success
+        text: "✅ La RSS plafonne à 1,2 Go aux heures de pointe ; plus aucun OOMKilled."
+      pire:
+        ending: failure
+        text: "❌ Le conteneur est tué deux fois plus souvent : il reste encore moins de place hors du tas."
+    explanation: |
+      Le budget mémoire d'un conteneur Java se calcule en entier : tas, metaspace, piles,
+      code JIT, GC et buffers directs. Par défaut, `MaxDirectMemorySize` vaut `-Xmx` : une
+      application réseau peut doubler sa consommation sans que le tas bouge.

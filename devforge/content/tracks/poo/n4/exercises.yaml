@@ -1,0 +1,148 @@
+exercises:
+  - id: poo.n4.uml.match-fleches
+    type: match
+    title: Lire un diagramme de classes
+    skills: [uml]
+    difficulty: 2
+    prompt: Relie chaque relation UML à son sens.
+    pairs:
+      - left: Héritage (triangle vide)
+        right: « Est une sorte de »
+      - left: Réalisation (pointillés et triangle)
+        right: Implémente une interface
+      - left: Composition (losange plein)
+        right: La partie disparaît avec le tout
+      - left: Agrégation (losange vide)
+        right: La partie peut exister sans le tout
+      - left: Dépendance (flèche pointillée)
+        right: Utilise ponctuellement, sans garder de référence
+    explanation: |
+      Une réservation n'existe pas sans sa séance : composition. Un joueur peut changer
+      d'équipe : agrégation. Ces nuances guident aussi le code (qui crée, qui détruit,
+      qui possède).
+
+  - id: poo.n4.contrats.qcm-exceptions
+    type: qcm
+    title: require ou check ?
+    skills: [invariants-contrats]
+    difficulty: 2
+    language: kotlin
+    prompt: Quelles exceptions sont levées ici, dans l'ordre ?
+    code: |
+      class Reservation(val places: Int, private val capacite: Int) {
+          var confirmee = false
+              private set
+
+          init { require(places in 1..capacite) { "places hors limites : $places" } }
+
+          fun confirmer() {
+              check(!confirmee) { "déjà confirmée" }
+              confirmee = true
+          }
+      }
+
+      // 1) Reservation(0, 10)
+      // 2) val r = Reservation(2, 10); r.confirmer(); r.confirmer()
+    choices:
+      - id: a
+        text: IllegalArgumentException, puis IllegalStateException.
+        correct: true
+      - id: b
+        text: IllegalStateException, puis IllegalArgumentException.
+      - id: c
+        text: Deux IllegalArgumentException.
+      - id: d
+        text: Aucune, require et check ne font qu'afficher un avertissement.
+    explanation: |
+      `require` vérifie un **argument** (précondition) : `IllegalArgumentException`.
+      `check` vérifie l'**état** de l'objet : `IllegalStateException`. Messages réels :
+      « places hors limites : 0 » et « déjà confirmée ».
+
+  - id: poo.n4.lsp.qcm-liste
+    type: qcm
+    title: Le contrat trahi
+    skills: [lsp-avance]
+    difficulty: 4
+    language: kotlin
+    prompt: Que se passe-t-il, et quel principe est en jeu ?
+    code: |
+      fun ajouterZero(liste: MutableList<Int>) {
+          liste.add(0)
+      }
+
+      val lecture = listOf(1, 2)
+      ajouterZero(lecture as MutableList<Int>)
+    choices:
+      - id: a
+        text: UnsupportedOperationException ; l'objet se présente comme une MutableList mais refuse add (substitution de Liskov).
+        correct: true
+      - id: b
+        text: "La liste devient `[1, 2, 0]`."
+      - id: c
+        text: Une ClassCastException au moment du cast.
+        feedback: Le cast réussit, car la liste Java sous-jacente implémente l'interface ; c'est l'appel à add qui échoue.
+      - id: d
+        text: Une erreur de compilation.
+    explanation: |
+      Sortie réelle : `UnsupportedOperationException`. Un objet qui implémente une interface
+      mais refuse une de ses opérations viole Liskov. Kotlin réduit le risque en distinguant
+      `List` et `MutableList` dans les types : le cast forcé est la vraie erreur ici.
+
+  - id: poo.n4.modelisation.qcm-entite
+    type: qcm
+    title: Entité ou value object ?
+    skills: [modelisation]
+    difficulty: 2
+    multiple: true
+    prompt: Lesquels sont des value objects (définis uniquement par leurs valeurs, interchangeables) ? (plusieurs réponses)
+    choices:
+      - id: a
+        text: Un montant de 12,50 €
+        correct: true
+      - id: b
+        text: Une adresse postale
+        correct: true
+      - id: c
+        text: Un membre inscrit
+        feedback: "Un membre garde son identité même s'il change de nom ou d'adresse : c'est une entité."
+      - id: d
+        text: Une commande numéro 4521
+        feedback: "Elle a une identité et un cycle de vie (créée, payée, expédiée) : c'est une entité."
+    explanation: |
+      Deux montants de 12,50 € sont interchangeables : value object, immuable. Deux membres
+      homonymes restent deux personnes : entité, identifiée par un identifiant stable.
+
+  - id: poo.n4.modelisation.review-anemique
+    type: code-review
+    title: "Revue de code : le modèle anémique"
+    skills: [modelisation, invariants-contrats]
+    difficulty: 3
+    language: kotlin
+    prompt: Trouve au moins 2 problèmes de modélisation.
+    code: |
+      data class Seance(var capacite: Int, var reservees: Int)
+
+      class ReservationService {
+          fun reserver(seance: Seance, places: Int) {
+              seance.reservees += places
+          }
+
+          fun annuler(seance: Seance, places: Int) {
+              seance.reservees -= places
+          }
+      }
+    issues:
+      - lines: [5]
+        category: bug
+        description: "Aucune vérification de capacité : on peut réserver plus de places qu'il n'y en a."
+      - lines: [1]
+        category: conception
+        description: Modèle anémique et propriétés `var` publiques ; n'importe qui peut rendre la séance incohérente. Les règles devraient vivre dans `Seance`.
+      - lines: [9]
+        category: bug
+        description: Annuler plus de places que réservées rend `reservees` négatif.
+    min_found: 2
+    explanation: |
+      Avec un modèle riche, `Seance.reserver(places)` vérifie la capacité avec `require` et
+      garde ses compteurs privés. L'invariant « 0 ≤ réservées ≤ capacité » ne peut plus être
+      violé, quel que soit le service qui appelle.

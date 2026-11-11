@@ -21,7 +21,9 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
-// Les tests chargent le vrai contenu du dépôt.
+// Les tests chargent le vrai contenu du dépôt : ils sont relancés quand il change.
 tasks.test {
-    systemProperty("devforge.content", rootDir.resolve("../content").canonicalPath)
+    val contenu = rootDir.resolve("../content")
+    inputs.dir(contenu).withPathSensitivity(PathSensitivity.RELATIVE)
+    systemProperty("devforge.content", contenu.canonicalPath)
 }

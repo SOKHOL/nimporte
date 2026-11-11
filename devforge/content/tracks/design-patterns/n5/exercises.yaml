@@ -1,0 +1,219 @@
+exercises:
+  - id: design-patterns.n5.resilience.predict-disjoncteur
+    type: predict-output
+    title: Le disjoncteur
+    skills: [resilience-patterns]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Disjoncteur(private val seuil: Int) {
+          var etat = "fermé"
+              private set
+          private var echecs = 0
+
+          fun appeler(action: () -> String): String {
+              if (etat == "ouvert") return "refusé"
+              return try {
+                  val resultat = action()
+                  echecs = 0
+                  resultat
+              } catch (e: Exception) {
+                  echecs++
+                  if (echecs >= seuil) etat = "ouvert"
+                  "échec"
+              }
+          }
+      }
+
+      fun main() {
+          val disjoncteur = Disjoncteur(seuil = 2)
+          val panne = { error("délai dépassé") }
+          println(disjoncteur.appeler(panne))
+          println(disjoncteur.appeler(panne))
+          println(disjoncteur.appeler { "ok" })
+          println(disjoncteur.etat)
+      }
+    choices:
+      - id: a
+        text: "`échec` / `échec` / `refusé` / `ouvert`"
+        correct: true
+      - id: b
+        text: "`échec` / `échec` / `ok` / `fermé`"
+        feedback: Après deux échecs, le disjoncteur s'ouvre et refuse les appels suivants sans les exécuter.
+      - id: c
+        text: "`échec` / `refusé` / `refusé` / `ouvert`"
+      - id: d
+        text: Le programme plante avec IllegalStateException.
+        feedback: "`appeler` attrape l'exception et la transforme en « échec »."
+    explanation: |
+      Le disjoncteur compte les échecs ; au seuil, il s'ouvre et répond immédiatement,
+      sans solliciter le service malade. Un vrai disjoncteur passerait ensuite en
+      semi-ouvert pour tester la reprise. Sortie vérifiée.
+
+  - id: design-patterns.n5.resilience.scenario-cascade
+    type: scenario
+    title: La panne qui se propage
+    skills: [resilience-patterns]
+    difficulty: 4
+    prompt: |
+      Le service de recommandations ralentit (8 secondes par réponse). Vingt minutes
+      plus tard, tout le site est indisponible, y compris le paiement. Mène l'enquête.
+    start: debut
+    nodes:
+      debut:
+        text: |
+          Les pages produits appellent les recommandations sans délai maximum. Les 200 threads
+          du serveur web sont tous occupés. Pourquoi le paiement est-il touché ?
+        options:
+          - text: Tous les threads du serveur attendent les recommandations ; il n'en reste plus pour le paiement.
+            next: cause
+            points: 3
+          - text: Le service de paiement est lui aussi en panne.
+            next: fausse-piste
+            points: 0
+            feedback: Le service de paiement répond bien quand on l'appelle directement.
+      fausse-piste:
+        text: Le service de paiement répond en 50 ms quand on l'appelle directement. Que se passe-t-il alors ?
+        options:
+          - text: Le serveur web n'a plus de thread libre pour l'appeler.
+            next: cause
+            points: 1
+      cause:
+        text: Quelle est la première correction à apporter ?
+        options:
+          - text: Un délai maximum court (300 ms) sur l'appel aux recommandations, avec une solution de repli (pas de recommandations).
+            next: timeout
+            points: 3
+          - text: Ajouter des retries sur l'appel aux recommandations.
+            next: retry
+            points: 0
+            feedback: Réessayer un service déjà saturé ne fait qu'aggraver sa charge.
+          - text: Doubler le nombre de threads.
+            next: threads
+            points: 1
+            feedback: Les nouveaux threads seront bloqués à leur tour, juste un peu plus tard.
+      retry:
+        text: Le service de recommandations reçoit trois fois plus d'appels et s'effondre complètement. Et maintenant ?
+        options:
+          - text: Un délai maximum court avec solution de repli.
+            next: timeout
+            points: 1
+      threads:
+        text: Le site tient dix minutes de plus, puis tombe à nouveau. Et maintenant ?
+        options:
+          - text: Un délai maximum court avec solution de repli.
+            next: timeout
+            points: 1
+      timeout:
+        text: Les pages s'affichent à nouveau, sans recommandations. Que rajouter pour la prochaine fois ?
+        options:
+          - text: Un disjoncteur sur les recommandations et un pool de threads dédié (cloison).
+            next: resolu
+            points: 3
+          - text: Rien, le délai maximum suffit.
+            next: partiel
+            points: 1
+      resolu:
+        ending: success
+        text: "✅ Désormais, un service lent ne coûte que 300 ms au premier appel, puis le disjoncteur répond instantanément et le reste du site n'est jamais touché."
+      partiel:
+        ending: partial
+        text: "🟡 Le site tient, mais chaque page paie encore 300 ms tant que les recommandations sont malades. Un disjoncteur l'éviterait."
+    explanation: |
+      Une dépendance lente est plus dangereuse qu'une dépendance en panne : elle immobilise
+      les ressources de l'appelant. Ordre des parades : délai maximum + solution de repli,
+      puis disjoncteur et cloisons. Les retries ne s'ajoutent qu'ensuite, avec backoff et
+      jitter, et jamais sur un service saturé.
+
+  - id: design-patterns.n5.frameworks.match
+    type: match
+    title: Les patterns de tes outils
+    skills: [patterns-frameworks]
+    difficulty: 3
+    prompt: Relie chaque élément de bibliothèque au pattern qu'il met en œuvre.
+    pairs:
+      - left: Les intercepteurs d'OkHttp
+        right: Chain of Responsibility
+      - left: RecyclerView.Adapter
+        right: Adapter
+      - left: "@Transactional de Spring"
+        right: Proxy
+      - left: BufferedReader(InputStreamReader(flux))
+        right: Decorator
+      - left: JdbcTemplate de Spring
+        right: Template Method
+    explanation: |
+      Une fois le pattern reconnu, on sait comment l'outil s'étend : ajouter un intercepteur,
+      écrire un adaptateur, envelopper un flux…
+
+  - id: design-patterns.n5.integration.match
+    type: match
+    title: Les patterns d'intégration
+    skills: [integration-patterns]
+    difficulty: 3
+    prompt: Relie chaque pattern d'intégration à son rôle.
+    pairs:
+      - left: Routeur
+        right: Envoie chaque message vers la bonne file selon son contenu
+      - left: File des lettres mortes
+        right: Met de côté les messages qui échouent à répétition
+      - left: Récepteur idempotent
+        right: Traite deux fois le même message sans effet en double
+      - left: Outbox transactionnelle
+        right: Enregistre en base et publie le message de façon fiable
+      - left: Agrégateur
+        right: Regroupe plusieurs messages liés en un seul
+    explanation: |
+      Avec les messages, on obtient au mieux « au moins une fois » : le même message peut
+      arriver deux fois. Idempotence et outbox sont les deux piliers d'une intégration fiable.
+
+  - id: design-patterns.n5.resilience.trous-backoff
+    type: fill-blanks
+    title: Réessayer poliment
+    skills: [resilience-patterns]
+    difficulty: 3
+    language: kotlin
+    prompt: "Complète ce calcul de délai entre deux tentatives : il doit doubler à chaque essai et inclure une part aléatoire."
+    code: |
+      fun delaiAvantEssai(essai: Int): Long {
+          val base = 100L * (1L shl essai)              // 100, 200, 400, 800…
+          val plafonne = minOf(base, 10_000L)
+          return Random.nextLong({{1}}, plafonne + 1)   // le {{2}} étale les tentatives
+      }
+    blanks:
+      "1":
+        answers: ["0"]
+        options: ["0", "plafonne", "base", "-1"]
+      "2":
+        answers: [jitter]
+        options: [jitter, backoff, timeout, circuit]
+    explanation: |
+      Le backoff exponentiel espace les tentatives ; le **jitter** (ici, un délai tiré au hasard
+      entre 0 et le plafond) évite que mille clients réessaient tous au même instant.
+      Sans jitter, les retries synchronisés forment des vagues qui empêchent le service de
+      se relever.
+
+  - id: design-patterns.n5.sur-ingenierie.qcm
+    type: qcm
+    title: Une interface de plus ?
+    skills: [sur-ingenierie]
+    difficulty: 2
+    prompt: |
+      Un collègue propose d'ajouter `CalculateurTvaFactory`, `CalculateurTvaStrategy` et
+      `CalculateurTvaProvider` pour un calcul de TVA qui n'a qu'une seule règle, sans
+      évolution prévue. Que réponds-tu ?
+    choices:
+      - id: a
+        text: Une simple fonction suffit ; on abstraira le jour où une deuxième règle arrivera vraiment (YAGNI).
+        correct: true
+      - id: b
+        text: Très bien, plus il y a de patterns, plus le code est professionnel.
+      - id: c
+        text: Il faudrait aussi un Singleton pour la Factory.
+      - id: d
+        text: Il faut un microservice dédié à la TVA.
+        feedback: Golden hammer.
+    explanation: |
+      Chaque abstraction a un coût : plus de fichiers, plus d'indirections, plus de choses à
+      comprendre. On l'introduit quand le besoin est réel (règle de trois), pas « au cas où ».

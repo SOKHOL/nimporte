@@ -211,3 +211,98 @@ exercises:
     explanation: |
       Les trois réflexes : un pool dédié et borné pour les entrées-sorties, un délai sur
       chaque attente, et un cycle de vie clair pour chaque pool (création, `shutdown`).
+
+  - id: concurrence.n3.threadlocal.predict-pool
+    type: predict-output
+    title: L'identité qui fuit
+    skills: [threadlocal]
+    difficulty: 4
+    language: kotlin
+    prompt: Le pool n'a qu'un seul thread. Qu'affiche ce programme ?
+    code: |
+      import java.util.concurrent.Executors
+
+      val utilisateur = ThreadLocal<String>()
+
+      fun traiter(requete: String, connecte: String?) {
+          if (connecte != null) utilisateur.set(connecte)
+          println("$requete traitée pour ${utilisateur.get()}")
+      }
+
+      fun main() {
+          val pool = Executors.newFixedThreadPool(1)
+          pool.submit { traiter("requête 1", "ada") }.get()
+          pool.submit { traiter("requête 2", null) }.get()
+          pool.shutdown()
+      }
+    choices:
+      - id: a
+        text: "`requête 1 traitée pour ada` / `requête 2 traitée pour ada`"
+        correct: true
+      - id: b
+        text: "`requête 1 traitée pour ada` / `requête 2 traitée pour null`"
+        feedback: "Ce serait vrai si chaque tâche avait un nouveau thread ; ici le même thread est réutilisé, avec sa valeur."
+      - id: c
+        text: Une exception, car la seconde tâche lit une valeur jamais définie.
+      - id: d
+        text: L'ordre des lignes est imprévisible.
+        feedback: "`.get()` attend la fin de la première tâche avant de soumettre la seconde."
+    explanation: |
+      Le pool réutilise son unique thread : la valeur de la première requête y est restée. Une
+      requête anonyme s'exécute donc avec l'identité d'Ada. Toujours `remove()` dans un
+      `finally`. Sortie vérifiée.
+
+  - id: concurrence.n3.verrous.bug-finally
+    type: find-bug
+    title: Le verrou jamais rendu
+    skills: [verrous-avances]
+    difficulty: 3
+    language: kotlin
+    prompt: Après une seule erreur de validation, plus aucun virement ne passe. Touche la ligne responsable.
+    code: |
+      val verrou = ReentrantLock()
+
+      fun virer(de: Compte, vers: Compte, montant: Int) {
+          verrou.lock()
+          require(montant <= de.solde) { "solde insuffisant" }
+          de.solde -= montant
+          vers.solde += montant
+          verrou.unlock()
+      }
+    bug_lines: [8]
+    hints:
+      - Que devient le verrou si `require` lève une exception ?
+    explanation: |
+      Si `require` lève une exception, `unlock()` n'est jamais appelé : le verrou reste pris
+      pour toujours et tous les autres threads attendent. Contrairement à `synchronized`,
+      `ReentrantLock` ne se libère pas tout seul. Correction : `try { … } finally {
+      verrou.unlock() }`, ou `verrou.withLock { … }` en Kotlin.
+
+  - id: concurrence.n3.verrous.qcm-while
+    type: qcm
+    title: if ou while ?
+    skills: [verrous-avances]
+    difficulty: 4
+    language: kotlin
+    prompt: Pourquoi faut-il écrire `while` et non `if` devant `await()` ?
+    code: |
+      fun prendre(): T = verrou.withLock {
+          while (elements.isEmpty()) pasVide.await()
+          elements.removeFirst()
+      }
+    choices:
+      - id: a
+        text: "Un thread peut se réveiller sans signal, ou un autre consommateur peut avoir pris l'élément entre le signal et le réveil : il faut revérifier la condition."
+        correct: true
+      - id: b
+        text: Pour que le thread attende moins longtemps.
+      - id: c
+        text: C'est une convention de style, `if` fonctionne aussi bien.
+        feedback: "Avec `if`, `removeFirst()` peut être appelé sur une file vide et lever une exception."
+      - id: d
+        text: Parce que `await()` ne libère pas le verrou.
+        feedback: "`await()` libère justement le verrou pendant l'attente, et le reprend au réveil."
+    explanation: |
+      Les réveils intempestifs (*spurious wakeups*) sont autorisés par la spécification, et
+      `signalAll` réveille plusieurs threads pour un seul élément. La règle vaut aussi pour
+      `wait()`/`notify()`. En pratique, préférer `ArrayBlockingQueue`, qui fait ce travail.

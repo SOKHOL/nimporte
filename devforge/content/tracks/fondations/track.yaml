@@ -1,71 +1,69 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: fondations
 title: Fondations de la programmation
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Les bases que tout le reste suppose : variables, types, conditions, boucles,
+  fonctions, collections, récursivité, erreurs, complexité, génériques, et la façon
+  d'apprendre n'importe quel langage.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: variables
-    title: Variables
-  - id: types
-    title: Types
-  - id: operateurs
-    title: Opérateurs
-  - id: conditions
-    title: Conditions
-  - id: boucles
-    title: Boucles
-  - id: fonctions
-    title: Fonctions
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: collections-listes-maps-ensembles
-    title: Collections (listes, maps, ensembles)
-  - id: chaines
-    title: Chaînes
-  - id: portee
-    title: Portée
-  - id: recursivite
-    title: Récursivité
-  - id: exceptions
-    title: Exceptions
-- level: 3
-  title: Approfondir
-  skills:
-  - id: memoire-pile-tas-references-ramasse
-    title: Mémoire (pile, tas, références, ramasse-miettes)
-  - id: complexite-big-o
-    title: Complexité Big-O
-  - id: nullabilite
-    title: Nullabilité
-  - id: typage-statique-dynamique
-    title: Typage statique/dynamique
-- level: 4
-  title: Concevoir
-  skills:
-  - id: generiques-et-variance
-    title: Génériques et variance
-  - id: compilation-vs-interpretation
-    title: Compilation vs interprétation
-  - id: jvm-et-bytecode
-    title: JVM et bytecode
-  - id: modules-et-packaging
-    title: Modules et packaging
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: apprendre-un-langage-en-une-semaine
-    title: 'Apprendre un langage en une semaine : Kotlin'
-  - id: python
-    title: Python
-  - id: go
-    title: Go
-  - id: rust-ownership
-    title: Rust (ownership)
-  - id: typescript
-    title: TypeScript
-  - id: les-paradigmes
-    title: Les paradigmes
+  - level: 1
+    title: Les briques de base
+    skills:
+      - id: variables-types
+        title: Variables et types
+      - id: operateurs
+        title: Opérateurs et calculs
+      - id: conditions
+        title: Conditions
+      - id: boucles
+        title: Boucles
+      - id: fonctions
+        title: Fonctions
+
+  - level: 2
+    title: Organiser les données
+    skills:
+      - id: collections
+        title: Listes, ensembles et dictionnaires
+      - id: chaines
+        title: Chaînes de caractères
+      - id: portee
+        title: Portée des variables
+      - id: recursivite
+        title: Récursivité
+      - id: exceptions
+        title: Gestion des erreurs
+
+  - level: 3
+    title: Ce que coûte le code
+    skills:
+      - id: complexite
+        title: Complexité (notation grand O)
+      - id: structures-adaptees
+        title: Choisir la bonne structure de données
+      - id: nullabilite
+        title: Nullabilité
+      - id: typage
+        title: Typage statique et dynamique
+
+  - level: 4
+    title: Abstraire et assembler
+    skills:
+      - id: generiques
+        title: Génériques
+      - id: variance
+        title: Variance (in et out)
+      - id: compilation-execution
+        title: Compilation et exécution
+      - id: modules
+        title: Modules, paquets et dépendances
+
+  - level: 5
+    title: Apprendre n'importe quel langage
+    skills:
+      - id: paradigmes
+        title: Les paradigmes de programmation
+      - id: comparer-langages
+        title: Comparer Kotlin, Python, Go, Rust et TypeScript
+      - id: apprendre-langage
+        title: Apprendre un langage en une semaine

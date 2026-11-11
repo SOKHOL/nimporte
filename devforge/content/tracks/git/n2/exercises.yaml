@@ -1,0 +1,111 @@
+exercises:
+  - id: git.n2.conflits.qcm-marqueurs
+    type: qcm
+    title: Lire un conflit
+    skills: [conflits]
+    difficulty: 2
+    language: text
+    prompt: Sur `main`, tu lances `git merge branche-x`. Que signifie ce contenu ?
+    code: |
+      <<<<<<< HEAD
+      Titre principal
+      =======
+      Titre X
+      >>>>>>> branche-x
+    choices:
+      - id: a
+        text: "« Titre principal » est la version de ta branche courante (main) ; « Titre X » celle de branche-x."
+        correct: true
+      - id: b
+        text: "« Titre X » est la version de main."
+      - id: c
+        text: Git a gardé les deux versions, il n'y a rien à faire.
+        feedback: Tant que les marqueurs sont là, le conflit n'est pas résolu et le fichier est invalide.
+      - id: d
+        text: Le fichier est corrompu, il faut le restaurer.
+    explanation: |
+      Le bloc du haut (`HEAD`) est ta version, celui du bas la version fusionnée. On édite
+      pour garder le bon contenu, on retire les marqueurs, puis `git add` et `git commit`.
+      Ou `git merge --abort` pour revenir en arrière.
+
+  - id: git.n2.fusions.qcm-fast-forward
+    type: qcm
+    title: Avance rapide
+    skills: [fusions, branches]
+    difficulty: 2
+    prompt: "`git merge fonction` affiche `Fast-forward`. Que s'est-il passé ?"
+    choices:
+      - id: a
+        text: main n'avait pas bougé depuis la création de fonction ; Git a simplement avancé l'étiquette main.
+        correct: true
+      - id: b
+        text: Git a créé un commit de fusion avec deux parents.
+        feedback: C'est ce qui arrive quand les deux branches ont avancé chacune de leur côté.
+      - id: c
+        text: Git a supprimé la branche fonction.
+      - id: d
+        text: La fusion a échoué.
+    explanation: |
+      Sans travail parallèle, pas besoin de commit de fusion : l'historique reste linéaire.
+      Sortie réelle : `Updating 7cd2be0..e8b69ac`, puis `Fast-forward`.
+
+  - id: git.n2.distants.match
+    type: match
+    title: Les commandes distantes
+    skills: [depots-distants]
+    difficulty: 2
+    prompt: Relie chaque commande à son effet.
+    pairs:
+      - left: git clone
+        right: Copie un dépôt distant complet sur ta machine
+      - left: git fetch
+        right: Récupère les nouveautés distantes sans modifier tes branches
+      - left: git pull
+        right: Récupère et fusionne dans ta branche courante
+      - left: git push
+        right: Envoie tes commits vers le dépôt distant
+    explanation: |
+      En cas de doute, commence par `git fetch` : il ne modifie rien localement, et permet
+      de regarder ce qui arrive (`git log main..origin/main`) avant de fusionner.
+
+  - id: git.n2.conflits.parsons-resoudre
+    type: parsons
+    title: Résoudre un conflit
+    skills: [conflits]
+    difficulty: 2
+    language: bash
+    prompt: Remets dans l'ordre les étapes pour intégrer branche-x dans main, avec un conflit dans notes.txt. Une ligne est un piège.
+    lines:
+      - git switch main
+      - git merge branche-x
+      - "# éditer notes.txt et retirer les marqueurs <<<<<<< ======= >>>>>>>"
+      - git add notes.txt
+      - git commit
+    distractors:
+      - git push --force
+    explanation: |
+      On se place sur la branche cible, on fusionne, on résout à la main, on marque le
+      fichier comme résolu avec `git add`, et on termine la fusion avec `git commit`.
+      `git push --force` n'a rien à faire ici : il écraserait l'historique distant.
+
+  - id: git.n2.pr.qcm-taille
+    type: qcm
+    title: Une bonne pull request
+    skills: [pull-requests]
+    difficulty: 2
+    prompt: Quelle pull request a le plus de chances d'être relue sérieusement et fusionnée vite ?
+    choices:
+      - id: a
+        text: 150 lignes, un seul objectif, une description qui explique le pourquoi et comment tester.
+        correct: true
+      - id: b
+        text: 3 000 lignes qui ajoutent une fonctionnalité et renomment la moitié du projet.
+        feedback: Personne ne relit vraiment 3 000 lignes ; et le renommage cache les vrais changements.
+      - id: c
+        text: Une pull request sans description, « le code parle de lui-même ».
+      - id: d
+        text: Une pull request qui désactive les tests pour passer la CI.
+    explanation: |
+      Les études sur la revue de code montrent que l'attention chute fortement au-delà de
+      quelques centaines de lignes. Petite, ciblée, expliquée : c'est aussi ce qui la rend
+      facile à annuler si besoin.

@@ -39,6 +39,12 @@ object SyntaxHighlighter {
         "try", "except", "finally", "raise", "yield",
     )
 
+    private val javascriptKeywords = setOf(
+        "const", "let", "var", "function", "return", "if", "else", "for", "while", "of", "in",
+        "this", "new", "class", "extends", "super", "true", "false", "null", "undefined",
+        "async", "await", "import", "export", "from", "typeof", "instanceof",
+    )
+
     fun tokenize(code: String, language: String?): List<Token> {
         val hashComments = language in setOf("bash", "dockerfile", "yaml", "python", "text")
         val keywords = when (language) {
@@ -46,6 +52,7 @@ object SyntaxHighlighter {
             "c" -> cKeywords
             "rust" -> rustKeywords
             "python" -> pythonKeywords
+            "javascript", "js" -> javascriptKeywords
             else -> kotlinKeywords
         }
         val tokens = mutableListOf<Token>()

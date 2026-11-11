@@ -51,25 +51,25 @@ tracks:
     title: Fondations de la programmation
     domain: code
     requires: []
-    status: planned
+    status: pilot
 
   - id: git
     title: Git et collaboration
     domain: ops
     requires: []
-    status: planned
+    status: pilot
 
   - id: linux
     title: Linux et shell
     domain: ops
     requires: []
-    status: planned
+    status: pilot
 
   - id: algo
     title: Algorithmes et structures de données
     domain: code
     requires: [fondations@1]
-    status: planned
+    status: pilot
 
   - id: poo
     title: Programmation orientée objet

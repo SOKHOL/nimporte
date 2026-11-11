@@ -1,0 +1,153 @@
+exercises:
+  - id: design-patterns.n4.interpreter.qcm-resultat
+    type: qcm
+    title: Évaluer un arbre
+    skills: [interpreter, visitor]
+    difficulty: 2
+    language: kotlin
+    prompt: "Avec les fonctions `evaluer` et `afficher` de la leçon, qu'affiche `println(\"${afficher(e)} = ${evaluer(e)}\")` pour cet arbre ?"
+    code: |
+      val e = Produit(Somme(Nombre(2), Nombre(3)), Nombre(4))
+    choices:
+      - id: a
+        text: "`(2 + 3) × 4 = 20`"
+        correct: true
+      - id: b
+        text: "`2 + 3 × 4 = 14`"
+        feedback: "L'arbre impose la structure : la somme est un sous-arbre du produit, donc calculée d'abord."
+      - id: c
+        text: "`(2 + 3) × 4 = 14`"
+      - id: d
+        text: "`2 × 3 + 4 = 10`"
+    explanation: |
+      L'arbre encode les priorités : pas besoin de parenthèses dans la structure, seulement
+      à l'affichage. `evaluer` et `afficher` sont deux « visiteurs » de la même hiérarchie
+      scellée. Sortie vérifiée.
+
+  - id: design-patterns.n4.visitor.qcm-kotlin
+    type: qcm
+    title: Visitor en Kotlin
+    skills: [visitor]
+    difficulty: 3
+    prompt: Pourquoi le pattern Visitor classique (avec `accept` et `visit`) est-il rarement nécessaire en Kotlin ?
+    choices:
+      - id: a
+        text: Un `when` exhaustif sur une hiérarchie scellée ajoute une opération sans toucher aux classes, avec vérification du compilateur.
+        correct: true
+      - id: b
+        text: Kotlin interdit la double répartition.
+      - id: c
+        text: Les data classes génèrent automatiquement les visiteurs.
+      - id: d
+        text: Le JIT optimise mieux les visiteurs que les `when`.
+    explanation: |
+      Visitor sert à ajouter des opérations sur une hiérarchie stable. Avec une `sealed
+      interface`, chaque fonction `when` est une opération, et le compilateur signale tout
+      cas oublié quand un nouveau type apparaît.
+
+  - id: design-patterns.n4.di.review-service
+    type: code-review
+    title: "Revue de code : un service qui fabrique tout"
+    skills: [injection-dependances, repository-uow, anti-patterns]
+    difficulty: 3
+    language: kotlin
+    prompt: Ce service est impossible à tester sans base de données ni serveur d'email. Trouve au moins 2 problèmes.
+    code: |
+      class InscriptionService {
+          private val base = PostgresConnexion("jdbc:postgresql://prod/devforge")
+          private val email = SmtpClient("smtp.devforge.dev")
+
+          fun inscrire(nom: String, adresse: String) {
+              base.executer("INSERT INTO utilisateurs VALUES ('$nom', '$adresse')")
+              email.envoyer(adresse, "Bienvenue $nom")
+          }
+      }
+    issues:
+      - lines: [2, 3]
+        category: conception
+        description: Les dépendances sont créées à l'intérieur ; les recevoir par le constructeur (injection) permettrait d'utiliser des fausses en test.
+      - lines: [2]
+        category: conception
+        description: "Adresse de la base de production en dur : configuration à externaliser."
+      - lines: [6]
+        category: securite
+        description: SQL construit par concaténation (injection SQL) ; utiliser une requête paramétrée, derrière un Repository.
+      - lines: [6]
+        category: conception
+        description: Le métier écrit du SQL ; un `UtilisateurRepository` cacherait la persistance.
+    min_found: 2
+    explanation: |
+      Version testable : `class InscriptionService(private val utilisateurs: UtilisateurRepository,
+      private val email: EnvoiEmail)`. En test, on passe des fakes en mémoire ; en production,
+      les vraies implémentations, assemblées par un conteneur ou à la main.
+
+  - id: design-patterns.n4.anti-patterns.match
+    type: match
+    title: Reconnaître les anti-patterns
+    skills: [anti-patterns]
+    difficulty: 2
+    prompt: Relie chaque anti-pattern à son symptôme.
+    pairs:
+      - left: God object
+        right: Une classe de 3 000 lignes qui gère utilisateurs, paiements et emails
+      - left: Golden hammer
+        right: Utiliser Kafka pour tout, même pour une simple liste de tâches
+      - left: Lava flow
+        right: Du code mort que personne n'ose supprimer
+      - left: Singletonite
+        right: Des singletons partout, donc un état global partout
+      - left: Optimisation prématurée
+        right: Un code illisible pour gagner des microsecondes jamais mesurées
+    explanation: |
+      Savoir nommer un anti-pattern aide à en parler en revue de code, sans attaquer la
+      personne : on parle du code, pas de son auteur.
+
+  - id: design-patterns.n4.specification.trous
+    type: fill-blanks
+    title: Combiner des règles
+    skills: [specification]
+    difficulty: 3
+    language: kotlin
+    prompt: Complète pour pouvoir écrire `premium and grosseCommande`.
+    code: |
+      fun interface Regle<T> {
+          fun estSatisfaitePar(candidat: T): Boolean
+      }
+
+      {{1}} fun <T> Regle<T>.and(autre: Regle<T>) =
+          Regle<T> { estSatisfaitePar(it) {{2}} autre.estSatisfaitePar(it) }
+
+      val premium = Regle<Commande> { it.client.premium }
+      val grosseCommande = Regle<Commande> { it.total > 100_00 }
+      val livraisonOfferte = premium and grosseCommande
+    blanks:
+      "1":
+        answers: [infix]
+        options: [infix, inline, operator, open]
+      "2":
+        answers: ["&&"]
+        options: ["&&", "||", "and", "=="]
+    explanation: |
+      `infix` permet d'écrire `premium and grosseCommande` sans point ni parenthèses. La
+      nouvelle règle est satisfaite si les deux le sont (`&&`). Les prérequis des parcours de
+      cette app sont construits exactement ainsi.
+
+  - id: design-patterns.n4.null-object.qcm
+    type: qcm
+    title: Un rien utile
+    skills: [null-object, memento]
+    difficulty: 2
+    prompt: Une classe accepte un `Journal` optionnel. Au lieu d'écrire `journal?.info(…)` à vingt endroits, quel pattern utiliser ?
+    choices:
+      - id: a
+        text: "Null Object : un `JournalSilencieux` qui ne fait rien, utilisé par défaut."
+        correct: true
+      - id: b
+        text: Memento, pour sauvegarder le journal.
+      - id: c
+        text: Singleton, pour n'avoir qu'un journal.
+      - id: d
+        text: Visitor, pour visiter chaque appel.
+    explanation: |
+      Le Null Object respecte l'interface et ne fait rien : le code appelant n'a plus aucun
+      cas particulier à gérer. Exemple : `class Service(private val journal: Journal = JournalSilencieux)`.

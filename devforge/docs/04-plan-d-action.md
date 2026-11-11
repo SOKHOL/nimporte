@@ -32,8 +32,9 @@ Environ **30 semaines** pour les phases 0 à 4.
 
 - Vision, curriculum, architecture et plan (ce dossier) ✅
 - Format YAML, JSON Schema, validateur, tests et CI ✅
-- Contenu pilote : 148 exercices, 33 leçons et 5 boss ; Mémoire, JVM, Concurrence et Métaprogrammation complets ✅
-- Terminer *POO niveau 1* : une leçon par compétence, ~8 exercices par compétence, le boss
+- Contenu pilote : 296 exercices, 64 leçons et 5 boss ; 10 parcours complets du niveau 1 au 5 (Fondations, Algorithmes, Git, Linux, POO, Design patterns, Mémoire, JVM, Concurrence, Métaprogrammation) ✅
+- ~~Terminer *POO niveau 1*~~ : POO complète du niveau 1 au niveau 5 ✅
+- Prochaine étape du contenu : boss des niveaux 2 à 5, puis Architecture, System design et DevOps complets
 - Maquettes basse fidélité (papier ou Figma) : carte des parcours, session, correction, profil
 - Choisir le nom définitif et l'icône
 

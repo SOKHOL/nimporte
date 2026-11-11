@@ -206,3 +206,92 @@ exercises:
       le premier incrémente `compteur`, puis le second l'affiche. Premier clic → 1,
       second clic → 2. Si on inversait les deux `surClic`, on obtiendrait 0 puis 1 :
       dépendre de l'ordre des observateurs est fragile.
+
+  - id: design-patterns.n1.pourquoi.qcm-quand
+    type: qcm
+    title: Le bon moment pour un pattern
+    skills: [pourquoi-patterns]
+    difficulty: 2
+    prompt: Dans quel cas introduire un design pattern est-il le plus justifié ?
+    choices:
+      - id: a
+        text: "Le même problème se pose maintenant dans le code (par exemple un `when` qui grossit à chaque nouvelle variante), et le pattern le résout."
+        correct: true
+      - id: b
+        text: Dès le début du projet, pour que l'architecture soit propre.
+        feedback: "Un pattern se justifie par un problème présent ; sinon il ajoute de la complexité pour rien."
+      - id: c
+        text: Quand on veut montrer qu'on connaît les patterns.
+      - id: d
+        text: Partout où c'est possible, plus il y en a, mieux c'est.
+    explanation: |
+      Un pattern apporte un vocabulaire et des compromis connus, mais aussi des classes et des
+      indirections. On l'introduit quand le problème qu'il résout est réel ; en Kotlin, une
+      lambda, `object` ou `by` suffisent souvent.
+
+  - id: design-patterns.n1.factory-method.predict-alerte
+    type: predict-output
+    title: Qui crée quoi ?
+    skills: [factory-method]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      sealed interface Notification { fun envoyer(message: String): String }
+      class Email(private val adresse: String) : Notification {
+          override fun envoyer(message: String) = "e-mail à $adresse : $message"
+      }
+      class Sms(private val numero: String) : Notification {
+          override fun envoyer(message: String) = "SMS au $numero : $message"
+      }
+
+      abstract class Service {
+          abstract fun creerNotification(): Notification          // la méthode fabrique
+          fun alerter(message: String) = println(creerNotification().envoyer(message))
+      }
+      class ServiceBureau : Service() { override fun creerNotification() = Email("ops@exemple.com") }
+      class ServiceAstreinte : Service() { override fun creerNotification() = Sms("0600000000") }
+
+      fun main() {
+          listOf(ServiceBureau(), ServiceAstreinte()).forEach { it.alerter("disque plein") }
+      }
+    choices:
+      - id: a
+        text: "`e-mail à ops@exemple.com : disque plein` / `SMS au 0600000000 : disque plein`"
+        correct: true
+      - id: b
+        text: "`e-mail à ops@exemple.com : disque plein` (deux fois)"
+        feedback: "`alerter` est commun, mais chaque sous-classe fournit sa propre `creerNotification`."
+      - id: c
+        text: Erreur de compilation, une classe abstraite ne peut pas appeler une méthode abstraite.
+        feedback: "C'est tout l'intérêt : la méthode commune appelle la méthode fabrique, que les sous-classes implémentent."
+      - id: d
+        text: "`SMS au 0600000000 : disque plein` / `e-mail à ops@exemple.com : disque plein`"
+    explanation: |
+      `Service.alerter` contient la logique commune et décide **quand** créer la notification ;
+      chaque sous-classe décide **laquelle** créer. C'est le pattern Factory Method. Sortie
+      vérifiée.
+
+  - id: design-patterns.n1.observer.qcm-fuite
+    type: qcm
+    title: L'écouteur oublié
+    skills: [observer]
+    difficulty: 3
+    prompt: |
+      Un écran s'inscrit comme observateur d'un service qui vit aussi longtemps que l'app,
+      mais ne se désinscrit jamais. Que se passe-t-il quand l'utilisateur quitte l'écran ?
+    choices:
+      - id: a
+        text: "Le service garde une référence vers l'observateur : l'écran et tout ce qu'il référence restent en mémoire (fuite), et continuent de recevoir les notifications."
+        correct: true
+      - id: b
+        text: Le ramasse-miettes supprime l'écran, puisqu'il n'est plus affiché.
+        feedback: "Le GC ne libère que ce qui n'est plus atteignable ; la liste d'observateurs du service l'atteint encore."
+      - id: c
+        text: Le service plante.
+      - id: d
+        text: Rien, l'observateur est désinscrit automatiquement.
+    explanation: |
+      C'est la fuite mémoire la plus fréquente avec Observer (le *lapsed listener*). Remèdes :
+      se désinscrire dans le cycle de vie (`onDestroy`), utiliser des API qui le font
+      (`collectAsStateWithLifecycle`, `repeatOnLifecycle`), ou des références faibles.

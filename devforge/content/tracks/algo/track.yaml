@@ -1,67 +1,66 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: algo
 title: Algorithmes et structures de données
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Chercher, trier, organiser, parcourir : les algorithmes et structures que tout
+  développeur doit savoir choisir, et que tout entretien technique teste.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: tableaux
-    title: Tableaux
-  - id: chaines
-    title: Chaînes
-  - id: recherche-lineaire-et-dichotomique
-    title: Recherche linéaire et dichotomique
-  - id: tris-simples
-    title: Tris simples
-  - id: big-o
-    title: Big-O
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: piles
-    title: Piles
-  - id: files
-    title: Files
-  - id: listes-chainees
-    title: Listes chaînées
-  - id: tables-de-hachage
-    title: Tables de hachage
-  - id: deux-pointeurs
-    title: Deux pointeurs
-  - id: fenetre-glissante
-    title: Fenêtre glissante
-- level: 3
-  title: Approfondir
-  skills:
-  - id: arbres-bst-parcours
-    title: Arbres (BST, parcours)
-  - id: tas
-    title: Tas
-  - id: backtracking
-    title: Backtracking
-  - id: tris-en-n-log-n
-    title: Tris en n log n
-- level: 4
-  title: Concevoir
-  skills:
-  - id: graphes-bfs-dfs-dijkstra-tri
-    title: Graphes (BFS, DFS, Dijkstra, tri topologique, union-find)
-  - id: programmation-dynamique
-    title: Programmation dynamique
-  - id: algorithmes-gloutons
-    title: Algorithmes gloutons
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: tries
-    title: Tries
-  - id: segment-trees
-    title: Segment trees
-  - id: algorithmes-de-chaines
-    title: Algorithmes de chaînes
-  - id: structures-probabilistes-bloom
-    title: Structures probabilistes (Bloom filter, HyperLogLog)
-  - id: analyse-amortie
-    title: Analyse amortie
+  - level: 1
+    title: Chercher et trier
+    skills:
+      - id: recherche
+        title: Recherche linéaire et dichotomique
+      - id: tris-simples
+        title: Les tris simples
+      - id: analyse-complexite
+        title: Analyser la complexité d'un algorithme
+
+  - level: 2
+    title: Les structures de base
+    skills:
+      - id: piles-files
+        title: Piles et files
+      - id: tables-hachage
+        title: Tables de hachage
+      - id: listes-chainees
+        title: Listes chaînées
+      - id: deux-pointeurs
+        title: Deux pointeurs et fenêtre glissante
+
+  - level: 3
+    title: Arbres et récursion
+    skills:
+      - id: arbres
+        title: Arbres binaires de recherche
+      - id: tas
+        title: Tas et files de priorité
+      - id: backtracking
+        title: Backtracking
+      - id: tris-efficaces
+        title: Tri fusion et tri rapide
+
+  - level: 4
+    title: Graphes et programmation dynamique
+    skills:
+      - id: graphes
+        title: Graphes, parcours en largeur et en profondeur
+      - id: plus-court-chemin
+        title: Plus court chemin (Dijkstra)
+      - id: tri-topologique
+        title: Tri topologique
+      - id: programmation-dynamique
+        title: Programmation dynamique
+      - id: glouton
+        title: Algorithmes gloutons
+
+  - level: 5
+    title: Structures avancées
+    skills:
+      - id: tries
+        title: Arbres de préfixes (tries)
+      - id: probabilistes
+        title: Structures probabilistes (Bloom, HyperLogLog)
+      - id: union-find
+        title: Union-find
+      - id: analyse-amortie
+        title: Analyse amortie

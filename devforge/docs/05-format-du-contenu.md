@@ -59,7 +59,7 @@ duration_min: 5
 | `prompt` | oui | consigne (Markdown) |
 | `explanation` | oui | explication affichée après la réponse, juste ou fausse |
 | `xp` | non | par défaut selon la difficulté : 10, 20, 35, 50, 80 |
-| `language` | non | `kotlin`, `java`, `python`, `c`, `rust`, `bash`, `dockerfile`, `yaml`, `sql`, `text` |
+| `language` | non | `kotlin`, `java`, `python`, `javascript`, `c`, `rust`, `bash`, `dockerfile`, `yaml`, `sql`, `text` |
 | `code` | selon le type | code affiché |
 | `hints` | non | indices progressifs, du plus vague au plus précis |
 | `tags` | non | mots-clés libres |

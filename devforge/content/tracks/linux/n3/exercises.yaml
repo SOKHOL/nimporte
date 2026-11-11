@@ -1,0 +1,202 @@
+exercises:
+  - id: linux.n3.systemd.trous-unit
+    type: fill-blanks
+    title: Un service qui redémarre tout seul
+    skills: [systemd]
+    difficulty: 3
+    language: text
+    prompt: |
+      Complète ce fichier unit pour que le service tourne sous l'utilisateur `api`, redémarre
+      après un plantage et démarre automatiquement au démarrage de la machine.
+    code: |
+      [Service]
+      {{1}}=api
+      ExecStart=/usr/bin/java -jar /opt/api/api.jar
+      Restart={{2}}
+
+      [Install]
+      WantedBy={{3}}
+    blanks:
+      "1":
+        answers: [User]
+        options: [User, Owner, RunAs, Group]
+      "2":
+        answers: [on-failure]
+        options: [on-failure, never, "yes", once]
+      "3":
+        answers: [multi-user.target]
+        options: [multi-user.target, boot.target, network.target, default.service]
+    explanation: |
+      `User=` évite de tourner en root ; `Restart=on-failure` relance après un code de sortie
+      non nul ou un signal ; `WantedBy=multi-user.target` rattache le service au démarrage
+      normal quand on fait `systemctl enable`.
+
+  - id: linux.n3.planification.qcm-cron
+    type: qcm
+    title: Lire une ligne cron
+    skills: [planification]
+    difficulty: 2
+    language: text
+    prompt: Quand cette tâche s'exécute-t-elle ?
+    code: |
+      30 2 * * 1 /opt/scripts/sauvegarde.sh
+    choices:
+      - id: a
+        text: Chaque lundi à 2 h 30.
+        correct: true
+      - id: b
+        text: Le 2 de chaque mois à 0 h 30.
+        feedback: "L'ordre est minute, heure, jour du mois, mois, jour de la semaine."
+      - id: c
+        text: Toutes les 30 minutes, le lundi.
+      - id: d
+        text: Le 1er janvier à 2 h 30.
+    explanation: |
+      Minute 30, heure 2, tous les jours du mois, tous les mois, jour de la semaine 1 (lundi ;
+      0 et 7 = dimanche). Une tâche de sauvegarde doit en plus être surveillée : cron ne
+      prévient personne quand elle échoue.
+
+  - id: linux.n3.reseau.qcm-refuse
+    type: qcm
+    title: Refusé ou pas de réponse ?
+    skills: [reseau-commandes]
+    difficulty: 4
+    language: bash
+    prompt: Que t'apprend ce message, obtenu instantanément ?
+    code: |
+      $ curl http://10.0.3.7:8080/sante
+      curl: (7) Failed to connect to 10.0.3.7 port 8080 after 0 ms: Couldn't connect to server
+    choices:
+      - id: a
+        text: "La machine est joignable, mais rien n'écoute sur le port 8080 (service arrêté, autre port, ou écoute seulement sur 127.0.0.1)."
+        correct: true
+      - id: b
+        text: Un pare-feu bloque le port 8080.
+        feedback: "Un pare-feu qui jette les paquets donne un délai dépassé, pas un refus instantané."
+      - id: c
+        text: Le DNS ne fonctionne pas.
+        feedback: On se connecte à une adresse IP, aucune résolution de nom n'a lieu.
+      - id: d
+        text: Le service est lent.
+    explanation: |
+      Un refus immédiat signifie que la machine a répondu « personne ici » (un paquet RST).
+      Étape suivante : sur la machine, `ss -tlnp | grep 8080` pour voir si le service écoute,
+      et sur quelle adresse.
+
+  - id: linux.n3.reseau.match
+    type: match
+    title: La bonne commande réseau
+    skills: [reseau-commandes]
+    difficulty: 3
+    prompt: Relie chaque question à la commande qui y répond.
+    pairs:
+      - left: Quel processus écoute sur le port 5432 ?
+        right: ss -tlnp
+      - left: Vers quelle adresse pointe ce nom de domaine ?
+        right: dig
+      - left: Combien de temps prend la connexion, et la réponse complète ?
+        right: curl -w
+      - left: Quels paquets passent vraiment sur l'interface ?
+        right: tcpdump
+      - left: Par quelle passerelle sortent les paquets ?
+        right: ip route
+    explanation: |
+      Un diagnostic réseau se fait par couches : le nom se résout-il (dig) ? la route
+      existe-t-elle (ip route, traceroute) ? quelqu'un écoute-t-il (ss) ? que répond le
+      service (curl) ? En dernier recours, on regarde les paquets (tcpdump).
+
+  - id: linux.n3.ssh.qcm-cles
+    type: qcm
+    title: Ce qui voyage avec SSH
+    skills: [ssh]
+    difficulty: 3
+    prompt: Avec une authentification SSH par clé, qu'est-ce qui est copié sur le serveur ?
+    choices:
+      - id: a
+        text: "Seulement la clé publique, dans ~/.ssh/authorized_keys ; la clé privée ne quitte jamais ta machine."
+        correct: true
+      - id: b
+        text: La clé privée, pour que le serveur puisse vérifier.
+        feedback: "Jamais : celui qui a la clé privée peut se faire passer pour toi partout où elle est acceptée."
+      - id: c
+        text: Les deux clés.
+      - id: d
+        text: Un mot de passe dérivé de la clé.
+    explanation: |
+      Le serveur envoie un défi que seule la clé privée sait signer ; la clé publique permet
+      de vérifier la signature. Aucun secret ne transite. La clé privée est protégée par une
+      phrase de passe et des permissions `600`.
+
+  - id: linux.n3.systemd.scenario-demarrage
+    type: scenario
+    title: Le service fantôme
+    skills: [systemd, reseau-commandes]
+    difficulty: 4
+    prompt: |
+      Après un redémarrage planifié du serveur, l'API ne répond plus. La veille, elle
+      fonctionnait parfaitement.
+    start: debut
+    nodes:
+      debut:
+        text: |
+          ```
+          $ curl http://localhost:8080/sante
+          curl: (7) Failed to connect to localhost port 8080 after 0 ms
+          ```
+          Par quoi commences-tu ?
+        options:
+          - text: systemctl status api
+            next: statut
+            points: 3
+          - text: Je relance le serveur une deuxième fois.
+            next: redemarrage
+            points: 0
+            feedback: Sans comprendre la cause, rien ne dit que ce sera différent.
+      redemarrage:
+        text: Même résultat après le second redémarrage. Et maintenant ?
+        options:
+          - text: systemctl status api
+            next: statut
+            points: 1
+      statut:
+        text: |
+          ```
+          ● api.service - API DevForge
+               Loaded: loaded (/etc/systemd/system/api.service; disabled)
+               Active: inactive (dead)
+          ```
+          Qu'en déduis-tu ?
+        options:
+          - text: "Le service est « disabled » : il a été démarré à la main avec start, mais jamais activé au démarrage."
+            next: correction
+            points: 3
+          - text: Le service a planté au démarrage.
+            next: journal
+            points: 1
+            feedback: Un plantage donnerait « failed », pas « inactive (dead) ».
+      journal:
+        text: "`journalctl -u api -b` (journal depuis le dernier démarrage) n'affiche aucune ligne. Que signifie ce silence ?"
+        options:
+          - text: Le service n'a jamais été lancé depuis le démarrage, il n'est pas activé.
+            next: correction
+            points: 2
+      correction:
+        text: Comment corriges-tu durablement ?
+        options:
+          - text: "sudo systemctl enable --now api, puis j'ajoute une sonde qui vérifie /sante après chaque redémarrage."
+            next: resolu
+            points: 3
+          - text: sudo systemctl start api
+            next: partiel
+            points: 1
+            feedback: Le service repart, mais le problème reviendra au prochain redémarrage.
+      resolu:
+        ending: success
+        text: "✅ Le service démarre maintenant automatiquement, et la sonde aurait détecté la panne en une minute."
+      partiel:
+        ending: partial
+        text: "🟡 L'API répond… jusqu'au prochain redémarrage planifié."
+    explanation: |
+      `start` démarre maintenant, `enable` au démarrage : `enable --now` fait les deux. Lire
+      la ligne `Loaded:` (enabled / disabled) et la ligne `Active:` (active, inactive,
+      failed) de `systemctl status` donne souvent la réponse en dix secondes.

@@ -1,0 +1,144 @@
+exercises:
+  - id: fondations.n4.generiques.predict-plus-grand
+    type: predict-output
+    title: Une fonction pour tous les types
+    skills: [generiques]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      open class Animal(val nom: String)
+      class Chien(nom: String) : Animal(nom)
+
+      fun <T : Comparable<T>> plusGrand(a: T, b: T): T = if (a >= b) a else b
+
+      fun noms(animaux: List<Animal>) = animaux.joinToString { it.nom }
+
+      fun main() {
+          val chiens: List<Chien> = listOf(Chien("Rex"), Chien("Médor"))
+          println(noms(chiens))
+          println(plusGrand(3, 7))
+          println(plusGrand("kotlin", "java"))
+      }
+    choices:
+      - id: a
+        text: "`Rex, Médor` / `7` / `kotlin`"
+        correct: true
+      - id: b
+        text: Une erreur de compilation, car une List<Chien> n'est pas une List<Animal>.
+        feedback: "`List` est covariante (`List<out E>`) : en lecture seule, des chiens sont bien des animaux."
+      - id: c
+        text: "`Rex, Médor` / `7` / `java`"
+        feedback: "Les chaînes se comparent dans l'ordre alphabétique : « kotlin » vient après « java »."
+      - id: d
+        text: "`Rex, Médor` / `3` / `java`"
+    explanation: |
+      `plusGrand` fonctionne pour tout type comparable. Et `noms` accepte une `List<Chien>`
+      car `List` est déclarée `List<out E>` (covariante). Sortie vérifiée.
+
+  - id: fondations.n4.variance.qcm-mutable
+    type: qcm
+    title: Le chat chez les chiens
+    skills: [variance]
+    difficulty: 3
+    language: kotlin
+    prompt: Pourquoi le compilateur refuse-t-il la deuxième ligne ?
+    code: |
+      val chiens: MutableList<Chien> = mutableListOf(Chien())
+      val animaux: MutableList<Animal> = chiens
+      animaux.add(Chat())
+    choices:
+      - id: a
+        text: Sinon, on pourrait ajouter un Chat dans une liste qui ne doit contenir que des chiens.
+        correct: true
+      - id: b
+        text: Parce que Chien n'hérite pas d'Animal.
+      - id: c
+        text: Parce qu'une MutableList ne peut contenir que des types primitifs.
+      - id: d
+        text: Il ne la refuse pas ; c'est l'ajout du Chat qui plante à l'exécution.
+        feedback: "Le compilateur l'arrête dès la deuxième ligne : *initializer type mismatch*."
+    explanation: |
+      Une `MutableList` est **invariante** : on y lit et on y écrit. Si `MutableList<Chien>`
+      était une `MutableList<Animal>`, on pourrait y écrire n'importe quel animal. Java a ce
+      défaut avec ses tableaux (`ArrayStoreException` à l'exécution) ; Kotlin l'empêche à la
+      compilation.
+
+  - id: fondations.n4.variance.match
+    type: match
+    title: out, in ou rien ?
+    skills: [variance]
+    difficulty: 3
+    prompt: Relie chaque type à sa variance.
+    pairs:
+      - left: "List<out E> (lecture seule)"
+        right: Covariant, une List<Chien> est une List<Animal>
+      - left: "Comparator<in T>"
+        right: Contravariant, un comparateur d'animaux sait comparer des chiens
+      - left: "MutableList<E>"
+        right: Invariant, aucune substitution possible
+    explanation: |
+      `out` : le type ne fait que **produire** des T. `in` : il ne fait que **consommer** des T.
+      Sans annotation, il fait les deux, et aucune substitution n'est sûre.
+
+  - id: fondations.n4.generiques.trous-borne
+    type: fill-blanks
+    title: Une borne générique
+    skills: [generiques]
+    difficulty: 2
+    language: kotlin
+    prompt: Complète pour que la fonction marche avec n'importe quel type qu'on sait comparer.
+    code: |
+      fun <T : {{1}}<T>> plusPetit(a: T, b: T): T = if (a {{2}} b) a else b
+    blanks:
+      "1":
+        answers: [Comparable]
+        options: [Comparable, Any, Number, List]
+      "2":
+        answers: ["<="]
+        options: ["<=", "==", "&&", "is"]
+    explanation: |
+      La borne `T : Comparable<T>` autorise les opérateurs de comparaison sur `T`. Elle
+      fonctionne pour les nombres, les chaînes, les dates, et toute classe qui implémente
+      `Comparable`.
+
+  - id: fondations.n4.compilation.match
+    type: match
+    title: Comment tourne ce langage ?
+    skills: [compilation-execution]
+    difficulty: 2
+    prompt: Relie chaque langage à son mode d'exécution principal.
+    pairs:
+      - left: Rust
+        right: Compilé à l'avance en code machine
+      - left: Kotlin sur la JVM
+        right: Compilé en bytecode, exécuté par une machine virtuelle avec JIT
+      - left: Python (CPython)
+        right: Interprété (après une compilation interne en bytecode)
+      - left: TypeScript
+        right: Transpilé en JavaScript
+    explanation: |
+      Le mode d'exécution influence le temps de démarrage, la performance de pointe et la
+      portabilité. La plupart des langages modernes mélangent plusieurs techniques.
+
+  - id: fondations.n4.modules.qcm-semver
+    type: qcm
+    title: Mettre à jour une dépendance
+    skills: [modules]
+    difficulty: 2
+    prompt: Une bibliothèque passe de la version 2.4.1 à la version 3.0.0. Que promet le versionnage sémantique ?
+    choices:
+      - id: a
+        text: La version majeure change, donc l'API peut contenir des changements incompatibles ; il faut lire les notes de version.
+        correct: true
+      - id: b
+        text: Seulement des corrections de bugs.
+        feedback: Ce serait 2.4.2.
+      - id: c
+        text: Seulement des ajouts compatibles.
+        feedback: Ce serait 2.5.0.
+      - id: d
+        text: Rien, les numéros de version sont décoratifs.
+    explanation: |
+      MAJEUR.MINEUR.CORRECTIF : le correctif répare, le mineur ajoute sans casser, le majeur
+      peut casser. Une mise à jour majeure se planifie, avec les tests comme filet de sécurité.

@@ -1,0 +1,148 @@
+exercises:
+  - id: git.n3.reflog.scenario-reset
+    type: scenario
+    title: Les commits envolés
+    skills: [reflog, annuler]
+    difficulty: 3
+    prompt: |
+      Tu viens de taper `git reset --hard HEAD~2` par erreur. `git log` ne montre plus que
+      « Ajoute la page d'accueil » : tes deux derniers commits ont disparu.
+    start: debut
+    nodes:
+      debut:
+        text: Que fais-tu ?
+        options:
+          - text: "`git reflog`, pour voir où pointait HEAD avant le reset."
+            next: reflog
+            points: 3
+          - text: Je réécris les deux commits de mémoire.
+            next: memoire
+            points: 0
+            feedback: Inutile, Git les a gardés.
+          - text: Je reclone le dépôt depuis le serveur.
+            next: reclone
+            points: 1
+            feedback: Seulement si les commits avaient été poussés ; et tu perds tes autres modifications locales.
+      memoire:
+        text: Après une heure, tu as réécrit une partie du travail, avec des différences. Il reste une option ?
+        options:
+          - text: "`git reflog`"
+            next: reflog
+            points: 1
+      reclone:
+        text: Les deux commits n'avaient jamais été poussés ; le nouveau clone ne les contient pas. Et maintenant ?
+        options:
+          - text: "Dans l'ancien dossier, `git reflog`."
+            next: reflog
+            points: 1
+      reflog:
+        text: |
+          ```
+          5561056 HEAD@{0}: reset: moving to HEAD~2
+          c71d1c6 HEAD@{1}: commit: Ajoute les badges
+          d3f7439 HEAD@{2}: commit: Ajoute le profil
+          ```
+          Comment récupères-tu tes commits ?
+        options:
+          - text: "`git reset --hard HEAD@{1}` (ou `git reset --hard c71d1c6`)."
+            next: resolu
+            points: 3
+          - text: "`git revert HEAD@{0}`"
+            next: revert
+            points: 0
+            feedback: revert crée un commit inverse ; il ne déplace pas la branche vers les commits disparus.
+      revert:
+        text: Un nouveau commit est apparu, mais les deux commits sont toujours absents de la branche. Que fais-tu ?
+        options:
+          - text: "`git reset --hard c71d1c6`"
+            next: resolu
+            points: 1
+      resolu:
+        ending: success
+        text: "✅ `git log` montre de nouveau les trois commits. Le reflog garde chaque position de HEAD pendant environ 90 jours."
+    explanation: |
+      Un commit n'est jamais effacé tout de suite : il devient seulement inaccessible depuis
+      les branches. Le reflog garde la trace de chaque position de HEAD ; on y retrouve
+      l'identifiant et on replace la branche dessus. Scénario rejoué sur un vrai dépôt.
+
+  - id: git.n3.annuler.match
+    type: match
+    title: Annuler, oui, mais comment ?
+    skills: [annuler]
+    difficulty: 3
+    prompt: Relie chaque situation à la bonne commande.
+    pairs:
+      - left: Un commit fautif est déjà sur main, partagé par toute l'équipe
+        right: git revert <commit>
+      - left: Le dernier commit local, pas encore poussé, contient une faute ; garder les changements
+        right: git reset --soft HEAD~1
+      - left: Jeter des modifications non commitées d'un fichier
+        right: git restore fichier
+      - left: Abandonner complètement les deux derniers commits locaux
+        right: git reset --hard HEAD~2
+    explanation: |
+      Ce qui est partagé ne se réécrit pas : `revert` ajoute un commit inverse, sans toucher à
+      l'historique des autres. Ce qui est local peut se réécrire avec `reset`.
+
+  - id: git.n3.bisect.qcm-etapes
+    type: qcm
+    title: Chercher dans 1 000 commits
+    skills: [bisect]
+    difficulty: 2
+    prompt: Un bug est apparu quelque part dans les 1 000 derniers commits. Combien d'étapes faut-il environ à git bisect pour trouver le coupable ?
+    choices:
+      - id: a
+        text: environ 10
+        correct: true
+      - id: b
+        text: environ 100
+      - id: c
+        text: environ 500
+      - id: d
+        text: 1 000
+    explanation: |
+      `bisect` est une recherche dichotomique : log₂(1 000) ≈ 10. Avec `git bisect run` et un
+      script de test, c'est entièrement automatique. Démonstration réelle dans la leçon : le
+      commit « Version 6 » trouvé seul parmi 8.
+
+  - id: git.n3.rebase.qcm-regle
+    type: qcm
+    title: La règle d'or du rebase
+    skills: [rebase]
+    difficulty: 3
+    prompt: Pourquoi ne faut-il pas faire de rebase sur une branche déjà partagée (comme main) ?
+    choices:
+      - id: a
+        text: Rebase crée de nouveaux commits ; les copies des autres divergent et leurs prochains push ou pull deviennent chaotiques.
+        correct: true
+      - id: b
+        text: Rebase supprime définitivement le code.
+      - id: c
+        text: Rebase est interdit par GitHub.
+      - id: d
+        text: Il n'y a aucun risque.
+    explanation: |
+      Les commits rejoués ont des identifiants différents des originaux. Pour Git, ce sont
+      d'autres commits : les collègues se retrouvent avec deux versions du même travail.
+      Rebase est parfait sur ta branche personnelle, avant de la partager.
+
+  - id: git.n3.outils.qcm-cherry-pick
+    type: qcm
+    title: Reporter un correctif
+    skills: [stash-cherry-pick]
+    difficulty: 2
+    prompt: Un correctif de sécurité est commité sur main. Il faut l'appliquer aussi à la branche de la version 2.4, sans le reste de main. Quelle commande ?
+    choices:
+      - id: a
+        text: "`git cherry-pick <commit>` sur la branche 2.4"
+        correct: true
+      - id: b
+        text: "`git merge main` dans la branche 2.4"
+        feedback: Cela apporterait aussi toutes les nouveautés de main, pas seulement le correctif.
+      - id: c
+        text: "`git stash`"
+      - id: d
+        text: "`git rebase main`"
+    explanation: |
+      `cherry-pick` rejoue un seul commit choisi. C'est l'outil classique pour reporter un
+      correctif sur des versions maintenues en parallèle.

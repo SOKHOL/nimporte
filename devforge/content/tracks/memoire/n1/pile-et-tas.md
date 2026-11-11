@@ -1,7 +1,7 @@
 ---
 id: memoire.n1.pile-et-tas
 title: La pile et le tas
-skills: [pile-tas, valeurs-references, duree-de-vie]
+skills: [pile-tas, valeurs-references, duree-de-vie, representation]
 duration_min: 8
 ---
 

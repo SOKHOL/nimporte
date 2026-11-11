@@ -1,0 +1,204 @@
+exercises:
+  - id: linux.n4.disques.scenario-disque-plein
+    type: scenario
+    title: Le disque plein qui ne l'est pas
+    skills: [systemes-fichiers, strace-lsof]
+    difficulty: 5
+    prompt: |
+      3 h du matin, alerte : le disque de la machine de l'API est plein, et l'API renvoie des
+      erreurs 500 parce qu'elle ne peut plus écrire.
+    start: debut
+    nodes:
+      debut:
+        text: |
+          ```
+          $ df -h /
+          Filesystem  Size  Used Avail Use% Mounted on
+          /dev/vda1    50G   50G     0 100% /
+          ```
+          Que fais-tu d'abord ?
+        options:
+          - text: Je cherche ce qui occupe la place avec du.
+            next: du
+            points: 3
+          - text: Je supprime /var/log/api/api.log, c'est sûrement lui.
+            next: rm-direct
+            points: 0
+            feedback: Supprimer avant de comprendre, en pleine nuit, sur la production…
+      rm-direct:
+        text: "Tu as supprimé le journal de 30 Go. `df -h` affiche toujours 100 %. Pourquoi ?"
+        options:
+          - text: "L'API garde le fichier ouvert : le nom a disparu, mais l'espace n'est libéré qu'à sa fermeture."
+            next: lsof
+            points: 2
+      du:
+        text: |
+          ```
+          $ sudo du -xsh /* 2>/dev/null | sort -h | tail -3
+          2.1G   /usr
+          4.8G   /opt
+          13G    /var
+          ```
+          `du` ne trouve qu'environ 20 Go sur les 50. Quelle hypothèse ?
+        options:
+          - text: Des fichiers supprimés mais encore ouverts par un processus.
+            next: lsof
+            points: 3
+          - text: Le disque est corrompu, il faut lancer fsck.
+            next: fsck
+            points: 0
+            feedback: fsck sur un système monté en production est dangereux, et rien n'indique une corruption.
+      fsck:
+        text: Ton collègue t'arrête. Que vérifies-tu à la place ?
+        options:
+          - text: lsof +L1, la liste des fichiers supprimés encore ouverts.
+            next: lsof
+            points: 1
+      lsof:
+        text: |
+          ```
+          $ sudo lsof +L1
+          java  1842  api  7w  REG  254,1  32212254720  0  …/api.log.1 (deleted)
+          ```
+          Un journal de 30 Go, supprimé par le script de rotation, est encore ouvert par l'API.
+          Comment libères-tu l'espace ?
+        options:
+          - text: "Je vide le fichier par son descripteur (: > /proc/1842/fd/7), puis je corrige la rotation pour utiliser logrotate avec copytruncate ou un signal de réouverture."
+            next: resolu
+            points: 3
+          - text: Je redémarre l'API.
+            next: redemarrage
+            points: 2
+            feedback: Ça libère l'espace, au prix d'une coupure ; et le problème reviendra à la prochaine rotation.
+      redemarrage:
+        ending: partial
+        text: "🟡 L'espace est libéré et l'API repart, mais la même alerte sonne dans neuf jours."
+      resolu:
+        ending: success
+        text: "✅ 30 Go libérés sans coupure, et la rotation des journaux ne garde plus de fichier fantôme."
+    explanation: |
+      `rm` retire un **nom** ; l'espace n'est rendu que lorsque plus aucun processus n'a le
+      fichier ouvert. Démonstration réelle : `du` passe de 51M à 4.0K après `rm`, alors que
+      `lsof` montre toujours le fichier `(deleted)`. Écart entre `df` et `du` → `lsof +L1`.
+
+  - id: linux.n4.charge.qcm-load
+    type: qcm
+    title: Lire la charge moyenne
+    skills: [charge-performance]
+    difficulty: 3
+    language: bash
+    prompt: Que conclus-tu de cette sortie, sur une machine à 4 cœurs ?
+    code: |
+      $ uptime
+       14:02:11 up 12 days,  load average: 8.12, 7.95, 3.10
+    choices:
+      - id: a
+        text: "La machine est saturée depuis plusieurs minutes : en moyenne, environ 4 tâches attendent un cœur (ou le disque)."
+        correct: true
+      - id: b
+        text: Le CPU est utilisé à 812 %.
+        feedback: La charge compte des tâches en attente ou en cours, ce n'est pas un pourcentage.
+      - id: c
+        text: Tout va bien, la charge baisse.
+        feedback: "Les trois valeurs sont les moyennes sur 1, 5 et 15 minutes : la charge **monte**."
+      - id: d
+        text: Il faut ajouter de la RAM.
+    explanation: |
+      Charge sur 1, 5 et 15 minutes, à comparer au nombre de cœurs (`nproc`). 8 sur 4 cœurs :
+      deux fois plus de travail que de capacité, et une hausse récente (3,10 sur 15 minutes).
+      Étape suivante : `vmstat 1` pour voir si c'est du CPU (`r` élevé) ou du disque (`b`,
+      `wa`).
+
+  - id: linux.n4.memoire.qcm-free
+    type: qcm
+    title: Presque plus de mémoire ?
+    skills: [charge-performance]
+    difficulty: 3
+    language: bash
+    prompt: "Un collègue s'inquiète : « il ne reste que 180 Mo de libre ». Que réponds-tu ?"
+    code: |
+      $ free -m
+                     total        used        free      shared  buff/cache   available
+      Mem:           16086        5210         180          16       10696       10480
+    choices:
+      - id: a
+        text: "Tout va bien : Linux utilise la RAM libre comme cache disque, et 10 Go restent disponibles (available)."
+        correct: true
+      - id: b
+        text: Il faut vider le cache avec drop_caches toutes les heures.
+        feedback: "Ça ralentirait la machine : le cache évite des lectures disque, et il est rendu dès qu'un programme a besoin de mémoire."
+      - id: c
+        text: La machine va bientôt utiliser le swap.
+      - id: d
+        text: Il y a une fuite de mémoire.
+    explanation: |
+      La colonne qui compte est **available**. `buff/cache` est de la mémoire que le noyau
+      rend à la demande. Sur la machine de test, réel : `free` 15419, `available` 15572.
+
+  - id: linux.n4.diagnostic.match
+    type: match
+    title: Le bon outil pour le symptôme
+    skills: [charge-performance, strace-lsof, systemes-fichiers]
+    difficulty: 4
+    prompt: Relie chaque symptôme à la commande qui l'éclaire le mieux.
+    pairs:
+      - left: Un programme semble bloqué, sans rien afficher
+        right: strace -p PID
+      - left: « Address already in use » au démarrage
+        right: lsof -i :8080
+      - left: « No space left on device » alors que df -h montre 40 % libre
+        right: df -i
+      - left: Le CPU passe son temps à attendre le disque
+        right: iostat -xz 1
+      - left: La machine utilise le swap en continu
+        right: vmstat 1 (colonnes si et so)
+    explanation: |
+      Chaque outil répond à une question précise ; la méthode USE (utilisation, saturation,
+      erreurs) dit quelle question poser pour chaque ressource.
+
+  - id: linux.n4.conteneurs.qcm
+    type: qcm
+    title: Ce qu'est un conteneur
+    skills: [conteneurs-linux]
+    difficulty: 4
+    prompt: Quelle description d'un conteneur Linux est exacte ?
+    choices:
+      - id: a
+        text: "Un processus ordinaire de l'hôte, isolé par des namespaces (ce qu'il voit) et limité par des cgroups (ce qu'il consomme), qui partage le noyau de l'hôte."
+        correct: true
+      - id: b
+        text: Une petite machine virtuelle avec son propre noyau.
+        feedback: "C'est la différence avec une VM : un conteneur n'a pas de noyau à lui."
+      - id: c
+        text: Un fichier compressé qui contient une application.
+        feedback: "Ça, c'est une image ; le conteneur est le processus lancé depuis l'image."
+      - id: d
+        text: Un utilisateur Linux avec moins de droits.
+    explanation: |
+      Sur l'hôte, `ps` montre les processus des conteneurs. Les namespaces réels de
+      `/proc/self/ns` : cgroup, ipc, mnt, net, pid, time, user, uts. Partager le noyau rend
+      les conteneurs légers, mais une faille du noyau les concerne tous.
+
+  - id: linux.n4.strace.qcm-config
+    type: qcm
+    title: La configuration ignorée
+    skills: [strace-lsof]
+    difficulty: 4
+    prompt: |
+      Un programme semble ignorer ta modification de `/etc/app/config.yaml`. Quelle commande
+      prouve quel fichier de configuration il lit vraiment ?
+    choices:
+      - id: a
+        text: strace -f -e trace=openat ./app
+        correct: true
+      - id: b
+        text: cat /etc/app/config.yaml
+        feedback: Ça montre le fichier, pas ce que le programme ouvre.
+      - id: c
+        text: top
+      - id: d
+        text: df -h
+    explanation: |
+      `strace -e trace=openat` affiche chaque fichier ouvert, avec le résultat (`= 3` pour un
+      descripteur, `= -1 ENOENT` pour un fichier absent). On découvre souvent qu'il lit
+      `~/.config/app/config.yaml` ou un chemin relatif au dossier courant.

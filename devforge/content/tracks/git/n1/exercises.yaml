@@ -1,0 +1,94 @@
+exercises:
+  - id: git.n1.zones.qcm-mm
+    type: qcm
+    title: Que contiendra le commit ?
+    skills: [trois-zones]
+    difficulty: 2
+    language: bash
+    prompt: Après ces commandes, que contiendra `git commit -m "…"` ?
+    code: |
+      echo "ligne 2" >> notes.txt
+      git add notes.txt
+      echo "ligne 3" >> notes.txt
+      git status --short      # affiche : MM notes.txt
+    choices:
+      - id: a
+        text: Seulement la ligne 2 ; la ligne 3 reste dans le répertoire de travail.
+        correct: true
+      - id: b
+        text: Les lignes 2 et 3.
+        feedback: "`git add` a photographié le fichier quand il n'avait que la ligne 2."
+      - id: c
+        text: Rien, il faut refaire git add.
+      - id: d
+        text: Seulement la ligne 3.
+    explanation: |
+      `git add` copie dans l'index la version **actuelle** du fichier. La modification faite
+      ensuite n'y est pas : d'où le double `M` (indexé, puis non indexé). Pour tout inclure :
+      `git add notes.txt` à nouveau, ou `git commit -a`.
+
+  - id: git.n1.zones.match
+    type: match
+    title: Quelle commande pour quelle zone ?
+    skills: [trois-zones, historique]
+    difficulty: 2
+    prompt: Relie chaque commande à ce qu'elle fait.
+    pairs:
+      - left: git add fichier
+        right: Copie la version actuelle du fichier dans l'index
+      - left: git commit
+        right: Enregistre le contenu de l'index dans l'historique
+      - left: git diff
+        right: Montre ce qui a changé et n'est pas encore indexé
+      - left: git diff --staged
+        right: Montre ce qui partira dans le prochain commit
+      - left: git log --oneline
+        right: Affiche l'historique, un commit par ligne
+    explanation: |
+      Retenir le trajet : répertoire de travail → `git add` → index → `git commit` → dépôt.
+      Les deux `git diff` regardent chacun un des deux passages.
+
+  - id: git.n1.commits.qcm-message
+    type: qcm
+    title: Le meilleur message
+    skills: [commits]
+    difficulty: 1
+    prompt: Lequel de ces messages de commit est le plus utile ?
+    choices:
+      - id: a
+        text: "« Corrige le calcul de la TVA pour les montants négatifs »"
+        correct: true
+      - id: b
+        text: "« fix »"
+      - id: c
+        text: "« modifs du jeudi »"
+      - id: d
+        text: "« Modifie Calcul.kt ligne 42 »"
+        feedback: Le diff montre déjà quel fichier et quelle ligne ; le message doit dire pourquoi.
+    explanation: |
+      Dans six mois, en lisant l'historique (ou en cherchant un bug avec `git bisect`), un
+      message qui dit **quoi et pourquoi** fait gagner des heures. Première ligne courte, à
+      l'impératif.
+
+  - id: git.n1.gitignore.qcm-secret
+    type: qcm
+    title: Le secret poussé par erreur
+    skills: [gitignore]
+    difficulty: 3
+    prompt: Tu as poussé un fichier `.env` contenant une clé d'API sur un dépôt partagé. Quelle est la première chose à faire ?
+    choices:
+      - id: a
+        text: Révoquer la clé et en générer une nouvelle, puis nettoyer l'historique et ajouter .env au .gitignore.
+        correct: true
+      - id: b
+        text: Supprimer le fichier dans un nouveau commit ; c'est réglé.
+        feedback: La clé reste lisible dans l'historique, par toute personne qui a cloné le dépôt.
+      - id: c
+        text: Ajouter .env au .gitignore ; Git l'oubliera.
+        feedback: Un fichier déjà versionné reste suivi, et l'ancien contenu reste dans l'historique.
+      - id: d
+        text: Renommer le fichier.
+    explanation: |
+      Un secret poussé doit être considéré comme **compromis**, même si on le supprime aussitôt :
+      des robots parcourent les dépôts publics en quelques minutes. On révoque d'abord, on
+      nettoie ensuite.

@@ -1,0 +1,159 @@
+exercises:
+  - id: fondations.n1.operateurs.predict-division
+    type: predict-output
+    title: Diviser des entiers
+    skills: [operateurs, variables-types]
+    difficulty: 1
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          println(7 / 2)
+          println(7 % 2)
+          println(7 / 2.0)
+          println(-7 / 2)
+      }
+    choices:
+      - id: a
+        text: "`3` / `1` / `3.5` / `-3`"
+        correct: true
+      - id: b
+        text: "`3.5` / `1` / `3.5` / `-3.5`"
+        feedback: Entre deux Int, la division est entière.
+      - id: c
+        text: "`3` / `1` / `3.5` / `-4`"
+        feedback: "Kotlin tronque vers zéro : -3,5 devient -3. (Python, avec `//`, donnerait -4.)"
+      - id: d
+        text: "`3` / `0` / `3` / `-3`"
+    explanation: |
+      `7 / 2` entre deux Int donne 3, `%` donne le reste 1, et dès qu'un Double intervient
+      on obtient 3.5. Pour les négatifs, Kotlin (comme Java et C) tronque vers zéro : -3.
+      Sortie vérifiée.
+
+  - id: fondations.n1.operateurs.qcm-flottants
+    type: qcm
+    title: 0,1 + 0,2
+    skills: [operateurs]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche `println(0.1 + 0.2 == 0.3)` ?
+    code: |
+      println(0.1 + 0.2 == 0.3)
+    choices:
+      - id: a
+        text: "`false`, car 0.1 + 0.2 vaut en réalité 0.30000000000000004"
+        correct: true
+      - id: b
+        text: "`true`"
+      - id: c
+        text: Une erreur de compilation.
+      - id: d
+        text: "`false`, mais seulement sur Android"
+        feedback: C'est la norme IEEE 754, identique sur toutes les plateformes et dans presque tous les langages.
+    explanation: |
+      0,1 n'a pas d'écriture binaire exacte : le calcul accumule une minuscule erreur.
+      Compare des flottants avec une tolérance (`abs(a - b) < 1e-9`), et utilise des entiers
+      (centimes) ou `BigDecimal` pour l'argent.
+
+  - id: fondations.n1.operateurs.qcm-debordement
+    type: qcm
+    title: Plus grand que le plus grand
+    skills: [variables-types, operateurs]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce code ?
+    code: |
+      val max = Int.MAX_VALUE   // 2147483647
+      println(max + 1)
+    choices:
+      - id: a
+        text: "`-2147483648`"
+        correct: true
+      - id: b
+        text: "`2147483648`"
+        feedback: "Un Int ne peut pas contenir cette valeur ; `max.toLong() + 1` la donnerait."
+      - id: c
+        text: Une ArithmeticException.
+        feedback: Kotlin (comme Java) ne vérifie pas les débordements ; `Math.addExact` le ferait.
+      - id: d
+        text: Une erreur de compilation.
+    explanation: |
+      Un Int fait 32 bits. Au-delà du maximum, il « repart » au minimum, sans erreur. C'est
+      à l'origine de bugs célèbres (compteurs, dates, montants). Utilise `Long` pour les
+      grandes valeurs, ou `Math.addExact` pour être prévenu.
+
+  - id: fondations.n1.boucles.predict-intervalles
+    type: predict-output
+    title: Compter avec des intervalles
+    skills: [boucles]
+    difficulty: 1
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      fun main() {
+          for (i in 1..10 step 3) print("$i ")
+          println()
+          for (i in 0 until 3) print("$i ")
+          println()
+          for (i in 3 downTo 1) print("$i ")
+          println()
+      }
+    choices:
+      - id: a
+        text: "`1 4 7 10` / `0 1 2` / `3 2 1`"
+        correct: true
+      - id: b
+        text: "`1 4 7` / `0 1 2 3` / `3 2 1`"
+        feedback: "`..` inclut la borne (10), `until` l'exclut (3)."
+      - id: c
+        text: "`1 4 7 10` / `0 1 2 3` / `3 2 1 0`"
+      - id: d
+        text: "`3 6 9` / `0 1 2` / `1 2 3`"
+    explanation: |
+      `1..10 step 3` : 1, 4, 7, 10 (10 est inclus). `0 until 3` : 0, 1, 2. `3 downTo 1` :
+      3, 2, 1. Sortie vérifiée.
+
+  - id: fondations.n1.conditions.bug-fizzbuzz
+    type: find-bug
+    title: FizzBuzz cassé
+    skills: [conditions]
+    difficulty: 2
+    language: kotlin
+    prompt: |
+      Pour 15, cette fonction renvoie « Fizz » au lieu de « FizzBuzz ».
+      Touche la ligne qui pose problème.
+    code: |
+      fun fizzBuzz(n: Int): String = when {
+          n % 3 == 0 -> "Fizz"
+          n % 5 == 0 -> "Buzz"
+          n % 15 == 0 -> "FizzBuzz"
+          else -> n.toString()
+      }
+    bug_lines: [2, 4]
+    hints:
+      - "`when` s'arrête à la première condition vraie. Laquelle est vraie en premier pour 15 ?"
+    explanation: |
+      15 est divisible par 3 : la première branche gagne et la branche « FizzBuzz » n'est
+      jamais atteinte. Réellement, la sortie pour 1 à 15 se termine par « 14 Fizz ». La
+      condition la plus spécifique (`n % 15 == 0`) doit venir **en premier**.
+
+  - id: fondations.n1.fonctions.trous-defaut
+    type: fill-blanks
+    title: Une fonction souple
+    skills: [fonctions, variables-types]
+    difficulty: 1
+    language: kotlin
+    prompt: Complète pour que `aire(3.0)` renvoie 3.0 (hauteur par défaut de 1) et que le résultat soit un nombre à virgule.
+    code: |
+      fun aire(largeur: Double, hauteur: Double {{1}} 1.0): {{2}} = largeur * hauteur
+    blanks:
+      "1":
+        answers: ["="]
+        options: ["=", ":", "->", "?"]
+      "2":
+        answers: [Double]
+        options: [Double, Int, Unit, String]
+    explanation: |
+      `hauteur: Double = 1.0` donne une valeur par défaut. Le type de retour `Double`
+      correspond au produit de deux Double. On peut aussi appeler
+      `aire(hauteur = 2.0, largeur = 5.0)` grâce aux arguments nommés.

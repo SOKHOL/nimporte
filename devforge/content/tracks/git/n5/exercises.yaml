@@ -1,0 +1,103 @@
+exercises:
+  - id: git.n5.objets.match
+    type: match
+    title: Les objets de Git
+    skills: [objets-git]
+    difficulty: 2
+    prompt: Relie chaque objet Git à ce qu'il contient.
+    pairs:
+      - left: blob
+        right: Le contenu d'un fichier, sans son nom
+      - left: tree
+        right: Une liste de noms de fichiers et de dossiers, avec leurs hashes
+      - left: commit
+        right: Un tree, le ou les commits parents, l'auteur et le message
+      - left: branche
+        right: Un fichier qui contient le hash d'un commit
+    explanation: |
+      Tout Git repose sur ces briques. `git cat-file -p` permet de les lire dans n'importe
+      quel dépôt.
+
+  - id: git.n5.objets.qcm-hash
+    type: qcm
+    title: Le même hash partout
+    skills: [objets-git]
+    difficulty: 3
+    language: bash
+    prompt: "`echo \"bonjour\" | git hash-object --stdin` affiche `1cd909e0…`. Que donnera la même commande sur l'ordinateur d'un collègue, dans un autre dépôt ?"
+    code: |
+      echo "bonjour" | git hash-object --stdin
+    choices:
+      - id: a
+        text: Exactement le même hash, car il ne dépend que du contenu.
+        correct: true
+      - id: b
+        text: Un hash différent, car il dépend de la date.
+        feedback: La date fait partie du commit, pas du blob.
+      - id: c
+        text: Un hash différent, car il dépend du nom du dépôt.
+      - id: d
+        text: Une erreur, car le fichier n'existe pas.
+    explanation: |
+      Le hash d'un blob ne dépend que de son contenu (et de son type). C'est ce qui permet à
+      Git de stocker une seule fois un contenu identique, et de détecter toute altération.
+
+  - id: git.n5.historique.qcm-modifier
+    type: qcm
+    title: Modifier un vieux commit
+    skills: [objets-git, references]
+    difficulty: 4
+    prompt: On modifie le message d'un commit vieux de 10 commits (avec un rebase interactif). Que devient l'identifiant des 10 commits qui le suivent ?
+    choices:
+      - id: a
+        text: Ils changent tous, car chaque commit contient le hash de son parent.
+        correct: true
+      - id: b
+        text: Ils restent identiques, seul le commit modifié change.
+      - id: c
+        text: Ils sont supprimés.
+      - id: d
+        text: Seul le dernier change.
+    explanation: |
+      Le hash d'un commit dépend de son parent : modifier un ancêtre change toute la chaîne
+      qui suit. C'est ce qui rend l'historique infalsifiable… et ce qui explique pourquoi un
+      rebase sur une branche partagée crée des « doublons » chez les autres.
+
+  - id: git.n5.references.qcm-branche
+    type: qcm
+    title: Créer une branche
+    skills: [references]
+    difficulty: 2
+    prompt: Pourquoi créer une branche est-il instantané, même dans un dépôt de plusieurs gigaoctets ?
+    choices:
+      - id: a
+        text: Une branche n'est qu'un petit fichier contenant le hash d'un commit ; rien n'est copié.
+        correct: true
+      - id: b
+        text: Git copie le dépôt en arrière-plan.
+      - id: c
+        text: Git compresse très bien les fichiers.
+      - id: d
+        text: Ce n'est instantané que sur un SSD.
+    explanation: |
+      `cat .git/refs/heads/main` affiche simplement un hash de 40 caractères. Créer une
+      branche, c'est écrire ce fichier : 41 octets, quelle que soit la taille du projet.
+
+  - id: git.n5.gros-depots.match
+    type: match
+    title: Dompter un très gros dépôt
+    skills: [gros-depots]
+    difficulty: 3
+    prompt: Relie chaque technique à son usage.
+    pairs:
+      - left: Git LFS
+        right: Stocker à part des fichiers binaires énormes (vidéos, modèles)
+      - left: Clone partiel (--filter=blob:none)
+        right: Ne télécharger le contenu des fichiers qu'au moment où on en a besoin
+      - left: Sparse checkout
+        right: Ne déployer que quelques dossiers d'un énorme dépôt
+      - left: Clone superficiel (--depth 1)
+        right: Récupérer seulement le dernier commit, par exemple en CI
+    explanation: |
+      Ces techniques se combinent ; ensemble, elles rendent utilisables des dépôts de
+      plusieurs centaines de gigaoctets.

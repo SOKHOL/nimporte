@@ -1,0 +1,114 @@
+exercises:
+  - id: clean-code.n2.smells.match
+    type: match
+    title: Reconnaître les odeurs
+    skills: [code-smells]
+    difficulty: 3
+    prompt: Relie chaque symptôme à l'odeur du code correspondante.
+    pairs:
+      - left: "Les e-mails, IBAN et montants sont partout des String et des Double"
+        right: Obsession des primitives
+      - left: "Ajouter un mode de paiement oblige à modifier 9 fichiers"
+        right: Chirurgie au fusil
+      - left: "La méthode de Facture passe son temps à lire les champs de Client"
+        right: Envie de fonctionnalité
+      - left: "GestionnaireCommande fait 3 000 lignes et gère tout"
+        right: Classe trop grosse
+    explanation: |
+      Chaque odeur a son remède : objets-valeurs, rapprochement de ce qui change ensemble,
+      déplacement de méthode, découpage par responsabilité.
+
+  - id: clean-code.n2.tests.qcm-message
+    type: qcm
+    title: Deux tests, deux messages
+    skills: [tests-unitaires]
+    difficulty: 2
+    language: kotlin
+    prompt: Les deux tests échouent sur le même bug. Lequel aide le plus à le comprendre ?
+    code: |
+      assertTrue(panier.total() == 9_500)
+      // AssertionError: Expected value to be true.
+
+      assertEquals(9_500, panier.total(), "un panier de 100 € pile doit avoir la remise")
+      // AssertionError: un panier de 100 € pile doit avoir la remise expected:<9500> but was:<10000>
+    choices:
+      - id: a
+        text: "Le second : il dit la règle, la valeur attendue et la valeur obtenue."
+        correct: true
+      - id: b
+        text: Le premier, plus court.
+      - id: c
+        text: Les deux se valent.
+      - id: d
+        text: Aucun, il faut lire les journaux.
+    explanation: |
+      Messages réels de JUnit. `expected:<9500> but was:<10000>` montre que la remise n'a pas
+      été appliquée à 100 € pile : le `>` aurait dû être `>=`.
+
+  - id: clean-code.n2.refactorings.qcm-commit
+    type: qcm
+    title: Refactorer et corriger en même temps ?
+    skills: [refactorings]
+    difficulty: 3
+    prompt: "En corrigeant un bug, tu veux aussi renommer trois classes et extraire deux fonctions. Comment t'y prends-tu ?"
+    choices:
+      - id: a
+        text: "Deux commits (ou plus) : d'abord les refactorings, sans changer de comportement et sans toucher aux tests, puis la correction du bug avec son test."
+        correct: true
+      - id: b
+        text: Un seul commit, c'est plus rapide à relire.
+        feedback: "Le relecteur doit démêler ce qui change le comportement de ce qui ne le change pas, au milieu de dizaines de fichiers renommés."
+      - id: c
+        text: D'abord le bug, et le refactoring plus tard, quand il y aura le temps.
+        feedback: "Possible, mais « plus tard » arrive rarement ; et le refactoring rend parfois la correction plus simple."
+      - id: d
+        text: Refactorer sans relancer les tests, pour aller plus vite.
+    explanation: |
+      Séparer structure et comportement rend chaque commit facile à relire et à annuler.
+      « Rendre le changement facile, puis faire le changement facile. »
+
+  - id: clean-code.n2.tests.parsons-aaa
+    type: parsons
+    title: Arrange, Act, Assert
+    skills: [tests-unitaires]
+    difficulty: 2
+    language: kotlin
+    prompt: Remets ce test dans l'ordre Arrange / Act / Assert.
+    lines:
+      - "@Test fun `refuse un retrait supérieur au solde`() {"
+      - "    val compte = Compte(soldeInitial = 50)"
+      - "    val resultat = compte.retirer(80)"
+      - "    assertEquals(Refuse(\"solde insuffisant\"), resultat)"
+      - "    assertEquals(50, compte.solde)"
+      - "}"
+    distractors:
+      - "    println(compte.solde)"
+    explanation: |
+      Préparer (le compte), agir (le retrait), vérifier (le résultat et l'absence d'effet).
+      Un `println` n'est pas une vérification : le test doit passer ou échouer tout seul.
+
+  - id: clean-code.n2.tests.qcm-first
+    type: qcm
+    title: Le test qui dépend du jour
+    skills: [tests-unitaires]
+    difficulty: 3
+    language: kotlin
+    prompt: Quel principe des bons tests ce test viole-t-il ?
+    code: |
+      @Test fun `abonnement expire`() {
+          val abonnement = Abonnement(fin = LocalDate.of(2026, 12, 31))
+          assertFalse(abonnement.estExpire())   // compare à LocalDate.now()
+      }
+    choices:
+      - id: a
+        text: "Repeatable : il passera jusqu'au 31 décembre 2026, puis échouera sans qu'aucun code n'ait changé."
+        correct: true
+      - id: b
+        text: Fast
+      - id: c
+        text: Self-validating
+      - id: d
+        text: Aucun
+    explanation: |
+      L'heure doit être injectée (`Clock`, `estExpire(aujourdhui)`) : le test fixe alors la
+      date et reste vrai pour toujours.

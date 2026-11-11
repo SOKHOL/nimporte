@@ -1,0 +1,124 @@
+exercises:
+  - id: cloud.n3.vpc.qcm-cidr
+    type: qcm
+    title: Combien d'adresses ?
+    skills: [vpc]
+    difficulty: 2
+    prompt: "Combien de sous-réseaux /24 peut-on découper dans un VPC 10.0.0.0/16, et combien d'adresses chacun contient-il ?"
+    choices:
+      - id: a
+        text: "256 sous-réseaux de 256 adresses (dont 251 utilisables sur AWS)"
+        correct: true
+      - id: b
+        text: "16 sous-réseaux de 24 adresses"
+      - id: c
+        text: "24 sous-réseaux de 1 024 adresses"
+      - id: d
+        text: "8 sous-réseaux de 8 192 adresses"
+    explanation: |
+      Calcul réel : un /16 a 2¹⁶ = 65 536 adresses ; un /24, 2⁸ = 256 ; 65 536 / 256 = 256
+      sous-réseaux. AWS réserve 5 adresses par sous-réseau.
+
+  - id: cloud.n3.iam.qcm-joker
+    type: qcm
+    title: La politique qui en fait trop
+    skills: [iam]
+    difficulty: 3
+    language: text
+    prompt: "Un rôle a ces deux politiques. Peut-il supprimer `factures/2026/f-001.pdf` ?"
+    code: |
+      {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": "arn:aws:s3:::factures/*"}
+      {"Effect": "Allow", "Action": ["s3:*"],                         "Resource": "arn:aws:s3:::factures/*"}
+    choices:
+      - id: a
+        text: "Oui : s3:* inclut s3:DeleteObject, même si personne ne l'avait voulu."
+        correct: true
+      - id: b
+        text: "Non, la première politique ne l'autorise pas."
+        feedback: "Il suffit qu'une politique autorise l'action, et `s3:*` le fait."
+      - id: c
+        text: "Non, les suppressions sont toujours interdites par défaut."
+      - id: d
+        text: Seulement depuis la console.
+    explanation: |
+      Résultat réel du modèle d'évaluation : `s3:DeleteObject factures/2026/f-001.pdf →
+      autorisé`. Les jokers ajoutés « pour que ça marche » sont une cause fréquente de droits
+      excessifs.
+
+  - id: cloud.n3.iam.match
+    type: match
+    title: Évaluer une politique IAM
+    skills: [iam]
+    difficulty: 3
+    prompt: "Avec : Allow s3:* sur factures/*, et Deny s3:DeleteObject sur factures/archives/*, relie chaque demande à son résultat."
+    pairs:
+      - left: "s3:GetObject sur factures/2026/f-001.pdf"
+        right: Autorisé
+      - left: "s3:DeleteObject sur factures/archives/2019/f-042.pdf"
+        right: Refusé, par le refus explicite
+      - left: "s3:GetObject sur paie/2026/bulletin.pdf"
+        right: Refusé par défaut, aucune autorisation ne s'applique
+    explanation: |
+      Refus par défaut ; une autorisation explicite ouvre ; un refus explicite l'emporte
+      toujours. Résultats réels du modèle simplifié.
+
+  - id: cloud.n3.vpc.qcm-base-publique
+    type: qcm
+    title: Où placer la base de données ?
+    skills: [vpc]
+    difficulty: 2
+    prompt: "Dans un VPC avec des sous-réseaux publics et privés, où placer la base PostgreSQL de production ?"
+    choices:
+      - id: a
+        text: "Dans un sous-réseau privé sans route vers Internet, avec un groupe de sécurité qui n'accepte le port 5432 que depuis le groupe des applications."
+        correct: true
+      - id: b
+        text: Dans un sous-réseau public, protégée par un mot de passe fort.
+        feedback: "Une base exposée sur Internet reçoit des milliers d'essais par jour ; et une faille du moteur suffirait."
+      - id: c
+        text: Dans un sous-réseau public, avec un groupe de sécurité ouvert à 0.0.0.0/0.
+      - id: d
+        text: N'importe où, le chiffrement suffit.
+    explanation: |
+      Défense en profondeur : pas d'accès réseau depuis Internet, des groupes de sécurité qui
+      se référencent entre eux, et en plus authentification et chiffrement.
+
+  - id: cloud.n3.kms.qcm-enveloppe
+    type: qcm
+    title: Le chiffrement d'enveloppe
+    skills: [chiffrement-kms]
+    difficulty: 4
+    prompt: "Avec le chiffrement d'enveloppe, que faut-il rechiffrer lors de la rotation de la clé maîtresse d'un fichier de 2 To ?"
+    choices:
+      - id: a
+        text: "Seulement la clé de données chiffrée (quelques dizaines d'octets), pas le fichier."
+        correct: true
+      - id: b
+        text: Les 2 To du fichier.
+      - id: c
+        text: Rien, la rotation n'est pas possible.
+      - id: d
+        text: La moitié du fichier.
+    explanation: |
+      Démonstration réelle : un fichier chiffré de 22 028 octets s'accompagne d'une clé de
+      données chiffrée de 60 octets. Le KMS ne voit passer que la clé, jamais les données.
+
+  - id: cloud.n3.iam.qcm-cles
+    type: qcm
+    title: Les clés d'accès de la CI
+    skills: [iam]
+    difficulty: 3
+    prompt: "La CI déploie sur AWS avec une clé d'accès permanente stockée dans ses secrets. Quelle amélioration ?"
+    choices:
+      - id: a
+        text: "La fédération OIDC : la CI endosse un rôle et reçoit des identifiants temporaires, limités au dépôt et à la branche, sans aucune clé stockée."
+        correct: true
+      - id: b
+        text: Changer la clé chaque année.
+      - id: c
+        text: Chiffrer la clé dans le dépôt.
+      - id: d
+        text: Donner des droits administrateur pour éviter les erreurs de déploiement.
+    explanation: |
+      Plus de secret à voler ni à faire tourner : des identifiants valables quelques heures,
+      délivrés seulement au bon dépôt et à la bonne branche.

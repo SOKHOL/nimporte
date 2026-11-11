@@ -1,0 +1,101 @@
+exercises:
+  - id: cloud.n1.modeles.match
+    type: match
+    title: Quel modèle de service ?
+    skills: [modeles-service]
+    difficulty: 2
+    prompt: Relie chaque offre au modèle de service correspondant.
+    pairs:
+      - left: Une machine virtuelle Linux dont tu gères les mises à jour
+        right: IaaS
+      - left: Une fonction exécutée à chaque dépôt de fichier, facturée à la milliseconde
+        right: Serverless (FaaS)
+      - left: Une plateforme qui déploie ton application à partir du code, sans gérer de serveur
+        right: PaaS
+      - left: Une messagerie d'entreprise utilisée par tous les salariés
+        right: SaaS
+    explanation: |
+      Plus on monte dans les modèles, moins on gère d'infrastructure, mais moins on contrôle
+      l'environnement.
+
+  - id: cloud.n1.responsabilite.qcm
+    type: qcm
+    title: Le compartiment public
+    skills: [responsabilite-partagee]
+    difficulty: 2
+    prompt: "Des fichiers de clients sont lisibles par tous sur Internet, parce qu'un compartiment de stockage objet a été rendu public. Qui en est responsable selon le modèle de responsabilité partagée ?"
+    choices:
+      - id: a
+        text: "Le client : la configuration des accès à ses données lui revient, même sur un service géré."
+        correct: true
+      - id: b
+        text: Le fournisseur, qui héberge le service.
+      - id: c
+        text: Personne, c'est un comportement normal.
+      - id: d
+        text: L'utilisateur qui a téléchargé les fichiers.
+    explanation: |
+      Le fournisseur sécurise l'infrastructure ; le client, sa configuration, ses identités et
+      ses données. La plupart des incidents cloud sont des erreurs de configuration.
+
+  - id: cloud.n1.regions.qcm
+    type: qcm
+    title: Une zone ou deux ?
+    skills: [regions-zones]
+    difficulty: 2
+    prompt: "Pourquoi déployer une application sur au moins deux zones de disponibilité d'une même région ?"
+    choices:
+      - id: a
+        text: "Pour survivre à la panne d'un datacenter : chaque zone a son alimentation, son refroidissement et son réseau, à quelques kilomètres des autres."
+        correct: true
+      - id: b
+        text: Pour être plus près des utilisateurs étrangers.
+        feedback: "Les zones d'une région sont proches les unes des autres ; c'est le rôle des régions ou des CDN."
+      - id: c
+        text: Parce que le fournisseur l'impose.
+      - id: d
+        text: Pour payer moins cher.
+    explanation: |
+      Les zones d'une région sont reliées avec une latence d'environ une milliseconde : on
+      peut y répliquer de façon synchrone, ce qui est rarement possible entre régions.
+
+  - id: cloud.n1.elasticite.qcm-calcul
+    type: qcm
+    title: Payer le pic toute la journée
+    skills: [elasticite]
+    difficulty: 3
+    prompt: "Un service a besoin de 10 serveurs pendant 2 heures par jour, et de 2 serveurs le reste du temps. Avec une capacité élastique plutôt que fixe, quelle économie d'heures-serveur ?"
+    choices:
+      - id: a
+        text: Environ 73 %
+        correct: true
+      - id: b
+        text: Environ 20 %
+      - id: c
+        text: Environ 92 %
+      - id: d
+        text: Aucune
+    explanation: |
+      Fixe : 10 × 24 = 240 heures-serveur par jour ; élastique : 10 × 2 + 2 × 22 = 64.
+      L'élasticité paie surtout pour les charges variables.
+
+  - id: cloud.n1.serverless.qcm
+    type: qcm
+    title: Une fonction lente au réveil
+    skills: [modeles-service]
+    difficulty: 3
+    prompt: "Une API construite avec des fonctions serverless répond en 30 ms, sauf la première requête après une période calme, qui prend 800 ms. Pourquoi ?"
+    choices:
+      - id: a
+        text: "Le démarrage à froid : après une inactivité, le fournisseur doit créer un nouvel environnement d'exécution et charger le code."
+        correct: true
+      - id: b
+        text: La base de données est lente le matin.
+      - id: c
+        text: Le DNS expire.
+      - id: d
+        text: Un bug du code de la fonction.
+    explanation: |
+      C'est le prix de la mise à l'échelle jusqu'à zéro. Remèdes : des fonctions légères,
+      des environnements maintenus chauds (payants), ou un service toujours démarré pour les
+      chemins sensibles à la latence.

@@ -1,0 +1,125 @@
+exercises:
+  - id: clean-code.n1.nommage.review
+    type: code-review
+    title: "Revue : une fonction difficile à lire"
+    skills: [nommage, fonctions]
+    difficulty: 2
+    language: kotlin
+    prompt: Trouve au moins 3 problèmes de lisibilité.
+    code: |
+      fun proc(d: List<Data>, x: Boolean): Double {
+          var r = 0.0
+          for (i in d) {
+              if (i.t == 2) {
+                  if (i.a > 0) {
+                      r += i.a * 1.2
+                  }
+              }
+          }
+          if (x) envoyerEmail(r)
+          return r
+      }
+    issues:
+      - lines: [1]
+        category: lisibilite
+        description: "`proc`, `d`, `x`, `Data` ne disent rien : `totalTtcDesVentes(ventes, notifierLaCompta)`."
+      - lines: [4, 6]
+        category: lisibilite
+        description: "Nombres magiques : que signifient `2` et `1.2` ? (`TypeVente.EN_LIGNE`, `TAUX_TVA`)."
+      - lines: [9]
+        category: conception
+        description: "Un booléen qui déclenche un effet de bord caché (un e-mail) dans une fonction de calcul : séparer le calcul de l'envoi."
+      - lines: [4, 5]
+        category: lisibilite
+        description: "`if` imbriqués : un `filter` ou un `continue` anticipé aplatit le code."
+    min_found: 3
+    explanation: |
+      Version possible : `ventes.filter { it.type == EN_LIGNE && it.montantHt > 0 }.sumOf {
+      it.montantHt * (1 + TAUX_TVA) }`, et l'envoi d'e-mail dans l'appelant.
+
+  - id: clean-code.n1.commentaires.qcm
+    type: qcm
+    title: Quel commentaire garder ?
+    skills: [commentaires]
+    difficulty: 2
+    prompt: Lequel de ces commentaires mérite d'être gardé ?
+    choices:
+      - id: a
+        text: "// Le fournisseur arrondit au centime supérieur (contrat du 12/03, art. 4) : on fait de même pour que les factures concordent."
+        correct: true
+      - id: b
+        text: "// incrémente le compteur"
+        feedback: "Il paraphrase le code : il n'apporte rien et risque de devenir faux."
+      - id: c
+        text: "// ancienne version : total = total * 1.2"
+        feedback: "Le code commenté encombre ; Git garde l'historique."
+      - id: d
+        text: "// Modifié par Paul le 03/02/2019"
+        feedback: "C'est le rôle de l'historique Git."
+    explanation: |
+      Un bon commentaire explique ce que le code ne peut pas dire : le **pourquoi**, une
+      contrainte externe, une référence.
+
+  - id: clean-code.n1.principes.match
+    type: match
+    title: DRY, KISS ou YAGNI ?
+    skills: [principes]
+    difficulty: 2
+    prompt: Relie chaque situation au principe qu'elle enfreint.
+    pairs:
+      - left: La règle de remise est recopiée dans le panier, la facture et l'export comptable
+        right: DRY
+      - left: Un système de plugins générique, pour l'unique export CSV de l'application
+        right: YAGNI
+      - left: "Cinq niveaux d'interfaces et une fabrique abstraite pour additionner deux montants"
+        right: KISS
+    explanation: |
+      DRY concerne la connaissance dupliquée ; KISS, la complexité inutile de la solution ;
+      YAGNI, les besoins imaginaires.
+
+  - id: clean-code.n1.fonctions.qcm-booleen
+    type: qcm
+    title: Le paramètre booléen
+    skills: [fonctions]
+    difficulty: 3
+    language: kotlin
+    prompt: Que suggère cet appel ?
+    code: |
+      genererRapport(ventes, true, false)
+    choices:
+      - id: a
+        text: "Que la fonction fait plusieurs choses selon des drapeaux illisibles à l'appel : des fonctions séparées ou des paramètres nommés (ou un enum) seraient plus clairs."
+        correct: true
+      - id: b
+        text: Rien, c'est la façon normale de passer des options.
+      - id: c
+        text: Qu'il faut ajouter un commentaire à l'appel.
+        feedback: "Un commentaire compense un défaut de conception ; mieux vaut le corriger."
+      - id: d
+        text: Qu'il faut passer les booléens en chaîne de caractères.
+    explanation: |
+      À la lecture, `true, false` ne veut rien dire. `genererRapport(ventes, format = PDF,
+      inclureDetails = false)` ou `genererRapportPdf(ventes)` se lisent sans ouvrir la fonction.
+
+  - id: clean-code.n1.principes.qcm-dry
+    type: qcm
+    title: Deux fonctions qui se ressemblent
+    skills: [principes]
+    difficulty: 4
+    prompt: |
+      Les frais de port d'un colis et les frais de retour d'un colis se calculent aujourd'hui
+      avec exactement le même code. Faut-il les fusionner en une seule fonction ?
+    choices:
+      - id: a
+        text: "Pas forcément : ce sont deux règles métier distinctes qui coïncident aujourd'hui ; si elles évolueront séparément, les fusionner créerait un couplage pire que la duplication."
+        correct: true
+      - id: b
+        text: "Oui, toujours : DRY interdit tout code dupliqué."
+        feedback: "DRY porte sur la connaissance, pas sur la ressemblance du code."
+      - id: c
+        text: Non, il ne faut jamais factoriser.
+      - id: d
+        text: Oui, et ajouter un paramètre booléen « estRetour ».
+    explanation: |
+      « La duplication coûte moins cher que la mauvaise abstraction » (Sandi Metz). On demande
+      au métier si ces règles sont **la même** règle.

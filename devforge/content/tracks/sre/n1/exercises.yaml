@@ -1,0 +1,99 @@
+exercises:
+  - id: sre.n1.piliers.match
+    type: match
+    title: Le bon pilier
+    skills: [trois-piliers]
+    difficulty: 2
+    prompt: Relie chaque question au type de donnée qui y répond le mieux.
+    pairs:
+      - left: "Le taux d'erreur a-t-il augmenté depuis le déploiement de 14 h ?"
+        right: Métriques
+      - left: Dans quel service la requête lente de ce client a-t-elle passé son temps ?
+        right: Traces
+      - left: Pourquoi le paiement de la commande 7731 a-t-il été refusé ?
+        right: Journaux
+    explanation: |
+      Les métriques pour les tendances et les alertes, les traces pour localiser, les
+      journaux pour le détail ; un identifiant de trace commun permet de passer de l'un à
+      l'autre.
+
+  - id: sre.n1.signaux.qcm-erreur-rapide
+    type: qcm
+    title: La latence qui s'améliore toute seule
+    skills: [signaux-or]
+    difficulty: 4
+    prompt: "Après un déploiement, la latence moyenne passe de 120 ms à 40 ms. Le taux de succès n'est pas affiché sur le tableau de bord. Que vérifier en premier ?"
+    choices:
+      - id: a
+        text: "Le taux d'erreurs : des erreurs renvoyées très vite (par exemple une dépendance qui refuse tout) font baisser la latence moyenne."
+        correct: true
+      - id: b
+        text: Rien, le déploiement a amélioré les performances.
+      - id: c
+        text: L'utilisation du CPU.
+      - id: d
+        text: La taille des journaux.
+    explanation: |
+      On sépare la latence des succès de celle des erreurs, et on regarde toujours les quatre
+      signaux ensemble : latence, trafic, erreurs, saturation.
+
+  - id: sre.n1.observabilite.qcm
+    type: qcm
+    title: Supervision ou observabilité ?
+    skills: [monitoring-observabilite]
+    difficulty: 3
+    prompt: "Des clients d'un seul opérateur mobile, sur la dernière version de l'application, voient des paiements lents depuis 14 h. Aucun tableau de bord ne montre de problème. Qu'est-ce qui permet de trouver la cause ?"
+    choices:
+      - id: a
+        text: "Des données riches en contexte (opérateur, version, pays, client) qu'on peut découper librement pour explorer une question imprévue."
+        correct: true
+      - id: b
+        text: Ajouter un tableau de bord par opérateur mobile.
+        feedback: "Utile après coup, mais on ne peut pas prévoir un tableau pour chaque combinaison possible."
+      - id: c
+        text: Augmenter la fréquence des sondes de santé.
+      - id: d
+        text: Redémarrer les serveurs de paiement.
+    explanation: |
+      La supervision répond aux questions prévues ; l'observabilité permet d'en poser de
+      nouvelles. Elle repose sur des événements avec beaucoup d'attributs.
+
+  - id: sre.n1.signaux.match
+    type: match
+    title: Les quatre signaux d'or
+    skills: [signaux-or]
+    difficulty: 2
+    prompt: Relie chaque mesure au signal d'or qu'elle représente.
+    pairs:
+      - left: p99 du temps de réponse de la page de paiement
+        right: Latence
+      - left: Nombre de requêtes par seconde sur l'API
+        right: Trafic
+      - left: Part des réponses 5xx et des réponses hors délai
+        right: Erreurs
+      - left: Connexions utilisées sur le pool de la base (95 sur 100)
+        right: Saturation
+    explanation: |
+      La saturation se mesure sur la ressource la plus contrainte ; elle prévient avant que
+      la latence et les erreurs ne s'envolent.
+
+  - id: sre.n1.signaux.qcm-cpu
+    type: qcm
+    title: L'alerte CPU
+    skills: [signaux-or, monitoring-observabilite]
+    difficulty: 3
+    prompt: "Une alerte réveille l'astreinte chaque nuit : « CPU à 92 % » pendant le traitement par lots. Les utilisateurs ne remarquent rien. Que faire ?"
+    choices:
+      - id: a
+        text: "Remplacer cette alerte par des alertes sur ce que voient les utilisateurs (erreurs, latence) ; garder le CPU comme information sur un tableau de bord."
+        correct: true
+      - id: b
+        text: Monter le seuil à 99 %.
+      - id: c
+        text: Ajouter des serveurs pour que le CPU baisse.
+      - id: d
+        text: Garder l'alerte, c'est plus sûr.
+        feedback: "Une alerte qui sonne pour rien apprend à ignorer les alertes, y compris les vraies."
+    explanation: |
+      Une alerte doit signaler un problème pour les utilisateurs qui demande une action
+      humaine. Un CPU élevé pendant un traitement prévu est normal.

@@ -1,65 +1,121 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: clean-code
 title: Clean code, refactoring et tests
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Écrire du code que les autres (et toi dans six mois) comprennent, le transformer sans
+  peur grâce aux tests, et bâtir une stratégie de tests qui attrape vraiment les bugs.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: nommage
-    title: Nommage
-  - id: fonctions-courtes
-    title: Fonctions courtes
-  - id: commentaires-utiles
-    title: Commentaires utiles
-  - id: dry
-    title: DRY
-  - id: kiss
-    title: KISS
-  - id: yagni
-    title: YAGNI
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: code-smells
-    title: Code smells
-  - id: refactorings-de-base-extraire
-    title: Refactorings de base (extraire, renommer, déplacer)
-  - id: tests-unitaires
-    title: Tests unitaires
-  - id: structure-arrange-act-assert
-    title: Structure Arrange-Act-Assert
-- level: 3
-  title: Approfondir
-  skills:
-  - id: tdd
-    title: TDD
-  - id: doublures-de-test-mock-stub-fake
-    title: Doublures de test (mock, stub, fake)
-  - id: pyramide-des-tests
-    title: Pyramide des tests
-  - id: tests-d-integration
-    title: Tests d'intégration
-  - id: couverture
-    title: Couverture
-- level: 4
-  title: Concevoir
-  skills:
-  - id: refactoring-de-legacy-tests-de
-    title: Refactoring de legacy (tests de caractérisation, *seams*)
-  - id: tests-de-contrat
-    title: Tests de contrat
-  - id: property-based-testing
-    title: Property-based testing
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: mutation-testing
-    title: Mutation testing
-  - id: architecture-testable
-    title: Architecture testable
-  - id: strategie-de-tests-d-une-equipe
-    title: Stratégie de tests d'une équipe
-  - id: revue-de-code-comme-pratique
-    title: Revue de code comme pratique
+  - level: 1
+    title: Du code lisible
+    skills:
+      - id: nommage
+        title: Bien nommer
+      - id: fonctions
+        title: Des fonctions courtes et claires
+      - id: commentaires
+        title: Commentaires utiles
+      - id: principes
+        title: DRY, KISS, YAGNI
+    boss:
+      id: clean-code.n1.boss
+      title: "Boss : le nom qui ment"
+      exercises:
+        - clean-code.n1.nommage.review
+        - clean-code.n1.commentaires.qcm
+        - clean-code.n1.principes.match
+        - clean-code.n1.principes.qcm-dry
+        - clean-code.n1.fonctions.qcm-booleen
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 2
+    title: Refactorer et tester
+    skills:
+      - id: code-smells
+        title: Les mauvaises odeurs du code
+      - id: refactorings
+        title: Les refactorings de base
+      - id: tests-unitaires
+        title: Des tests unitaires utiles (AAA)
+    boss:
+      id: clean-code.n2.boss
+      title: "Boss : le test qui ne dit rien"
+      exercises:
+        - clean-code.n2.smells.match
+        - clean-code.n2.refactorings.qcm-commit
+        - clean-code.n2.tests.parsons-aaa
+        - clean-code.n2.tests.qcm-first
+        - clean-code.n2.tests.qcm-message
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Tester efficacement
+    skills:
+      - id: tdd
+        title: Le développement piloté par les tests
+      - id: doublures
+        title: Doublures de test (stub, mock, fake, spy)
+      - id: pyramide
+        title: La pyramide des tests et les tests d'intégration
+      - id: couverture
+        title: La couverture de code et ses limites
+    boss:
+      id: clean-code.n3.boss
+      title: "Boss : la couverture trompeuse"
+      exercises:
+        - clean-code.n3.tdd.parsons
+        - clean-code.n3.doublures.qcm-fragile
+        - clean-code.n3.doublures.qcm-posseder
+        - clean-code.n3.couverture.qcm-mutant
+        - clean-code.n3.doublures.match
+        - clean-code.n3.pyramide.qcm
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 4
+    title: Tests avancés et code existant
+    skills:
+      - id: legacy
+        title: Travailler avec du code existant sans tests
+      - id: tests-contrat
+        title: Les tests de contrat
+      - id: property-based
+        title: Les tests par propriétés
+      - id: tests-instables
+        title: Les tests instables
+    boss:
+      id: clean-code.n4.boss
+      title: "Boss : le test qui clignote"
+      exercises:
+        - clean-code.n4.legacy.scenario
+        - clean-code.n4.contrat.qcm
+        - clean-code.n4.property.match
+        - clean-code.n4.instables.qcm-set
+        - clean-code.n4.property.qcm-zero
+        - clean-code.n4.instables.match
+      pass_ratio: 0.8
+      time_limit_min: 12
+
+  - level: 5
+    title: Une culture de qualité
+    skills:
+      - id: mutation
+        title: Le test de mutation
+      - id: architecture-testable
+        title: Une architecture testable
+      - id: strategie-tests
+        title: La stratégie de tests d'une équipe
+      - id: revue-de-code
+        title: La revue de code
+    boss:
+      id: clean-code.n5.boss
+      title: "Boss : le mutant survivant"
+      exercises:
+        - clean-code.n5.mutation.qcm-survivants
+        - clean-code.n5.architecture.find-bug
+        - clean-code.n5.strategie.scenario
+        - clean-code.n5.revue.match
+        - clean-code.n5.architecture.qcm-coeur
+      pass_ratio: 0.8
+      time_limit_min: 10

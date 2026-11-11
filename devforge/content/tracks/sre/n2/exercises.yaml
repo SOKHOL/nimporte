@@ -1,0 +1,106 @@
+exercises:
+  - id: sre.n2.prometheus.qcm-histogramme
+    type: qcm
+    title: Lire un histogramme Prometheus
+    skills: [metriques-prometheus]
+    difficulty: 3
+    language: text
+    prompt: "D'après cet histogramme, combien de requêtes ont duré plus de 0,25 s ?"
+    code: |
+      http_duree_secondes_bucket{le="0.05"} 2
+      http_duree_secondes_bucket{le="0.1"} 3
+      http_duree_secondes_bucket{le="0.25"} 5
+      http_duree_secondes_bucket{le="0.5"} 6
+      http_duree_secondes_bucket{le="1.0"} 7
+      http_duree_secondes_bucket{le="+Inf"} 7
+    choices:
+      - id: a
+        text: "2 (7 au total, dont 5 en 0,25 s ou moins)"
+        correct: true
+      - id: b
+        text: "5"
+        feedback: "Chaque tranche compte les requêtes **au plus** égales à sa limite : 5 ont duré 0,25 s ou moins."
+      - id: c
+        text: "1"
+      - id: d
+        text: "13"
+        feedback: "Les tranches sont cumulatives : on ne les additionne pas."
+    explanation: |
+      Sortie réelle de la bibliothèque officielle, avec 7 durées de 0,03 à 0,9 s. Les tranches
+      sont cumulatives : `le="+Inf"` vaut toujours le nombre total.
+
+  - id: sre.n2.prometheus.match-types
+    type: match
+    title: Counter, gauge ou histogram ?
+    skills: [metriques-prometheus]
+    difficulty: 2
+    prompt: Relie chaque mesure au type de métrique Prometheus adapté.
+    pairs:
+      - left: Nombre total de commandes passées
+        right: Counter
+      - left: Nombre de messages en attente dans la file
+        right: Gauge
+      - left: Durée des requêtes, pour en tirer le p99
+        right: Histogram
+    explanation: |
+      Un counter ne fait que monter et s'exploite avec `rate()` ; une gauge est une valeur
+      instantanée ; un histogram permet les percentiles.
+
+  - id: sre.n2.prometheus.qcm-cardinalite
+    type: qcm
+    title: L'étiquette de trop
+    skills: [metriques-prometheus]
+    difficulty: 4
+    prompt: "Un développeur ajoute l'étiquette `client_id` (2 millions de clients) à la métrique de durée des requêtes, qui a 12 tranches. Que risque-t-il ?"
+    choices:
+      - id: a
+        text: "Des dizaines de millions de séries temporelles (cardinalité explosive) : Prometheus manque de mémoire et les requêtes deviennent très lentes."
+        correct: true
+      - id: b
+        text: Rien, les étiquettes sont gratuites.
+      - id: c
+        text: Les percentiles deviennent plus précis.
+      - id: d
+        text: Prometheus refuse les étiquettes numériques.
+    explanation: |
+      Chaque combinaison de valeurs d'étiquettes est une série distincte : 2 millions de
+      clients × 12 tranches × les autres étiquettes. Les identifiants individuels vont dans
+      les journaux et les traces.
+
+  - id: sre.n2.journaux.find-bug
+    type: find-bug
+    title: Le journal impossible à exploiter
+    skills: [journaux-structures]
+    difficulty: 3
+    language: kotlin
+    prompt: "L'équipe veut compter les refus de paiement par raison et par client. Touche la ligne qui rend ça difficile."
+    code: |
+      fun refuser(commande: Commande, raison: Raison) {
+          metriques.compteur("paiements_refuses", "raison" to raison.code).inc()
+          log.warn("Le paiement de la commande ${commande.id} du client ${commande.clientId} est refusé : $raison")
+          evenements.publier(PaiementRefuse(commande.id, raison))
+      }
+    bug_lines: [3]
+    explanation: |
+      Les valeurs sont noyées dans le texte : chaque ligne est différente, il faut des
+      expressions régulières pour les extraire. Message fixe et champs :
+      `log.warn("paiement refusé", kv("commande_id", …), kv("client_id", …), kv("raison", …))`.
+
+  - id: sre.n2.alertes.match
+    type: match
+    title: Améliorer les alertes
+    skills: [alertes]
+    difficulty: 3
+    prompt: Relie chaque mauvaise alerte à sa meilleure version.
+    pairs:
+      - left: "CPU au-delà de 80 %"
+        right: Taux d'erreur ou latence p99 au-delà de l'objectif
+      - left: "Disque plein à 100 %"
+        right: "Disque plein dans 4 h au rythme actuel"
+      - left: Un pic d'erreurs d'une minute réveille l'astreinte
+        right: Condition maintenue 5 minutes, ou consommation du budget d'erreur
+      - left: "Le certificat expire dans 20 jours (en pleine nuit)"
+        right: Un ticket, sans réveil
+    explanation: |
+      Une alerte qui réveille doit être urgente, importante et actionnable, et correspondre à
+      un impact pour les utilisateurs.

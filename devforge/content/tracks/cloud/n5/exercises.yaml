@@ -1,0 +1,123 @@
+exercises:
+  - id: cloud.n5.gouvernance.match
+    type: match
+    title: Préventif ou détectif ?
+    skills: [gouvernance]
+    difficulty: 3
+    prompt: Relie chaque garde-fou à sa nature et à son outil type.
+    pairs:
+      - left: Interdire toute ressource hors des régions européennes
+        right: Préventif, politique d'organisation (SCP, Azure Policy)
+      - left: Signaler un disque non chiffré créé hier
+        right: Détectif, règle de conformité (AWS Config, Defender)
+      - left: Refuser une pull request Terraform qui ouvre le port 22 à Internet
+        right: En amont, contrôle d'IaC dans la CI (Checkov, tfsec)
+    explanation: |
+      Le préventif rend l'erreur impossible, le détectif la trouve vite, et le contrôle en CI
+      l'arrête avant même qu'elle existe.
+
+  - id: cloud.n5.landing-zone.qcm
+    type: qcm
+    title: Un seul compte pour tout
+    skills: [landing-zone]
+    difficulty: 3
+    prompt: "Une entreprise de 15 équipes a toutes ses ressources, de test et de production, dans un seul compte AWS. Quel est le principal problème ?"
+    choices:
+      - id: a
+        text: "Aucune frontière : une erreur ou un accès compromis en test peut toucher la production, les droits sont difficiles à limiter et les coûts à attribuer."
+        correct: true
+      - id: b
+        text: AWS limite à un seul environnement par compte.
+      - id: c
+        text: Les performances baissent avec le nombre de ressources.
+      - id: d
+        text: Aucun, c'est la configuration recommandée.
+    explanation: |
+      Le compte est la frontière d'isolation la plus forte du cloud. Une landing zone crée
+      un compte par application et par environnement, avec des garde-fous communs.
+
+  - id: cloud.n5.well-architected.match
+    type: match
+    title: Les piliers Well-Architected
+    skills: [well-architected]
+    difficulty: 2
+    prompt: Relie chaque question de revue au pilier correspondant.
+    pairs:
+      - left: Comment le système se rétablit-il après la perte d'une zone ?
+        right: Fiabilité
+      - left: Qui peut lire les données de santé, et est-ce journalisé ?
+        right: Sécurité
+      - left: Les instances sont-elles dimensionnées selon leur usage réel ?
+        right: Optimisation des coûts
+      - left: Comment détecte-t-on et corrige-t-on un mauvais déploiement ?
+        right: Excellence opérationnelle
+      - left: Comment réduit-on l'énergie consommée par des calculs inutiles ?
+        right: Durabilité
+    explanation: |
+      La grille force à regarder tous les piliers, et à arbitrer leurs tensions de façon
+      explicite.
+
+  - id: cloud.n5.multi-cloud.scenario
+    type: scenario
+    title: Le projet multi-cloud
+    skills: [multi-cloud]
+    difficulty: 4
+    prompt: |
+      La direction veut que toutes les applications tournent « en même temps sur AWS et
+      Azure, pour ne dépendre d'aucun fournisseur ». L'équipe compte 25 personnes.
+    start: debut
+    nodes:
+      debut:
+        text: Quelle est ta première question ?
+        options:
+          - text: "Quel risque précis veut-on couvrir (panne d'un fournisseur, contrainte légale, négociation, sortie possible), et combien coûte-t-il aujourd'hui ?"
+            next: analyse
+            points: 3
+          - text: Quels outils utiliser pour déployer sur les deux ?
+            next: outils
+            points: 1
+            feedback: "La question technique vient après celle du besoin."
+      outils:
+        text: "Les premiers essais montrent que les services gérés diffèrent partout : bases, files, identités, réseau. Que fais-tu ?"
+        options:
+          - text: Revenir au besoin réel et au coût, avant d'aller plus loin.
+            next: analyse
+            points: 1
+      analyse:
+        text: "Le vrai besoin : pouvoir quitter un fournisseur en 6 mois si le contrat devenait défavorable. Que proposes-tu ?"
+        options:
+          - text: "Rester sur un fournisseur principal, avec des briques portables (conteneurs, PostgreSQL, Terraform, OpenTelemetry), des données exportables, et un plan de sortie documenté et chiffré."
+            next: resolu
+            points: 3
+          - text: Tout faire tourner sur les deux fournisseurs, comme demandé.
+            next: double
+            points: 0
+      double:
+        ending: failure
+        text: "❌ Deux ans plus tard : coûts presque doublés, équipe épuisée, services limités au plus petit dénominateur commun."
+      resolu:
+        ending: success
+        text: "✅ Le risque est couvert pour une fraction du coût, et l'équipe garde l'usage des services gérés là où ils apportent beaucoup."
+    explanation: |
+      Le multi-cloud actif coûte cher en complexité et en compétences. On le réserve aux
+      besoins qui le justifient ; sinon, on maîtrise le coût de sortie.
+
+  - id: cloud.n5.gouvernance.qcm-ci
+    type: qcm
+    title: Arrêter l'erreur au plus tôt
+    skills: [gouvernance, landing-zone]
+    difficulty: 3
+    prompt: "Où arrêter le plus tôt possible une ressource Terraform qui créerait un compartiment de stockage public ?"
+    choices:
+      - id: a
+        text: "Dans la CI, avec un contrôle d'IaC (Checkov, OPA) qui bloque la pull request ; avec en plus une politique d'organisation qui l'interdit."
+        correct: true
+      - id: b
+        text: Lors de l'audit annuel.
+      - id: c
+        text: Quand un client signale la fuite.
+      - id: d
+        text: Avec une revue manuelle de chaque ressource en production.
+    explanation: |
+      Plus l'erreur est trouvée tôt, moins elle coûte. On combine le contrôle en amont (CI),
+      le préventif (organisation) et le détectif (conformité).

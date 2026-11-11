@@ -1,0 +1,129 @@
+exercises:
+  - id: clean-code.n5.mutation.qcm-survivants
+    type: qcm
+    title: Les mutants survivants
+    skills: [mutation]
+    difficulty: 4
+    prompt: |
+      Un outil de mutation rapporte que les mutants `total > 100` et `total >= 101` (au lieu
+      de `total >= 100`) survivent à la suite de tests. Qu'est-ce que ça signifie ?
+    choices:
+      - id: a
+        text: "Aucun test ne vérifie le comportement à la limite de 100 € : un bug à cet endroit passerait inaperçu."
+        correct: true
+      - id: b
+        text: "Le code est faux, il faut remplacer >= par >."
+        feedback: "Un mutant survivant révèle une faiblesse des tests, pas forcément du code."
+      - id: c
+        text: La couverture de code est insuffisante.
+        feedback: "La couverture était de 100 % dans la démonstration réelle."
+      - id: d
+        text: L'outil de mutation est mal configuré.
+    explanation: |
+      Démonstration réelle : 5 mutants tués sur 7 (71 %), les deux survivants touchant la
+      limite ; avec `remise(100) == 95` et `remise(99.99) == 99.99`, 7 sur 7.
+
+  - id: clean-code.n5.architecture.find-bug
+    type: find-bug
+    title: La logique impossible à tester
+    skills: [architecture-testable]
+    difficulty: 3
+    language: kotlin
+    prompt: "Ce calcul de niveau de relance est difficile à tester. Touche la ligne qui le rend dépendant de l'extérieur."
+    code: |
+      fun niveauDeRelance(facture: Facture): Int {
+          val retard = ChronoUnit.DAYS.between(facture.echeance, LocalDate.now())
+          return when {
+              retard < 30 -> 0
+              retard < 60 -> 1
+              else -> 2
+          }
+      }
+    bug_lines: [2]
+    explanation: |
+      `LocalDate.now()` lit l'horloge réelle : le résultat change chaque jour, et il est
+      impossible de tester « 59 jours de retard » sans attendre. Passer la date en paramètre
+      (`niveauDeRelance(facture, aujourdhui)`) rend la fonction pure.
+
+  - id: clean-code.n5.architecture.qcm-coeur
+    type: qcm
+    title: Cœur fonctionnel, coquille impérative
+    skills: [architecture-testable]
+    difficulty: 3
+    prompt: "Dans l'approche « cœur fonctionnel, coquille impérative », où se trouve la décision « quelles factures relancer » ?"
+    choices:
+      - id: a
+        text: "Dans le cœur : une fonction pure qui reçoit les factures et la date, et renvoie la liste des relances à faire."
+        correct: true
+      - id: b
+        text: Dans la coquille, avec l'envoi des e-mails.
+      - id: c
+        text: Dans la base de données, en procédure stockée.
+      - id: d
+        text: Dans un mock.
+    explanation: |
+      La coquille lit les données, appelle le cœur, puis applique ses décisions. Le cœur se
+      teste avec des milliers de cas, sans doublure ni base.
+
+  - id: clean-code.n5.revue.match
+    type: match
+    title: Commentaires de revue
+    skills: [revue-de-code]
+    difficulty: 2
+    prompt: Relie chaque situation de revue à la meilleure réaction.
+    pairs:
+      - left: Une pull request de 2 400 lignes
+        right: Demander de la découper en étapes relisibles
+      - left: Des imports mal triés et une indentation incohérente
+        right: Laisser le formateur et le linter s'en charger automatiquement
+      - left: Tu doutes de la gestion d'une liste vide
+        right: "Poser la question : « que se passe-t-il si la liste est vide ? »"
+      - left: Un nom de variable que tu trouves juste un peu moins clair
+        right: "Le marquer comme non bloquant (« détail : »)"
+    explanation: |
+      La revue sert d'abord à partager la connaissance et à vérifier la conception et la
+      compréhension ; le style est automatisé.
+
+  - id: clean-code.n5.strategie.scenario
+    type: scenario
+    title: La stratégie de tests d'une nouvelle équipe
+    skills: [strategie-tests, mutation]
+    difficulty: 4
+    prompt: |
+      Tu rejoins une équipe dont la CI dure 55 minutes, échoue au hasard une fois sur quatre,
+      et dont la direction exige 90 % de couverture. Les bugs en production restent fréquents.
+    start: debut
+    nodes:
+      debut:
+        text: Par quoi commences-tu ?
+        options:
+          - text: "Mesurer : quels tests sont lents, lesquels sont instables, et quels bugs de production n'ont été vus par aucun test."
+            next: priorites
+            points: 3
+          - text: Écrire plus de tests pour monter à 95 % de couverture.
+            next: couverture
+            points: 0
+      couverture:
+        text: "Couverture à 95 %, CI à 70 minutes, et autant de bugs en production. Pourquoi ?"
+        options:
+          - text: Les tests exécutent le code sans vérifier les cas qui comptent ; la couverture ne mesure pas leur qualité.
+            next: priorites
+            points: 1
+      priorites:
+        text: "Les mesures montrent : 70 % du temps passé dans 300 tests de bout en bout, 40 tests instables, et des bugs surtout dans les règles de tarification. Ta proposition ?"
+        options:
+          - text: "Quarantaine et correction des tests instables, déplacer la logique vérifiée en bout en bout vers des tests unitaires et d'intégration, tests de mutation sur la tarification, et remplacer l'objectif de couverture par des indicateurs utiles."
+            next: resolu
+            points: 3
+          - text: Tout paralléliser sur plus de machines.
+            next: paralleliser
+            points: 1
+      paralleliser:
+        ending: partial
+        text: "🟡 La CI passe à 20 minutes, mais reste instable et ne trouve toujours pas les bugs de tarification."
+      resolu:
+        ending: success
+        text: "✅ Trois mois plus tard : CI à 9 minutes, plus aucun test instable connu, et les bugs de tarification sont attrapés avant la production."
+    explanation: |
+      Une stratégie part des risques et des mesures, pas d'un pourcentage. Les tests de
+      mutation montrent où la suite de tests est réellement faible.

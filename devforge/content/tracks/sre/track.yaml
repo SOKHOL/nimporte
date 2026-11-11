@@ -1,63 +1,118 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: sre
 title: Observabilité et SRE
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Voir ce qui se passe en production, mesurer la fiabilité avec des objectifs chiffrés,
+  gérer les incidents et rendre les systèmes robustes face à la charge et aux pannes.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: logs
-    title: Logs
-  - id: metriques
-    title: Métriques
-  - id: traces-a-quoi-ils-servent
-    title: 'Traces : à quoi ils servent'
-  - id: monitoring-vs-observabilite
-    title: Monitoring vs observabilité
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: logs-structures
-    title: Logs structurés
-  - id: prometheus-counter-gauge-histogram
-    title: Prometheus (counter, gauge, histogram)
-  - id: tableaux-de-bord-grafana
-    title: Tableaux de bord Grafana
-  - id: alertes
-    title: Alertes
-- level: 3
-  title: Approfondir
-  skills:
-  - id: traces-distribuees-opentelemetry
-    title: Traces distribuées (OpenTelemetry)
-  - id: methodes-red-et-use
-    title: Méthodes RED et USE
-  - id: sli
-    title: SLI
-  - id: slo
-    title: SLO
-  - id: sla
-    title: SLA
-  - id: budgets-d-erreur
-    title: Budgets d'erreur
-- level: 4
-  title: Concevoir
-  skills:
-  - id: gestion-d-incident-roles
-    title: Gestion d'incident (rôles, communication)
-  - id: post-mortems-sans-blame
-    title: Post-mortems sans blâme
-  - id: capacity-planning
-    title: Capacity planning
-  - id: tests-de-charge
-    title: Tests de charge
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: chaos-engineering
-    title: Chaos engineering
-  - id: fiabilite-a-grande-echelle
-    title: Fiabilité à grande échelle
-  - id: reduction-du-travail-repetitif-toil
-    title: Réduction du travail répétitif (toil)
+  - level: 1
+    title: Observer un système
+    skills:
+      - id: trois-piliers
+        title: Journaux, métriques et traces
+      - id: monitoring-observabilite
+        title: Supervision et observabilité
+      - id: signaux-or
+        title: Les quatre signaux d'or
+    boss:
+      id: sre.n1.boss
+      title: "Boss : le tableau de bord muet"
+      exercises:
+        - sre.n1.piliers.match
+        - sre.n1.observabilite.qcm
+        - sre.n1.signaux.qcm-erreur-rapide
+        - sre.n1.signaux.qcm-cpu
+        - sre.n1.signaux.match
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: Instrumenter
+    skills:
+      - id: journaux-structures
+        title: Des journaux structurés
+      - id: metriques-prometheus
+        title: Les métriques avec Prometheus
+      - id: tableaux-de-bord
+        title: Des tableaux de bord utiles
+      - id: alertes
+        title: Des alertes qui méritent un réveil
+    boss:
+      id: sre.n2.boss
+      title: "Boss : l'alerte qui crie au loup"
+      exercises:
+        - sre.n2.journaux.find-bug
+        - sre.n2.prometheus.qcm-cardinalite
+        - sre.n2.alertes.match
+        - sre.n2.prometheus.qcm-histogramme
+        - sre.n2.prometheus.match-types
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Mesurer la fiabilité
+    skills:
+      - id: traces-distribuees
+        title: Les traces distribuées (OpenTelemetry)
+      - id: red-use
+        title: Les méthodes RED et USE
+      - id: sli-slo
+        title: SLI, SLO et SLA
+      - id: budget-erreur
+        title: Le budget d'erreur
+    boss:
+      id: sre.n3.boss
+      title: "Boss : le budget épuisé"
+      exercises:
+        - sre.n3.traces.qcm-traceparent
+        - sre.n3.red-use.match
+        - sre.n3.budget.qcm-minutes
+        - sre.n3.budget.scenario-gel
+        - sre.n3.budget.qcm-burn
+        - sre.n3.slo.match
+      pass_ratio: 0.8
+      time_limit_min: 12
+
+  - level: 4
+    title: Incidents et capacité
+    skills:
+      - id: gestion-incident
+        title: Gérer un incident
+      - id: post-mortem
+        title: Les post-mortems sans reproche
+      - id: capacite
+        title: Planifier la capacité et la file d'attente
+      - id: tests-charge
+        title: Les tests de charge
+    boss:
+      id: sre.n4.boss
+      title: "Boss : la file d'attente"
+      exercises:
+        - sre.n4.incident.match-roles
+        - sre.n4.post-mortem.qcm-cause
+        - sre.n4.capacite.scenario-backlog
+        - sre.n4.capacite.qcm-file
+        - sre.n4.tests-charge.qcm-regulier
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 5
+    title: La fiabilité à grande échelle
+    skills:
+      - id: pannes-en-cascade
+        title: Pannes en cascade et tempêtes de réessais
+      - id: chaos
+        title: Le chaos engineering
+      - id: toil
+        title: Réduire le travail répétitif (toil)
+    boss:
+      id: sre.n5.boss
+      title: "Boss : la tempête de réessais"
+      exercises:
+        - sre.n5.cascade.scenario-metastable
+        - sre.n5.chaos.parsons
+        - sre.n5.toil.qcm
+        - sre.n5.cascade.match
+        - sre.n5.cascade.qcm-niveaux
+      pass_ratio: 0.8
+      time_limit_min: 10

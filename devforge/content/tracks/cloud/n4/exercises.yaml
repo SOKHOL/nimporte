@@ -1,0 +1,123 @@
+exercises:
+  - id: cloud.n4.dr.match
+    type: match
+    title: Choisir une stratégie de reprise
+    skills: [reprise-sinistre]
+    difficulty: 3
+    prompt: Relie chaque exigence à la stratégie de reprise après sinistre la plus économique qui la satisfait.
+    pairs:
+      - left: "Un outil interne : RPO 24 h, RTO 2 jours"
+        right: Sauvegarde et restauration
+      - left: "Un site marchand : RPO 5 min, RTO 2 h"
+        right: Veilleuse (données répliquées, calcul décrit mais éteint)
+      - left: "Une plateforme de réservation : RPO 1 min, RTO 15 min"
+        right: Secours tiède (version réduite toujours active)
+      - left: "Un système de paiement : RPO et RTO proches de zéro"
+        right: Actif-actif multi-région
+    explanation: |
+      Chaque cran divise le temps de reprise et multiplie le coût ; le bon choix dépend du
+      coût d'une heure d'interruption pour le métier.
+
+  - id: cloud.n4.ha.qcm-calcul
+    type: qcm
+    title: Deux zones plutôt qu'une
+    skills: [haute-disponibilite]
+    difficulty: 3
+    prompt: "Une instance est disponible 99,5 % du temps. Avec deux instances dans deux zones indépendantes, dont une seule suffit, quelle disponibilité théorique ?"
+    choices:
+      - id: a
+        text: "Environ 99,9975 %"
+        correct: true
+      - id: b
+        text: "99,5 %, rien ne change"
+      - id: c
+        text: "99 %"
+        feedback: "Ce serait le cas si les deux devaient fonctionner en même temps (en série)."
+      - id: d
+        text: "100 %"
+    explanation: |
+      Calcul réel : 1 − 0,005² = 99,9975 %, soit environ 1 minute de panne par mois au lieu
+      de 216. L'hypothèse d'indépendance est essentielle : une dépendance commune (une seule
+      NAT, un seul cache) l'annule.
+
+  - id: cloud.n4.ha.scenario-nat
+    type: scenario
+    title: La zone qui emporte tout
+    skills: [haute-disponibilite]
+    difficulty: 4
+    prompt: |
+      L'application tourne dans trois zones, avec une base multi-zone. Pourtant, quand la zone
+      A tombe, toute l'application échoue à appeler le service de paiement externe.
+    start: debut
+    nodes:
+      debut:
+        text: Les instances des zones B et C fonctionnent. Que cherches-tu ?
+        options:
+          - text: "Une dépendance unique placée dans la zone A, sur le chemin des appels sortants (par exemple une seule passerelle NAT)."
+            next: nat
+            points: 3
+          - text: Un bug dans le service de paiement.
+            next: paiement
+            points: 0
+      paiement:
+        text: "Le prestataire de paiement fonctionne pour ses autres clients, et les requêtes n'arrivent même pas chez lui. Qu'est-ce qui se trouve entre les instances et Internet ?"
+        options:
+          - text: La passerelle NAT, et la table de routage des sous-réseaux privés.
+            next: nat
+            points: 1
+      nat:
+        text: "Les sous-réseaux privés des trois zones sortent tous par une passerelle NAT unique, dans la zone A. Que fais-tu ?"
+        options:
+          - text: "Une passerelle NAT par zone, chaque sous-réseau privé routé vers celle de sa zone ; puis un exercice de perte de zone pour chercher d'autres dépendances cachées."
+            next: resolu
+            points: 3
+          - text: Déplacer la passerelle NAT dans la zone B.
+            next: deplace
+            points: 0
+      deplace:
+        ending: failure
+        text: "❌ La prochaine panne de la zone B aura exactement le même effet."
+      resolu:
+        ending: success
+        text: "✅ Lors de l'exercice suivant, la perte d'une zone n'interrompt plus aucun parcours."
+    explanation: |
+      La haute disponibilité ne vaut que par son maillon le plus faible. Les exercices de
+      perte de zone révèlent les dépendances uniques cachées.
+
+  - id: cloud.n4.finops.qcm-unitaire
+    type: qcm
+    title: La facture qui double
+    skills: [finops]
+    difficulty: 3
+    prompt: "En un an, la facture cloud a doublé, et le nombre de commandes a triplé. Comment l'interpréter ?"
+    choices:
+      - id: a
+        text: "Plutôt bien : le coût par commande a baissé d'environ un tiers ; le coût unitaire est le bon indicateur."
+        correct: true
+      - id: b
+        text: Mal, la facture doit rester stable.
+      - id: c
+        text: Mal, il faut couper les dépenses de moitié.
+      - id: d
+        text: On ne peut rien en dire sans connaître le prix des machines.
+    explanation: |
+      2 / 3 ≈ 0,67 : chaque commande coûte environ 33 % de moins. Le coût total grandit avec
+      le succès ; on suit le coût unitaire et les anomalies.
+
+  - id: cloud.n4.finops.match
+    type: match
+    title: Les leviers FinOps
+    skills: [finops]
+    difficulty: 3
+    prompt: Relie chaque constat au levier d'économie adapté.
+    pairs:
+      - left: "Les environnements de test tournent nuits et week-ends"
+        right: Les éteindre automatiquement hors des heures de travail
+      - left: Des serveurs à 8 % de CPU en moyenne depuis six mois
+        right: Les redimensionner (rightsizing)
+      - left: Une base de charge stable et prévisible pour trois ans
+        right: Un engagement (réservation, savings plan)
+      - left: "Personne ne sait à quelle équipe appartient la moitié des ressources"
+        right: Des étiquettes obligatoires et des coûts par équipe
+    explanation: |
+      Rendre visible d'abord, puis éteindre, redimensionner, et payer moins cher ce qui reste.

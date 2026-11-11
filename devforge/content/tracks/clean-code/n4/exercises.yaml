@@ -1,0 +1,173 @@
+exercises:
+  - id: clean-code.n4.instables.qcm-set
+    type: qcm
+    title: Le test qui passe une fois sur six
+    skills: [tests-instables]
+    difficulty: 4
+    language: python
+    prompt: Ce test, lancé 50 fois, a réussi 8 fois et échoué 42 fois. Pourquoi ?
+    code: |
+      def fruits_uniques(panier):
+          return list(set(panier))
+
+      def test_fruits_uniques():
+          assert fruits_uniques(["pomme", "kiwi", "pomme", "poire"]) == ["pomme", "kiwi", "poire"]
+    choices:
+      - id: a
+        text: "L'ordre d'un ensemble de chaînes varie d'un processus Python à l'autre (hachage aléatoire) ; le test dépend d'un ordre qui n'est pas garanti."
+        correct: true
+      - id: b
+        text: Le test est trop lent et dépasse un délai.
+      - id: c
+        text: set() supprime parfois des éléments en double à tort.
+      - id: d
+        text: pytest lance les assertions dans le désordre.
+    explanation: |
+      Mesure réelle : 8 réussites sur 50. Il faut comparer sans tenir compte de l'ordre
+      (`sorted(...)` ou des ensembles), ou que la fonction garantisse un ordre
+      (`dict.fromkeys(panier)` garde l'ordre d'apparition).
+
+  - id: clean-code.n4.property.qcm-zero
+    type: qcm
+    title: Ce qu'a trouvé Hypothesis
+    skills: [property-based]
+    difficulty: 4
+    language: python
+    prompt: "La propriété « decoder(encoder(texte)) == texte » échoue, et Hypothesis rapporte `texte='0'`. Pourquoi ce texte casse-t-il l'aller-retour ?"
+    code: |
+      def encoder(texte):   # 'aaab' -> '3a1b'
+          return "".join(f"{len(m.group(0))}{m.group(1)}" for m in re.finditer(r"(.)\1*", texte, re.S))
+
+      def decoder(code):
+          return "".join(c * int(n) for n, c in re.findall(r"(\d+)(\D)", code))
+    choices:
+      - id: a
+        text: "encoder('0') produit '10', que le décodeur lit comme le nombre 10 sans caractère derrière : le chiffre du texte se mélange au compteur."
+        correct: true
+      - id: b
+        text: Hypothesis a un bug avec les chiffres.
+      - id: c
+        text: Le texte vide n'est pas géré.
+      - id: d
+        text: Les expressions régulières ne fonctionnent pas avec les chiffres.
+    explanation: |
+      Résultat réel : `Falsifying example: test_aller_retour(texte='0')`. Hypothesis réduit
+      automatiquement le contre-exemple au plus simple. Le format doit séparer le compteur du
+      caractère, ou échapper les chiffres.
+
+  - id: clean-code.n4.legacy.scenario
+    type: scenario
+    title: Modifier le calcul des primes
+    skills: [legacy]
+    difficulty: 4
+    prompt: |
+      Tu dois changer une règle dans `calculerPrimes()`, une fonction de 900 lignes sans aucun
+      test, qui lit la base, appelle le service RH et écrit des fichiers.
+    start: debut
+    nodes:
+      debut:
+        text: Par quoi commences-tu ?
+        options:
+          - text: "Je crée des points d'injection (extraire les accès à la base et au service RH derrière des interfaces, avec les refactorings automatiques de l'IDE), puis j'écris des tests de caractérisation du comportement actuel."
+            next: caracterisation
+            points: 3
+          - text: Je réécris la fonction proprement, de zéro.
+            next: reecriture
+            points: 0
+            feedback: "900 lignes contiennent des années de cas particuliers non documentés."
+          - text: Je modifie la ligne concernée et je teste à la main en préproduction.
+            next: manuel
+            points: 1
+      reecriture:
+        ending: failure
+        text: "❌ La nouvelle version oublie trois cas particuliers ; des salariés reçoivent des primes fausses."
+      manuel:
+        ending: partial
+        text: "🟡 Le cas testé à la main fonctionne ; un autre, que personne n'a vérifié, a changé sans que personne ne le sache."
+      caracterisation:
+        text: "Un test de caractérisation montre qu'un salarié à mi-temps reçoit une prime pleine, ce qui semble faux. Que fais-tu ?"
+        options:
+          - text: "Je fige ce comportement dans le test tel quel, je le signale au métier, et je ne le change que s'il est confirmé comme un bug (dans un commit séparé)."
+            next: modification
+            points: 3
+          - text: Je le corrige au passage.
+            next: modification
+            points: 1
+            feedback: "C'est peut-être voulu (un accord d'entreprise) ; et mélanger les changements rend la relecture difficile."
+      modification:
+        text: "Comment ajoutes-tu la nouvelle règle ?"
+        options:
+          - text: "Dans une nouvelle fonction testée (sprout method), appelée par une seule ligne depuis l'ancien code."
+            next: resolu
+            points: 3
+          - text: Au milieu des 900 lignes, là où ça semble logique.
+            next: resolu
+            points: 1
+      resolu:
+        ending: success
+        text: "✅ La règle est changée, testée, et les tests de caractérisation prouvent que le reste n'a pas bougé."
+    explanation: |
+      Points d'injection, tests de caractérisation, sprout method : on obtient un filet de
+      sécurité avant de toucher au code, et chaque changement reste petit et vérifiable.
+
+  - id: clean-code.n4.contrat.qcm
+    type: qcm
+    title: Le champ renommé
+    skills: [tests-contrat]
+    difficulty: 3
+    prompt: |
+      L'équipe Client renomme le champ `email` en `courriel` dans son API. Les tests des deux
+      équipes sont verts, mais la production casse. Qu'est-ce qui l'aurait évité ?
+    choices:
+      - id: a
+        text: "Des tests de contrat pilotés par le consommateur : le contrat de l'équipe Commande (qui utilise email) aurait fait échouer le build de l'équipe Client."
+        correct: true
+      - id: b
+        text: Plus de tests unitaires chez l'équipe Client.
+        feedback: "Ils vérifient le comportement de Client, pas ce que ses consommateurs attendent."
+      - id: c
+        text: Un faux service Client plus réaliste dans les tests de Commande.
+        feedback: "Le faux reproduit l'ancienne API : il serait resté vert."
+      - id: d
+        text: Un environnement de test partagé où tous les services tournent.
+        feedback: "Possible, mais lent, coûteux et souvent cassé ; et le problème serait trouvé tard."
+    explanation: |
+      Les tests de contrat déplacent la détection dans la CI du fournisseur, avant tout
+      déploiement, sans environnement complet.
+
+  - id: clean-code.n4.instables.match
+    type: match
+    title: Causes et remèdes des tests instables
+    skills: [tests-instables]
+    difficulty: 3
+    prompt: Relie chaque cause d'instabilité à son remède.
+    pairs:
+      - left: Le test compare une liste issue d'un ensemble
+        right: Comparer sans tenir compte de l'ordre
+      - left: "sleep(2000) avant de vérifier qu'un message est traité"
+        right: Attendre une condition, avec un délai maximal
+      - left: Le test échoue le jour du changement d'heure
+        right: Injecter une horloge contrôlée
+      - left: Le test passe seul mais échoue après un autre test
+        right: Isoler l'état (données propres à chaque test, transaction annulée)
+    explanation: |
+      Chaque instabilité a une cause déterministe ; la trouver vaut mieux que relancer.
+
+  - id: clean-code.n4.property.match
+    type: match
+    title: Trouver la bonne propriété
+    skills: [property-based]
+    difficulty: 4
+    prompt: Relie chaque fonction à la propriété qu'on peut tester sur toutes les entrées.
+    pairs:
+      - left: Sérialiser puis désérialiser un objet en JSON
+        right: "Aller-retour : on retrouve l'objet de départ"
+      - left: Trier une liste
+        right: "Même taille, mêmes éléments, ordonnée"
+      - left: Normaliser un numéro de téléphone
+        right: "Idempotence : normaliser deux fois donne le même résultat"
+      - left: Un nouvel algorithme de recherche rapide
+        right: "Oracle : même résultat qu'une recherche simple et lente"
+    explanation: |
+      Une bonne propriété décrit une vérité générale, sans recalculer le résultat attendu avec
+      le même code que celui qu'on teste.

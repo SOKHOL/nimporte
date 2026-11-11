@@ -1,0 +1,146 @@
+exercises:
+  - id: clean-code.n3.couverture.qcm-mutant
+    type: qcm
+    title: 100 % de couverture
+    skills: [couverture]
+    difficulty: 4
+    language: python
+    prompt: "Ces deux tests couvrent 100 % des lignes de `remise`. Si quelqu'un remplace `>=` par `>`, que se passe-t-il ?"
+    code: |
+      def remise(total):
+          if total >= 100:
+              return total * 0.95
+          return total
+
+      def test_remise_appliquee(): assert remise(200) == 190
+      def test_pas_de_remise():    assert remise(50) == 50
+    choices:
+      - id: a
+        text: "Les deux tests passent toujours : aucun ne teste la limite de 100 €."
+        correct: true
+      - id: b
+        text: Un test échoue, puisque la couverture est de 100 %.
+        feedback: "La couverture dit que les lignes sont exécutées, pas que leur comportement est vérifié à la limite."
+      - id: c
+        text: La couverture tombe à 50 %.
+      - id: d
+        text: Le code ne compile plus.
+    explanation: |
+      Démonstration réelle : `coverage` affiche 100 %, et le mutant `>` donne `2 passed`. Avec
+      un test `remise(100) == 95`, le même mutant donne `1 failed, 2 passed`.
+
+  - id: clean-code.n3.doublures.match
+    type: match
+    title: Les doublures de test
+    skills: [doublures]
+    difficulty: 3
+    prompt: Relie chaque doublure à sa description.
+    pairs:
+      - left: Stub
+        right: Renvoie des réponses préparées à l'avance
+      - left: Fake
+        right: Une vraie implémentation simplifiée (un dépôt en mémoire)
+      - left: Mock
+        right: Programmé avec des attentes sur les appels qu'il doit recevoir
+      - left: Spy
+        right: Enregistre les appels pour qu'on les vérifie ensuite
+      - left: Dummy
+        right: Remplit un paramètre, sans jamais être utilisé
+    explanation: |
+      On préfère le vrai objet ou un fake ; les mocks servent à vérifier une interaction qui
+      fait partie du comportement attendu.
+
+  - id: clean-code.n3.doublures.qcm-fragile
+    type: qcm
+    title: Le test qui casse à chaque refactoring
+    skills: [doublures]
+    difficulty: 4
+    language: kotlin
+    prompt: Ce test casse à chaque refactoring, alors que le total calculé ne change pas. Pourquoi ?
+    code: |
+      @Test fun `calcule le total`() {
+          val calcul = mockk<CalculTva>(relaxed = true)
+          every { calcul.appliquer(any()) } returns 120
+          Panier(calcul).total()
+          verifyOrder {
+              calcul.arrondir(any())
+              calcul.appliquer(100)
+          }
+      }
+    choices:
+      - id: a
+        text: "Il vérifie l'ordre des appels internes (l'implémentation) au lieu du résultat observable : vérifier que total() vaut 120."
+        correct: true
+      - id: b
+        text: MockK est instable.
+      - id: c
+        text: Il manque un @BeforeEach.
+      - id: d
+        text: Le mock devrait être un spy.
+    explanation: |
+      Un test doit protéger le comportement, pas la façon de l'obtenir. Ici, un vrai
+      `CalculTva` (rapide et déterministe) et une assertion sur le total suffisent.
+
+  - id: clean-code.n3.tdd.parsons
+    type: parsons
+    title: Un cycle de TDD
+    skills: [tdd]
+    difficulty: 2
+    language: text
+    prompt: Remets dans l'ordre un cycle de TDD pour corriger un bug signalé.
+    lines:
+      - Écrire un test qui reproduit le bug
+      - Le lancer et le voir échouer
+      - Corriger le code avec le changement le plus simple
+      - Relancer tous les tests et les voir passer
+      - Nettoyer le code et les tests, en restant au vert
+    distractors:
+      - Corriger le code, puis écrire un test qui passe du premier coup
+    explanation: |
+      Voir le test échouer prouve qu'il détecte bien le bug ; un test écrit après coup qui
+      passe du premier coup ne prouve pas grand-chose.
+
+  - id: clean-code.n3.pyramide.qcm
+    type: qcm
+    title: Une suite de tests de 2 heures
+    skills: [pyramide]
+    difficulty: 3
+    prompt: |
+      La suite de tests d'une équipe compte 1 500 tests de bout en bout dans un navigateur et
+      40 tests unitaires. Elle dure 2 heures et échoue au hasard une fois sur trois. Que
+      proposes-tu ?
+    choices:
+      - id: a
+        text: "Rééquilibrer : déplacer la logique vérifiée vers des tests unitaires et d'intégration rapides, et ne garder en bout en bout que les parcours critiques."
+        correct: true
+      - id: b
+        text: Lancer les tests en parallèle sur 50 machines.
+        feedback: "Ça réduit la durée, pas l'instabilité ni la difficulté de diagnostic."
+      - id: c
+        text: Supprimer les tests qui échouent au hasard.
+      - id: d
+        text: Ne lancer les tests qu'une fois par semaine.
+    explanation: |
+      Une pyramide inversée est lente et instable. Mesure réelle : 200 tests unitaires en
+      0,15 s ; les mêmes vérifications via une base en 0,91 s ; un navigateur est encore bien
+      plus lent.
+
+  - id: clean-code.n3.doublures.qcm-posseder
+    type: qcm
+    title: Mocker une bibliothèque
+    skills: [doublures, pyramide]
+    difficulty: 4
+    prompt: "Pourquoi déconseille-t-on de mocker directement le client HTTP d'une bibliothèque tierce dans les tests du métier ?"
+    choices:
+      - id: a
+        text: "Le mock reproduit ce qu'on croit que la bibliothèque fait ; on l'enveloppe dans son propre adaptateur, testé par un test d'intégration, et on fait des doublures de cet adaptateur."
+        correct: true
+      - id: b
+        text: Les bibliothèques HTTP ne peuvent pas être mockées.
+      - id: c
+        text: C'est trop lent.
+      - id: d
+        text: Il vaut mieux appeler le vrai service dans chaque test unitaire.
+    explanation: |
+      « Ne mockez pas ce que vous ne possédez pas. » Le port (votre interface) se simule
+      facilement ; l'adaptateur réel est vérifié contre le vrai service ou un serveur simulé.

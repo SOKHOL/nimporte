@@ -1,0 +1,153 @@
+exercises:
+  - id: sre.n3.budget.qcm-minutes
+    type: qcm
+    title: Le budget d'un 99,9 %
+    skills: [budget-erreur, sli-slo]
+    difficulty: 2
+    prompt: "Un service a un SLO de disponibilité de 99,9 % sur 30 jours. Combien de minutes d'indisponibilité totale son budget d'erreur autorise-t-il ?"
+    choices:
+      - id: a
+        text: Environ 43 minutes
+        correct: true
+      - id: b
+        text: Environ 4 minutes
+        feedback: "C'est le budget d'un 99,99 %."
+      - id: c
+        text: Environ 7 heures
+        feedback: "C'est le budget d'un 99 %."
+      - id: d
+        text: Aucune
+    explanation: |
+      30 jours × 24 h × 60 min × 0,001 = 43,2 minutes. Chaque « 9 » supplémentaire divise
+      le budget par dix.
+
+  - id: sre.n3.slo.match
+    type: match
+    title: SLI, SLO ou SLA ?
+    skills: [sli-slo]
+    difficulty: 2
+    prompt: Relie chaque phrase à la notion qu'elle illustre.
+    pairs:
+      - left: Part des paiements réussis en moins de 500 ms
+        right: SLI
+      - left: "99,9 % des paiements réussis en moins de 500 ms, sur 30 jours glissants"
+        right: SLO
+      - left: "En dessous de 99,5 % sur le mois, 10 % de l'abonnement est remboursé"
+        right: SLA
+      - left: Les 0,1 % de paiements qui peuvent échouer sur la période
+        right: Budget d'erreur
+    explanation: |
+      Le SLA, contractuel, est moins strict que le SLO interne, pour garder une marge avant
+      les pénalités.
+
+  - id: sre.n3.traces.qcm-traceparent
+    type: qcm
+    title: Lire un traceparent
+    skills: [traces-distribuees]
+    difficulty: 3
+    language: text
+    prompt: "Le service de paiement reçoit cet en-tête. Que doit-il faire pour que ses opérations apparaissent dans la même trace ?"
+    code: |
+      traceparent: 00-f319cabbc65237529c67eb7fec7e1534-151b95fd833cea05-03
+    choices:
+      - id: a
+        text: "Créer ses spans avec le même identifiant de trace (f319…) et, pour parent, le span 151b95fd833cea05."
+        correct: true
+      - id: b
+        text: Créer une nouvelle trace avec un nouvel identifiant.
+        feedback: "La trace serait coupée en deux, et on ne verrait plus le parcours complet."
+      - id: c
+        text: Renvoyer l'en-tête dans sa réponse.
+      - id: d
+        text: Rien, l'en-tête est seulement informatif.
+    explanation: |
+      En-tête réel produit par OpenTelemetry. Les bibliothèques d'instrumentation lisent et
+      propagent ce contexte automatiquement ; il faut surtout ne pas le perdre (appels
+      asynchrones, files de messages).
+
+  - id: sre.n3.budget.scenario-gel
+    type: scenario
+    title: Le budget épuisé
+    skills: [budget-erreur]
+    difficulty: 4
+    prompt: |
+      Le 18 du mois, le budget d'erreur du service de paiement (SLO 99,9 %) est épuisé, après
+      deux incidents liés à des déploiements. Le produit veut livrer une grosse fonctionnalité
+      la semaine prochaine.
+    start: debut
+    nodes:
+      debut:
+        text: Que prévoit une politique de budget d'erreur bien faite ?
+        options:
+          - text: "Geler les changements risqués et consacrer l'équipe à la fiabilité (causes des incidents, tests, déploiements progressifs) jusqu'à ce que le budget se reconstitue, comme convenu à l'avance avec le produit."
+            next: suite
+            points: 3
+          - text: On livre quand même, le budget est indicatif.
+            next: ignore
+            points: 0
+          - text: On supprime le SLO pour ce mois-ci.
+            next: ignore
+            points: 0
+      ignore:
+        ending: failure
+        text: "❌ Un troisième incident frappe le jour de la livraison, et le SLO perd toute crédibilité."
+      suite:
+        text: "Les incidents viennent tous deux de migrations de base. Quelle action de fiabilité vient en premier ?"
+        options:
+          - text: "Rendre les migrations sûres (lock_timeout, expand/contract, vérifications en CI) et déployer progressivement avec retour arrière automatique."
+            next: resolu
+            points: 3
+          - text: Ajouter des serveurs.
+            next: resolu-faible
+            points: 0
+      resolu-faible:
+        ending: partial
+        text: "🟡 Plus de capacité, mais la cause des incidents n'est pas traitée."
+      resolu:
+        ending: success
+        text: "✅ La fonctionnalité sort deux semaines plus tard, sur des déploiements qui ne cassent plus le paiement."
+    explanation: |
+      Le budget d'erreur transforme la fiabilité en décision chiffrée, prise à l'avance avec
+      le produit : on livre tant qu'il en reste, on fiabilise quand il est épuisé.
+
+  - id: sre.n3.red-use.match
+    type: match
+    title: RED ou USE ?
+    skills: [red-use]
+    difficulty: 3
+    prompt: Relie chaque mesure à la méthode et à la lettre correspondantes.
+    pairs:
+      - left: Requêtes par seconde reçues par l'API
+        right: RED, Rate
+      - left: Part des requêtes de l'API qui renvoient une erreur
+        right: RED, Errors
+      - left: p99 du temps de réponse de l'API
+        right: RED, Duration
+      - left: 45 requêtes en attente d'une connexion du pool
+        right: USE, Saturation
+      - left: Les disques occupés 98 % du temps
+        right: USE, Utilization
+    explanation: |
+      RED pour les services, du point de vue des requêtes ; USE pour les ressources. RED dit
+      si ça va mal, USE aide à trouver pourquoi.
+
+  - id: sre.n3.budget.qcm-burn
+    type: qcm
+    title: Le taux de consommation
+    skills: [budget-erreur, alertes]
+    difficulty: 4
+    prompt: "Pourquoi alerter sur un taux de consommation du budget de 14,4 mesuré sur 1 heure ?"
+    choices:
+      - id: a
+        text: "À ce rythme, 2 % du budget mensuel disparaît en une heure (le mois entier en environ 2 jours) : c'est grave et durable, ça justifie un réveil."
+        correct: true
+      - id: b
+        text: Parce que 14,4 est la valeur maximale possible.
+      - id: c
+        text: Parce que cela correspond à 14,4 % d'erreurs.
+        feedback: "Le taux compare la consommation au rythme qui épuiserait le budget en 30 jours ; 14,4 × 0,1 % = 1,44 % d'erreurs pour un SLO de 99,9 %."
+      - id: d
+        text: Parce que Prometheus l'impose.
+    explanation: |
+      Un taux de 1 épuise le budget en 30 jours (720 heures). 14,4 × 1/720 = 2 % par heure.
+      On combine une fenêtre longue (fiabilité) et une courte (l'alerte s'arrête vite).

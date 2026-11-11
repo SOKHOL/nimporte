@@ -50,11 +50,12 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 ## Ce qui existe déjà
 
 - La carte des 31 parcours et de leurs prérequis : [`content/curriculum.yaml`](content/curriculum.yaml).
-- 16 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
-  POO, Design patterns, Architecture, System design, DevOps, Bases de données, Réseau et web,
-  Sécurité, **Gestion de la mémoire, JVM, Threads et concurrence, Métaprogrammation et AOP**.
-- **94 leçons et 465 exercices**, couvrant 9 types d'exercices, et **80 boss chronométrés,
-  un par niveau**. **Les 16 parcours détaillés sont complets du niveau 1 au niveau 5** :
+- 19 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
+  POO, Design patterns, Clean code, Architecture, System design, DevOps, SRE, Cloud, Bases de
+  données, Réseau et web, Sécurité, **Gestion de la mémoire, JVM, Threads et concurrence,
+  Métaprogrammation et AOP**.
+- **109 leçons et 544 exercices**, couvrant 9 types d'exercices, et **95 boss chronométrés,
+  un par niveau**. **Les 19 parcours détaillés sont complets du niveau 1 au niveau 5** :
   - fondations : types, boucles, collections, exceptions, complexité, nullabilité,
     génériques, fonctions d'ordre supérieur, apprendre n'importe quel langage ;
   - algorithmes : recherche et tris, piles, files, hachage, fenêtres glissantes, arbres,
@@ -95,6 +96,15 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
   - sécurité : mots de passe, MFA et passkeys, injections, XSS, CSRF, IDOR, SSRF, autorisation,
     secrets, cryptographie appliquée, dépendances, STRIDE, zero trust, tests de sécurité,
     réponse à incident, test d'intrusion, RGPD, ingénierie sociale ;
+  - clean code : nommage, fonctions, DRY/KISS/YAGNI, odeurs et refactorings, tests unitaires,
+    TDD, doublures, pyramide, couverture, code existant, tests de contrat, tests par
+    propriétés, tests instables, tests de mutation, revue de code ;
+  - SRE : journaux, métriques et traces, Prometheus, alertes, OpenTelemetry, SLI/SLO,
+    budget d'erreur, incidents, post-mortems, capacité et files d'attente, tests de charge,
+    pannes en cascade, chaos engineering, toil ;
+  - cloud : modèles de service, régions et zones, responsabilité partagée, calcul, stockage,
+    VPC, IAM, KMS, haute disponibilité, reprise après sinistre, FinOps, landing zones,
+    gouvernance, Well-Architected, multi-cloud ;
   - DevOps : culture et métriques DORA, 12 facteurs, Docker (couches, sécurité, PID 1),
     Compose, CI/CD, stratégies de déploiement, feature flags, Terraform, Ansible,
     Kubernetes et son diagnostic, Helm, GitOps, platform engineering, sécurité de la
@@ -103,7 +113,7 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
   Tous les extraits (Kotlin, C, Python, Rust, JavaScript) ont été exécutés pour vérifier les
   réponses attendues, et les sorties citées dans les cours Git, Linux, System design et DevOps
   sont des sorties réelles (Git, bash, strace, Redis, PostgreSQL, Docker, Terraform, curl,
-  openssl, bandit, pip-audit).
+  openssl, bandit, pip-audit, pytest, Hypothesis, Prometheus, OpenTelemetry).
 - Un validateur (schémas + cohérence) avec ses tests, lancé par GitHub Actions.
 
 ## Structure
@@ -144,6 +154,6 @@ python -m unittest discover -s devforge/tools -v
 
 ## Prochaine étape
 
-Rédiger les 15 parcours encore à l'état de plan (cloud, SRE, clean code, programmation
-fonctionnelle…), enrichir les parcours existants (plus d'exercices par compétence), puis
+Rédiger les 12 parcours encore à l'état de plan (programmation fonctionnelle, débogage,
+performance, systèmes distribués…), enrichir les parcours existants (plus d'exercices par compétence), puis
 notifications et widget pour le défi du jour. Voir le [plan d'action](docs/04-plan-d-action.md).

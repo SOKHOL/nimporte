@@ -1,0 +1,131 @@
+exercises:
+  - id: sre.n4.capacite.qcm-file
+    type: qcm
+    title: Le service à 95 %
+    skills: [capacite]
+    difficulty: 4
+    prompt: |
+      Un service traite chaque requête en 10 ms et peut en servir 94 par seconde. Les
+      requêtes arrivent au hasard. Entre 30 % et 95 % de charge, que devient sa latence
+      médiane ?
+    choices:
+      - id: a
+        text: "Elle est multipliée par environ 5 (de 11 à 55 ms), car le temps d'attente dans la file explose à l'approche de 100 %."
+        correct: true
+      - id: b
+        text: Elle reste à 10 ms tant que le service n'est pas plein.
+        feedback: "Ce serait vrai avec des arrivées parfaitement régulières, jamais avec du vrai trafic."
+      - id: c
+        text: Elle augmente proportionnellement à la charge (×3).
+      - id: d
+        text: Elle diminue grâce aux caches.
+    explanation: |
+      Mesure réelle : 11, 17, 25, 39, 55 ms de médiane à 30, 60, 80, 90, 95 % ; le p99 passe
+      de 52 à 185 ms. L'attente croît comme ρ / (1 − ρ) : on garde une marge.
+
+  - id: sre.n4.incident.match-roles
+    type: match
+    title: Les rôles pendant un incident
+    skills: [gestion-incident]
+    difficulty: 2
+    prompt: Relie chaque tâche au rôle qui en est chargé.
+    pairs:
+      - left: Décider de revenir à la version précédente
+        right: Responsable d'incident
+      - left: Exécuter le retour arrière et vérifier les métriques
+        right: Opérations
+      - left: Mettre à jour la page de statut toutes les 30 minutes
+        right: Communication
+      - left: Noter l'heure de chaque action et son résultat
+        right: Scribe
+    explanation: |
+      Le responsable d'incident coordonne et décide sans taper de commandes : il garde une vue
+      d'ensemble que personne n'a quand il est plongé dans un terminal.
+
+  - id: sre.n4.tests-charge.qcm-regulier
+    type: qcm
+    title: Un test de charge trop optimiste
+    skills: [tests-charge]
+    difficulty: 4
+    prompt: "Un test de charge envoie exactement une requête toutes les 11,1 ms (90 req/s) et mesure un p99 de 12 ms. En production, au même débit moyen, le p99 dépasse 180 ms. Pourquoi ?"
+    choices:
+      - id: a
+        text: "Le trafic réel arrive en rafales aléatoires ; un débit parfaitement régulier ne crée presque jamais de file d'attente et sous-estime la latence."
+        correct: true
+      - id: b
+        text: La production a des serveurs plus lents.
+      - id: c
+        text: Le test de charge a un bug de mesure.
+      - id: d
+        text: Le réseau de production ajoute 170 ms.
+    explanation: |
+      Mesures réelles sur le même serveur : arrivées régulières, p99 de 12 ms à 95 % de
+      charge ; arrivées aléatoires, 185 ms. On teste avec des arrivées réalistes, en modèle
+      ouvert (débit fixé, indépendant des réponses).
+
+  - id: sre.n4.post-mortem.qcm-cause
+    type: qcm
+    title: La cause racine unique
+    skills: [post-mortem]
+    difficulty: 3
+    prompt: "Un post-mortem conclut : « cause racine : le développeur n'a pas vérifié la migration ». Qu'en penses-tu ?"
+    choices:
+      - id: a
+        text: "C'est insuffisant : il faut chercher les facteurs contributifs du système (pas de test des migrations en CI, pas de lock_timeout, alerte tardive, retour arrière difficile) et des actions sur eux."
+        correct: true
+      - id: b
+        text: C'est correct, il faut le former.
+      - id: c
+        text: C'est correct, il faut retirer ses accès.
+      - id: d
+        text: C'est la bonne conclusion si c'est la troisième fois.
+    explanation: |
+      Les systèmes complexes tombent par des combinaisons de facteurs. Chercher un coupable
+      apprend à cacher les erreurs ; corriger le système empêche qu'elles se reproduisent.
+
+  - id: sre.n4.capacite.scenario-backlog
+    type: scenario
+    title: La seconde mystérieuse
+    skills: [capacite, tests-charge]
+    difficulty: 5
+    prompt: |
+      Pendant un test de charge, le p99 d'un service passe brutalement de 120 ms à environ
+      1 050 ms dès 80 % de charge, alors que le CPU n'est qu'à 60 % et que la médiane reste à
+      25 ms.
+    start: debut
+    nodes:
+      debut:
+        text: "Qu'évoque une latence qui saute à environ 1 seconde pile, pour une petite partie des requêtes ?"
+        options:
+          - text: "Des connexions refusées puis retentées par le client après le délai de retransmission TCP (1 s) : une file de connexions trop petite qui déborde."
+            next: verification
+            points: 3
+          - text: Une pause du ramasse-miettes.
+            next: gc
+            points: 1
+            feedback: "Possible en général, mais des pauses donneraient des valeurs variées, pas une seconde pile."
+      gc:
+        text: "Les journaux du GC ne montrent aucune pause longue. Et la valeur reste collée à environ 1 s. Que vérifies-tu ?"
+        options:
+          - text: La taille de la file d'attente de connexions du serveur (backlog) et les compteurs de connexions refusées.
+            next: verification
+            points: 2
+      verification:
+        text: "Le serveur est configuré avec une file de 5 connexions. Que fais-tu ?"
+        options:
+          - text: "Augmenter la file (et vérifier somaxconn), puis relancer le test ; ajouter une métrique sur les connexions refusées."
+            next: resolu
+            points: 3
+          - text: Ajouter des serveurs.
+            next: serveurs
+            points: 1
+      serveurs:
+        ending: partial
+        text: "🟡 Le problème recule, sans disparaître : chaque serveur garde sa file de 5 places."
+      resolu:
+        ending: success
+        text: "✅ Avec une file de 1 024 places, le p99 à 80 % de charge redescend à 111 ms."
+    explanation: |
+      Mesure réelle : file de 5 connexions (défaut du serveur Python), p99 de 1 046 ms à 80 %
+      de charge ; file de 1 024, 111 ms. Les limites cachées (backlog, pools, descripteurs)
+      cassent souvent avant le CPU.

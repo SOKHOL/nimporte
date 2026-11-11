@@ -1,57 +1,117 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: cloud
 title: Cloud
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Comprendre et utiliser le cloud public : modèles de service, régions et zones, calcul,
+  stockage, réseau, identités, haute disponibilité, reprise après sinistre, coûts et
+  gouvernance.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: iaas
-    title: IaaS
-  - id: paas
-    title: PaaS
-  - id: saas
-    title: SaaS
-  - id: regions-et-zones
-    title: Régions et zones
-  - id: responsabilite-partagee
-    title: Responsabilité partagée
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: calcul-vm-conteneurs-manages
-    title: Calcul (VM, conteneurs managés, serverless)
-  - id: stockage-objet-bloc-fichier
-    title: Stockage (objet, bloc, fichier)
-  - id: bases-managees
-    title: Bases managées
-- level: 3
-  title: Approfondir
-  skills:
-  - id: reseau-cloud-vpc-sous-reseaux
-    title: Réseau cloud (VPC, sous-réseaux, groupes de sécurité, NAT)
-  - id: iam-et-moindre-privilege
-    title: IAM et moindre privilège
-- level: 4
-  title: Concevoir
-  skills:
-  - id: architectures-de-reference
-    title: Architectures de référence
-  - id: haute-disponibilite
-    title: Haute disponibilité
-  - id: reprise-apres-sinistre-rpo-rto
-    title: Reprise après sinistre (RPO, RTO)
-  - id: finops
-    title: FinOps
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: multi-cloud
-    title: Multi-cloud
-  - id: landing-zones
-    title: Landing zones
-  - id: gouvernance
-    title: Gouvernance
-  - id: frameworks-well-architected
-    title: Frameworks *well-architected*
+  - level: 1
+    title: Les fondamentaux
+    skills:
+      - id: modeles-service
+        title: IaaS, PaaS, SaaS et serverless
+      - id: regions-zones
+        title: Régions et zones de disponibilité
+      - id: responsabilite-partagee
+        title: Le modèle de responsabilité partagée
+      - id: elasticite
+        title: Élasticité et paiement à l'usage
+    boss:
+      id: cloud.n1.boss
+      title: "Boss : le compartiment public"
+      exercises:
+        - cloud.n1.serverless.qcm
+        - cloud.n1.regions.qcm
+        - cloud.n1.responsabilite.qcm
+        - cloud.n1.elasticite.qcm-calcul
+        - cloud.n1.modeles.match
+      pass_ratio: 0.8
+      time_limit_min: 8
+
+  - level: 2
+    title: Les services de base
+    skills:
+      - id: calcul
+        title: Calcul (VM, conteneurs gérés, fonctions)
+      - id: stockage
+        title: Stockage objet, bloc et fichier
+      - id: bases-gerees
+        title: Bases de données et files gérées
+    boss:
+      id: cloud.n2.boss
+      title: "Boss : le disque orphelin"
+      exercises:
+        - cloud.n2.calcul.qcm-spot
+        - cloud.n2.stockage.scenario-rancongiciel
+        - cloud.n2.stockage.match
+        - cloud.n2.stockage.qcm-presigne
+        - cloud.n2.bases.qcm-gere
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 3
+    title: Réseau et identités
+    skills:
+      - id: vpc
+        title: Réseau virtuel (VPC, sous-réseaux, routage)
+      - id: iam
+        title: Identités et moindre privilège (IAM)
+      - id: chiffrement-kms
+        title: Chiffrement et gestion des clés (KMS)
+    boss:
+      id: cloud.n3.boss
+      title: "Boss : le joker de trop"
+      exercises:
+        - cloud.n3.vpc.qcm-cidr
+        - cloud.n3.iam.match
+        - cloud.n3.kms.qcm-enveloppe
+        - cloud.n3.iam.qcm-joker
+        - cloud.n3.iam.qcm-cles
+        - cloud.n3.vpc.qcm-base-publique
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 4
+    title: Concevoir pour le cloud
+    skills:
+      - id: haute-disponibilite
+        title: Haute disponibilité multi-zone
+      - id: reprise-sinistre
+        title: Reprise après sinistre (RPO, RTO)
+      - id: finops
+        title: FinOps, maîtriser les coûts
+    boss:
+      id: cloud.n4.boss
+      title: "Boss : la zone qui emporte tout"
+      exercises:
+        - cloud.n4.ha.scenario-nat
+        - cloud.n4.dr.match
+        - cloud.n4.finops.qcm-unitaire
+        - cloud.n4.ha.qcm-calcul
+        - cloud.n4.finops.match
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 5
+    title: Gouverner le cloud
+    skills:
+      - id: landing-zone
+        title: Landing zones et organisation des comptes
+      - id: gouvernance
+        title: Garde-fous et conformité
+      - id: well-architected
+        title: Les cadres Well-Architected
+      - id: multi-cloud
+        title: Multi-cloud et dépendance au fournisseur
+    boss:
+      id: cloud.n5.boss
+      title: "Boss : la landing zone"
+      exercises:
+        - cloud.n5.landing-zone.qcm
+        - cloud.n5.gouvernance.match
+        - cloud.n5.well-architected.match
+        - cloud.n5.multi-cloud.scenario
+        - cloud.n5.gouvernance.qcm-ci
+      pass_ratio: 0.8
+      time_limit_min: 10

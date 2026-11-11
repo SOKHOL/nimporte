@@ -87,7 +87,7 @@ tracks:
     title: Clean code, refactoring et tests
     domain: code
     requires: [poo@1]
-    status: planned
+    status: pilot
 
   - id: design-patterns
     title: Design patterns
@@ -129,13 +129,13 @@ tracks:
     title: Cloud
     domain: ops
     requires: [devops@2, reseau-web@2]
-    status: planned
+    status: pilot
 
   - id: sre
     title: Observabilité et SRE
     domain: ops
     requires: [devops@3, linux@2]
-    status: planned
+    status: pilot
 
   - id: securite
     title: Sécurité

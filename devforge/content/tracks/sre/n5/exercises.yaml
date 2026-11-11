@@ -1,0 +1,145 @@
+exercises:
+  - id: sre.n5.cascade.scenario-metastable
+    type: scenario
+    title: La panne qui ne s'arrête pas
+    skills: [pannes-en-cascade]
+    difficulty: 5
+    prompt: |
+      La base a été lente pendant 10 minutes à cause d'une maintenance. Elle est revenue à la
+      normale depuis 20 minutes, mais l'API répond toujours en erreur à 95 %. Les métriques
+      montrent un trafic entrant quatre fois supérieur à l'habitude.
+    start: debut
+    nodes:
+      debut:
+        text: Pourquoi l'API ne se rétablit-elle pas d'elle-même ?
+        options:
+          - text: "Une tempête de réessais : les clients réessaient immédiatement, la file est pleine de requêtes déjà abandonnées, ce qui provoque de nouveaux réessais (panne métastable)."
+            next: sortie
+            points: 3
+          - text: La base est encore lente.
+            next: base
+            points: 0
+      base:
+        text: "Les métriques de la base sont normales, mais elle reçoit quatre fois plus de requêtes. D'où vient ce trafic ?"
+        options:
+          - text: Des réessais des clients et des services intermédiaires.
+            next: sortie
+            points: 2
+      sortie:
+        text: Comment sortir de l'incident maintenant ?
+        options:
+          - text: "Réduire la charge entrante (délestage, limitation de débit, voire coupure brève), vider les files, puis rouvrir progressivement."
+            next: prevention
+            points: 3
+          - text: Ajouter des serveurs d'API.
+            next: plus
+            points: 1
+            feedback: "Plus de serveurs d'API envoient encore plus de requêtes vers la base."
+      plus:
+        text: "La base sature à son tour sous le surplus de requêtes. Que faire ?"
+        options:
+          - text: Réduire la charge entrante et vider les files, puis rouvrir progressivement.
+            next: prevention
+            points: 1
+      prevention:
+        text: Qu'est-ce qui évitera la prochaine fois ?
+        options:
+          - text: "Des réessais avec délai croissant aléatoire et un budget, à un seul niveau, des délais propagés et un disjoncteur vers la base."
+            next: resolu
+            points: 3
+          - text: Supprimer tous les réessais.
+            next: aucun
+            points: 1
+            feedback: "Les réessais sont utiles contre les erreurs passagères ; il faut les limiter, pas les supprimer."
+      aucun:
+        ending: partial
+        text: "🟡 Plus de tempête, mais chaque micro-coupure réseau devient une erreur visible pour les utilisateurs."
+      resolu:
+        ending: success
+        text: "✅ Lors de la maintenance suivante, l'API se dégrade pendant 10 minutes puis revient seule à la normale."
+    explanation: |
+      Simulation : avec des réessais immédiats, 2 % de réponses utiles 40 s après la fin de la
+      panne et une file de 2 864 requêtes ; avec délai croissant et budget, 89 % et une file
+      vide.
+
+  - id: sre.n5.cascade.qcm-niveaux
+    type: qcm
+    title: Des réessais à chaque étage
+    skills: [pannes-en-cascade]
+    difficulty: 4
+    prompt: "Une requête traverse 4 services ; chacun réessaie 3 fois en cas d'échec de l'appel suivant. Le dernier service est en panne. Combien d'appels peut-il recevoir pour une seule requête utilisateur ?"
+    choices:
+      - id: a
+        text: "Jusqu'à 81 (3⁴)"
+        correct: true
+      - id: b
+        text: "12 (4 × 3)"
+        feedback: "Les réessais se multiplient : chaque tentative d'un niveau déclenche les réessais du niveau suivant."
+      - id: c
+        text: "3"
+      - id: d
+        text: "4"
+    explanation: |
+      On réessaie à un seul niveau (souvent le plus proche de l'utilisateur ou le plus proche
+      de la dépendance), avec un budget, et on propage les délais.
+
+  - id: sre.n5.chaos.parsons
+    type: parsons
+    title: Une expérience de chaos
+    skills: [chaos]
+    difficulty: 3
+    language: text
+    prompt: Remets dans l'ordre les étapes d'une expérience de chaos engineering.
+    lines:
+      - Définir l'état stable mesurable (taux de succès, latence)
+      - "Formuler une hypothèse : « si une instance de la base tombe, le succès reste au-dessus de 99 % »"
+      - Injecter la panne sur un périmètre limité, avec un bouton d'arrêt
+      - Observer les métriques et comparer à l'hypothèse
+      - Corriger les faiblesses trouvées, puis élargir le périmètre
+    distractors:
+      - Couper une zone entière en production sans prévenir, pour voir
+    explanation: |
+      Le chaos engineering est une expérience contrôlée, pas une provocation : on limite le
+      rayon d'impact et on peut tout arrêter immédiatement.
+
+  - id: sre.n5.toil.qcm
+    type: qcm
+    title: Le redémarrage du lundi
+    skills: [toil]
+    difficulty: 3
+    prompt: "Chaque lundi, quelqu'un redémarre à la main un service dont la mémoire grossit pendant la semaine. Quelle est la meilleure action ?"
+    choices:
+      - id: a
+        text: "Trouver et corriger la fuite de mémoire ; en attendant, automatiser le redémarrage avec une alerte et une limite."
+        correct: true
+      - id: b
+        text: Écrire une procédure pour que n'importe qui puisse le faire.
+        feedback: "Ça partage le travail répétitif, sans le supprimer."
+      - id: c
+        text: Redémarrer tous les jours pour plus de sécurité.
+      - id: d
+        text: Doubler la mémoire du serveur.
+        feedback: "Le redémarrage aura lieu tous les quinze jours au lieu de chaque semaine."
+    explanation: |
+      Le toil se traite à la cause quand c'est possible ; l'automatisation du symptôme n'est
+      qu'une solution temporaire.
+
+  - id: sre.n5.cascade.match
+    type: match
+    title: Les protections contre les cascades
+    skills: [pannes-en-cascade]
+    difficulty: 4
+    prompt: Relie chaque protection à ce qu'elle empêche.
+    pairs:
+      - left: Délai croissant et aléatoire entre les réessais
+        right: Que tous les clients réessaient en même temps
+      - left: Disjoncteur
+        right: Continuer à appeler une dépendance qui échoue
+      - left: Cloisons (un pool par dépendance)
+        right: Qu'une dépendance lente épuise toutes les connexions
+      - left: Délestage
+        right: Servir toutes les requêtes trop tard plutôt qu'une partie à temps
+      - left: Propagation des délais
+        right: Travailler pour un appelant qui a déjà abandonné
+    explanation: |
+      Ces protections se combinent ; chacune casse une boucle d'amplification différente.

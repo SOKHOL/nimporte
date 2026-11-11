@@ -1,0 +1,126 @@
+exercises:
+  - id: cloud.n2.stockage.match
+    type: match
+    title: Objet, bloc ou fichier ?
+    skills: [stockage]
+    difficulty: 2
+    prompt: Relie chaque besoin au type de stockage adapté.
+    pairs:
+      - left: Les photos envoyées par les utilisateurs d'une application
+        right: Stockage objet (S3)
+      - left: Le disque de données d'une base PostgreSQL installée sur une VM
+        right: Stockage bloc (EBS)
+      - left: Un dossier partagé lu et écrit par dix serveurs à la fois
+        right: Stockage fichier (EFS, NFS)
+      - left: Les sauvegardes à conserver 7 ans, presque jamais relues
+        right: Stockage objet en classe archive
+    explanation: |
+      Le stockage objet couvre la majorité des besoins de fichiers ; le bloc sert aux disques
+      d'une machine ; le fichier partagé, aux applications qui en ont absolument besoin.
+
+  - id: cloud.n2.calcul.qcm-spot
+    type: qcm
+    title: Des machines à prix cassé
+    skills: [calcul]
+    difficulty: 3
+    prompt: "Pour quelle charge les instances spot (jusqu'à environ 90 % moins chères, mais reprises avec un court préavis) sont-elles le plus adaptées ?"
+    choices:
+      - id: a
+        text: "Un traitement par lots découpé en petites tâches, qui reprend là où il en était si une machine disparaît."
+        correct: true
+      - id: b
+        text: La base de données principale de production.
+        feedback: "Perdre la machine en pleine écriture coûterait bien plus que l'économie."
+      - id: c
+        text: Un service qui garde les sessions des utilisateurs en mémoire.
+      - id: d
+        text: Le serveur d'un jeu en ligne avec des parties de deux heures.
+    explanation: |
+      Le spot convient aux charges interruptibles et tolérantes : calculs par lots, rendu,
+      CI, nœuds supplémentaires d'un cluster qui sait redistribuer le travail.
+
+  - id: cloud.n2.stockage.qcm-presigne
+    type: qcm
+    title: Envoyer une vidéo de 2 Go
+    skills: [stockage]
+    difficulty: 3
+    prompt: "Des utilisateurs envoient des vidéos de 2 Go. Les faire transiter par les serveurs de l'API sature leur réseau et leur mémoire. Quelle solution ?"
+    choices:
+      - id: a
+        text: "L'API génère une URL présignée temporaire, et le navigateur envoie la vidéo directement au stockage objet."
+        correct: true
+      - id: b
+        text: Rendre le compartiment public en écriture.
+        feedback: "N'importe qui pourrait y déposer n'importe quoi, et la facture suivrait."
+      - id: c
+        text: Augmenter la taille des serveurs de l'API.
+      - id: d
+        text: Découper la vidéo en JSON.
+    explanation: |
+      L'URL présignée donne un droit limité (un objet, une opération, quelques minutes). Les
+      serveurs de l'application ne voient passer que de petites requêtes.
+
+  - id: cloud.n2.bases.qcm-gere
+    type: qcm
+    title: Ce que la base gérée ne fait pas pour toi
+    skills: [bases-gerees]
+    difficulty: 3
+    prompt: "L'équipe passe de PostgreSQL sur une VM à un PostgreSQL géré. Qu'est-ce qui reste sa responsabilité ?"
+    choices:
+      - id: a
+        text: "Le schéma, les index et les requêtes, le dimensionnement, les droits et le réseau, et le coût."
+        correct: true
+      - id: b
+        text: Les sauvegardes et les correctifs du système.
+        feedback: "C'est justement ce que le service géré prend en charge."
+      - id: c
+        text: Le remplacement du matériel en panne.
+      - id: d
+        text: Rien, tout est géré.
+    explanation: |
+      Une requête sans index reste lente sur une base gérée. Le fournisseur gère
+      l'exploitation, pas la conception.
+
+  - id: cloud.n2.stockage.scenario-rancongiciel
+    type: scenario
+    title: Les sauvegardes chiffrées par l'attaquant
+    skills: [stockage, bases-gerees]
+    difficulty: 4
+    prompt: |
+      Un attaquant a obtenu les clés d'accès d'un administrateur. Il a chiffré les serveurs et
+      supprimé les sauvegardes stockées dans un compartiment du même compte.
+    start: debut
+    nodes:
+      debut:
+        text: Qu'aurait-il fallu pour que les sauvegardes survivent ?
+        options:
+          - text: "Des sauvegardes immuables (versionnage + verrouillage d'objets pendant 30 jours), dans un compte séparé auquel l'administrateur de production n'a pas accès en suppression."
+            next: suite
+            points: 3
+          - text: Des sauvegardes plus fréquentes.
+            next: frequence
+            points: 0
+      frequence:
+        text: "Les sauvegardes horaires ont été supprimées avec les autres. Que manquait-il ?"
+        options:
+          - text: Qu'elles soient impossibles à supprimer ou modifier, même par un administrateur compromis.
+            next: suite
+            points: 1
+      suite:
+        text: Et pour vérifier que ce dispositif fonctionne vraiment ?
+        options:
+          - text: "Des restaurations régulières, chronométrées, depuis le compte de sauvegarde, comme exercice."
+            next: resolu
+            points: 3
+          - text: Vérifier chaque jour que les fichiers de sauvegarde existent.
+            next: existe
+            points: 1
+      existe:
+        ending: partial
+        text: "🟡 Les fichiers existent, mais le jour de l'incident, la restauration échoue sur un format incompatible."
+      resolu:
+        ending: success
+        text: "✅ Lors de l'exercice suivant, la base est restaurée depuis le compte isolé en 1 h 40."
+    explanation: |
+      Le versionnage et le verrouillage d'objets, un compte séparé et des restaurations
+      testées protègent des suppressions, accidentelles ou malveillantes.

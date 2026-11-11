@@ -1,0 +1,114 @@
+exercises:
+  - id: donnees.n2.sql.predict-fenetre
+    type: predict-output
+    title: Cumul et évolution
+    skills: [sql-analytique]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme (SQLite gère les fonctions de fenêtre) ?
+    code: |
+      import sqlite3
+
+      db = sqlite3.connect(":memory:")
+      db.execute("create table ca (mois int, montant int)")
+      db.executemany("insert into ca values (?, ?)", [(1, 100), (2, 80), (3, 120)])
+      for ligne in db.execute("""
+              select mois,
+                     sum(montant) over (order by mois),
+                     montant - lag(montant) over (order by mois)
+              from ca order by mois"""):
+          print(ligne)
+    choices:
+      - id: a
+        text: "`(1, 100, None)` / `(2, 180, -20)` / `(3, 300, 40)`"
+        correct: true
+      - id: b
+        text: "`(1, 300, None)` / `(2, 300, -20)` / `(3, 300, 40)`"
+        feedback: "Avec order by dans la fenêtre, la somme est cumulée jusqu'à la ligne courante."
+      - id: c
+        text: "`(1, 100, 0)` / `(2, 180, -20)` / `(3, 300, 40)`"
+        feedback: "lag() n'a pas de ligne précédente pour le premier mois : il renvoie NULL."
+      - id: d
+        text: "Une seule ligne `(3, 300, 40)`"
+        feedback: "Une fonction de fenêtre ne regroupe pas les lignes, contrairement à group by."
+    explanation: |
+      sum … over (order by …) cumule, lag regarde la ligne précédente. Sortie vérifiée.
+
+  - id: donnees.n2.sql.find-bug-fan-out
+    type: find-bug
+    title: Le chiffre d'affaires gonflé
+    skills: [sql-analytique, modele-etoile]
+    difficulty: 4
+    language: sql
+    prompt: "Ce rapport annonce un chiffre d'affaires trois fois supérieur à la comptabilité. Touche la ligne en cause."
+    code: |
+      select c.client_id,
+             sum(c.montant_total) as ca,
+             count(l.id) as articles
+      from commandes c
+      join lignes_commande l on l.commande_id = c.id
+      group by c.client_id;
+    bug_lines: [2]
+    explanation: |
+      La jointure produit une ligne par ligne de commande : le montant total de chaque
+      commande est compté autant de fois qu'elle a d'articles (fan-out). Il faut sommer au
+      bon grain : sum(l.montant) sur les lignes, ou agréger les lignes dans une sous-requête
+      avant la jointure.
+
+  - id: donnees.n2.etoile.qcm-grain
+    type: qcm
+    title: Le grain de la table de faits
+    skills: [modele-etoile]
+    difficulty: 3
+    prompt: "Pourquoi le choix du grain (ce que représente une ligne de la table de faits) est-il la première décision d'un modèle en étoile ?"
+    choices:
+      - id: a
+        text: "Il fixe les questions possibles : avec un grain « total par jour et par magasin », on ne pourra jamais analyser les paniers ou les produits ; il est très coûteux à changer ensuite."
+        correct: true
+      - id: b
+        text: "Parce qu'il détermine le nombre de dimensions autorisées."
+      - id: c
+        text: "Parce que la base l'exige avant de créer les index."
+      - id: d
+        text: "Il n'a pas d'importance si les dimensions sont bien faites."
+    explanation: |
+      Choisir le grain le plus fin raisonnable (une ligne de vente) garde toutes les questions
+      ouvertes ; on agrège ensuite à la demande.
+
+  - id: donnees.n2.etoile.match
+    type: match
+    title: Le vocabulaire de l'entrepôt
+    skills: [modele-etoile, entrepots]
+    difficulty: 3
+    prompt: Relie chaque notion à sa définition.
+    pairs:
+      - left: Table de faits
+        right: Des événements mesurables, une ligne par événement, avec des mesures numériques
+      - left: Dimension
+        right: Le contexte descriptif (qui, quoi, où, quand) pour filtrer et regrouper
+      - left: Dimension à évolution lente de type 2
+        right: Une nouvelle ligne avec des dates de validité quand un attribut change
+      - left: Clé de substitution
+        right: Un identifiant propre à l'entrepôt, indépendant des clés de production
+    explanation: |
+      Le modèle dimensionnel de Kimball : simple à interroger, rapide, et historique.
+
+  - id: donnees.n2.entrepots.qcm-oltp
+    type: qcm
+    title: Pourquoi un entrepôt séparé ?
+    skills: [entrepots]
+    difficulty: 2
+    prompt: "Pourquoi ne pas faire les analyses directement sur la base PostgreSQL de production ?"
+    choices:
+      - id: a
+        text: "Une analyse lourde ralentirait les clients, la base par lignes est moins efficace pour parcourir des millions de lignes sur quelques colonnes, et on veut l'historique de plusieurs sources réunies."
+        correct: true
+      - id: b
+        text: "PostgreSQL ne sait pas faire de group by."
+      - id: c
+        text: "La loi interdit d'analyser les données de production."
+      - id: d
+        text: "Les entrepôts sont toujours gratuits."
+    explanation: |
+      Mesure réelle : 88 ms dans PostgreSQL contre 25 ms dans DuckDB sur Parquet pour la
+      même agrégation, et l'écart grandit avec le volume.

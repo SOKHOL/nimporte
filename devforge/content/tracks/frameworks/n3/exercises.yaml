@@ -1,0 +1,137 @@
+exercises:
+  - id: frameworks.n3.paresseux.qcm-n-plus-1
+    type: qcm
+    title: Compter les requêtes
+    skills: [chargement-paresseux]
+    difficulty: 3
+    language: java
+    prompt: "Commande.client est en FetchType.LAZY et la table contient 50 commandes. Combien de requêtes SQL ce code envoie-t-il, dans une transaction ?"
+    code: |
+      double total = 0;
+      for (Commande c : commandes.findAll()) {
+          total += c.getClient().getNom().length();
+      }
+    choices:
+      - id: a
+        text: "51 : une pour les commandes, puis une par client au premier accès à son proxy (si les 50 clients sont distincts)."
+        correct: true
+      - id: b
+        text: "1 : Hibernate charge tout d'un coup."
+        feedback: "C'est ce que fait un join fetch, pas un findAll avec une relation paresseuse."
+      - id: c
+        text: "2 : une pour les commandes, une pour tous les clients."
+        feedback: "Ce serait le cas avec un chargement par lots (@BatchSize) assez grand, pas par défaut."
+      - id: d
+        text: "50"
+    explanation: |
+      C'est le N+1. Mesure réelle avec 10 commandes : 11 requêtes, contre 1 avec
+      `select c from Commande c join fetch c.client`. Un client déjà chargé dans le contexte
+      ne serait pas rechargé.
+
+  - id: frameworks.n3.transactions.find-bug
+    type: find-bug
+    title: L'erreur qui n'annule rien
+    skills: [transactions, dirty-checking]
+    difficulty: 4
+    language: java
+    prompt: "Quand le stock est insuffisant, la réservation est quand même enregistrée en base. Touche la ligne en cause."
+    code: |
+      class StockInsuffisant extends Exception { … }
+
+      @Transactional
+      void reserver(long produitId, int quantite) throws StockInsuffisant {
+          Produit p = em.find(Produit.class, produitId);
+          p.setReserve(p.getReserve() + quantite);
+          if (p.getStock() < p.getReserve()) {
+              throw new StockInsuffisant();
+          }
+      }
+    bug_lines: [3]
+    explanation: |
+      Par défaut, @Transactional n'annule que pour les exceptions non vérifiées. StockInsuffisant
+      hérite d'Exception : la transaction est validée, et le dirty checking écrit la réserve
+      modifiée. Correction : `@Transactional(rollbackFor = StockInsuffisant.class)`, ou une
+      exception qui hérite de RuntimeException. Comportement vérifié sur Spring Boot 3.3.
+
+  - id: frameworks.n3.paresseux.qcm-proxy
+    type: qcm
+    title: Le nom qui vaut null
+    skills: [chargement-paresseux, contexte-de-persistance]
+    difficulty: 4
+    prompt: "Dans une transaction, commande.client.nom (accès direct au champ) vaut null, alors que commande.client.getNom() renvoie « client1 ». Pourquoi ?"
+    choices:
+      - id: a
+        text: "commande.client est un proxy Hibernate (une sous-classe générée, vide) : seules ses méthodes déclenchent le chargement, ses champs restent à leur valeur par défaut."
+        correct: true
+      - id: b
+        text: "Le nom n'est pas encore écrit en base."
+      - id: c
+        text: "Le champ nom n'est pas annoté @Column."
+      - id: d
+        text: "Hibernate efface les champs pour économiser la mémoire."
+    explanation: |
+      Résultat réel : la classe est Client$HibernateProxy$…, le champ vaut null, le getter
+      renvoie client1. Avec des entités, toujours passer par des accesseurs.
+
+  - id: frameworks.n3.revue
+    type: code-review
+    title: "Revue : le service de commandes"
+    skills: [dirty-checking, chargement-paresseux, transactions, contexte-de-persistance]
+    difficulty: 4
+    language: java
+    prompt: Ce service fonctionne en développement. Trouve au moins 3 problèmes.
+    code: |
+      @Transactional
+      List<CommandeDto> commandesDuMois() {
+          List<Commande> cs = commandes.findByMois(YearMonth.now());
+          for (Commande c : cs) {
+              c.setMontant(Math.round(c.getMontant()));
+          }
+          return cs.stream()
+              .map(c -> new CommandeDto(c.getId(), c.getMontant(), c.getClient().getNom()))
+              .toList();
+      }
+
+      @Transactional
+      void payer(long id) {
+          Commande c = commandes.findById(id).orElseThrow();
+          banque.debiter(c.getClient().getIban(), c.getMontant());
+          c.setPayee(true);
+      }
+    issues:
+      - lines: [5]
+        category: bug
+        description: "Arrondir le montant pour l'affichage modifie l'entité gérée : le dirty checking écrit les montants arrondis en base à la fin de la transaction."
+      - lines: [8]
+        category: performance
+        description: "getClient() sur une relation paresseuse dans une boucle : une requête par commande (N+1). Utiliser un join fetch ou une projection."
+      - lines: [1]
+        category: performance
+        description: "Une méthode de lecture sans readOnly = true : Hibernate fait le dirty checking de toutes les entités chargées."
+      - lines: [15]
+        category: conception
+        description: "Un appel à la banque (réseau) à l'intérieur de la transaction : la connexion et les verrous sont gardés pendant l'appel ; et si la transaction échoue après le débit, le client est débité sans commande payée."
+    min_found: 3
+    explanation: |
+      Quatre pièges classiques de l'ORM : modification involontaire, N+1, lecture sans
+      readOnly, et appel externe dans une transaction (à sortir de la transaction, avec une
+      clé d'idempotence et un état « paiement en cours »).
+
+  - id: frameworks.n3.contexte.match
+    type: match
+    title: Les mécanismes de Hibernate
+    skills: [contexte-de-persistance, dirty-checking, chargement-paresseux]
+    difficulty: 3
+    prompt: Relie chaque observation réelle au mécanisme qui l'explique.
+    pairs:
+      - left: "Deux find(Client.class, 1L) : une seule requête, le même objet"
+        right: Le contexte de persistance (identity map)
+      - left: "Un UPDATE est envoyé sans aucun appel à save()"
+        right: Le dirty checking au flush
+      - left: "LazyInitializationException en dehors de la transaction"
+        right: Un proxy paresseux dont le contexte est fermé
+      - left: "10 insertions mais 2 appels à nextval"
+        right: La réservation des identifiants par blocs
+    explanation: |
+      Toutes ces observations viennent du journal SQL de l'application de la leçon
+      (Spring Boot 3.3, Hibernate 6, PostgreSQL 16).

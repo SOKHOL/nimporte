@@ -1,0 +1,141 @@
+exercises:
+  - id: frameworks.n2.portees.qcm-prototype
+    type: qcm
+    title: Le panier qui ne change jamais
+    skills: [portees]
+    difficulty: 3
+    language: java
+    prompt: "Panier est un bean de portée prototype. Dans l'application réelle, deux appels à panierCourant() renvoient le panier 1, puis encore le panier 1. Pourquoi ?"
+    code: |
+      @Component @Scope("prototype")
+      class Panier { … }
+
+      @Component
+      class ServiceNaif {
+          private final Panier panier;
+          ServiceNaif(Panier panier) { this.panier = panier; }
+          int panierCourant() { return panier.numero; }
+      }
+    choices:
+      - id: a
+        text: "ServiceNaif est un singleton : son constructeur n'est appelé qu'une fois, donc il ne reçoit qu'un seul panier. Il faut un ObjectProvider<Panier> et demander un panier à chaque fois."
+        correct: true
+      - id: b
+        text: "La portée prototype ne fonctionne pas avec l'injection par constructeur."
+      - id: c
+        text: "Spring met les prototypes en cache après le premier appel."
+        feedback: "Chaque demande au conteneur crée bien un nouveau panier ; mais ServiceNaif n'en fait qu'une, à sa création."
+      - id: d
+        text: "Il faut annoter panierCourant() avec @Scope."
+    explanation: |
+      Résultat réel : ServiceNaif donne « panier 1 puis 1 », la version avec ObjectProvider
+      donne « panier 2 puis 3 ». La portée est celle du bean qui reçoit l'injection, pas
+      celle de l'appel.
+
+  - id: frameworks.n2.portees.find-bug
+    type: find-bug
+    title: Le service qui mélange les utilisateurs
+    skills: [portees, conteneur-injection]
+    difficulty: 3
+    language: java
+    prompt: "Sous charge, des utilisateurs reçoivent parfois la facture d'un autre. Touche la ligne en cause."
+    code: |
+      @Service
+      class ServiceFacture {
+          private final Factures factures;
+          private Utilisateur utilisateurCourant;
+
+          ServiceFacture(Factures factures) { this.factures = factures; }
+
+          Facture derniere(Utilisateur u) {
+              utilisateurCourant = u;
+              return factures.derniereDe(utilisateurCourant.id());
+          }
+      }
+    bug_lines: [4, 9]
+    explanation: |
+      Un service est un singleton partagé par tous les fils de Tomcat : deux requêtes
+      simultanées écrivent le même champ. Un singleton doit être sans état ; ici, il suffit
+      d'utiliser le paramètre u directement.
+
+  - id: frameworks.n2.cycle.parsons
+    type: parsons
+    title: La vie d'un bean singleton
+    skills: [cycle-de-vie]
+    difficulty: 3
+    language: text
+    prompt: Remets dans l'ordre les étapes de la vie d'un bean singleton dans Spring.
+    lines:
+      - "Appel du constructeur, avec les dépendances déjà créées"
+      - "Injection des champs et méthodes @Autowired éventuels"
+      - "Appel de la méthode @PostConstruct"
+      - "BeanPostProcessor « après » : création éventuelle du proxy (@Transactional…)"
+      - "Utilisation par l'application"
+      - "Appel de la méthode @PreDestroy à la fermeture du contexte"
+    distractors:
+      - "Appel de @PreDestroy après un kill -9"
+    explanation: |
+      Ordre réel observé : constructeur, @PostConstruct, puis @PreDestroy à la fermeture.
+      @PreDestroy n'est jamais appelé si le processus est tué brutalement.
+
+  - id: frameworks.n2.auto.match
+    type: match
+    title: Les conditions de l'auto-configuration
+    skills: [auto-configuration]
+    difficulty: 3
+    prompt: Relie chaque condition à ce qu'elle vérifie.
+    pairs:
+      - left: "@ConditionalOnClass"
+        right: Une bibliothèque est présente dans les dépendances
+      - left: "@ConditionalOnMissingBean"
+        right: Vous n'avez pas défini ce bean vous-même
+      - left: "@ConditionalOnProperty"
+        right: Une propriété de configuration a une valeur donnée
+      - left: "@ConditionalOnWebApplication"
+        right: L'application est une application web
+    explanation: |
+      Le rapport réel (--debug) : 60 auto-configurations retenues, 137 écartées, chacune avec
+      sa raison. @ConditionalOnMissingBean est ce qui fait que vos beans gagnent.
+
+  - id: frameworks.n2.auto.scenario-datasource
+    type: scenario
+    title: L'application qui ne démarre plus
+    skills: [auto-configuration]
+    difficulty: 3
+    prompt: |
+      Tu ajoutes spring-boot-starter-data-jpa et le pilote PostgreSQL pour préparer une future
+      fonctionnalité. Au démarrage :
+      « Failed to configure a DataSource: 'url' attribute is not specified and no embedded
+      datasource could be configured. »
+    start: debut
+    nodes:
+      debut:
+        text: Que se passe-t-il ?
+        options:
+          - text: "La présence des classes JDBC a déclenché DataSourceAutoConfiguration (@ConditionalOnClass), qui exige une URL que je n'ai pas fournie."
+            next: comprendre
+            points: 3
+          - text: "Le pilote PostgreSQL est corrompu ; je le retélécharge."
+            next: pilote
+            points: 0
+      pilote:
+        ending: failure
+        text: "❌ Même erreur : le pilote n'y est pour rien."
+      comprendre:
+        text: Que fais-tu ?
+        options:
+          - text: "Fournir spring.datasource.url (et les identifiants) dans la configuration de chaque environnement, ou ne pas ajouter la dépendance avant d'en avoir besoin."
+            next: resolu
+            points: 3
+          - text: "Exclure toutes les auto-configurations avec @SpringBootApplication(exclude = …) au hasard jusqu'à ce que ça démarre."
+            next: hasard
+            points: 0
+      hasard:
+        ending: partial
+        text: "🟡 L'application démarre, mais plus rien ne se configure seul, et personne ne sait pourquoi."
+      resolu:
+        ending: success
+        text: "✅ L'application démarre, et tu sais lire le rapport des conditions la prochaine fois."
+    explanation: |
+      Message réel de Spring Boot 3.3. Ajouter une dépendance change le comportement : c'est
+      le principe de l'auto-configuration. Le rapport --debug explique chaque décision.

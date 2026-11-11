@@ -1,0 +1,116 @@
+exercises:
+  - id: donnees.n1.formats.predict-csv
+    type: predict-output
+    title: Tout est texte dans un CSV
+    skills: [formats]
+    difficulty: 2
+    language: python
+    prompt: Qu'affiche ce programme ?
+    code: |
+      import csv, io
+
+      texte = 'id,code_postal,montant\n1,01000,"3,50"\n'
+      ligne = next(csv.DictReader(io.StringIO(texte)))
+      print(ligne["code_postal"], int(ligne["code_postal"]))
+      print(ligne["montant"])
+      try:
+          print(float(ligne["montant"]))
+      except ValueError:
+          print("ValueError")
+    choices:
+      - id: a
+        text: "`01000 1000` / `3,50` / `ValueError`"
+        correct: true
+      - id: b
+        text: "`1000 1000` / `3.5` / `3.5`"
+        feedback: "Le module csv ne convertit rien : chaque valeur reste une chaîne."
+      - id: c
+        text: "`01000 01000` / `3,50` / `3.5`"
+        feedback: "int() supprime le zéro initial, et float() ne connaît pas la virgule décimale."
+      - id: d
+        text: "Une erreur à la lecture de la virgule entre guillemets."
+    explanation: |
+      Les guillemets protègent la virgule de "3,50", qui reste une seule valeur. Mais le
+      fichier ne dit ni que 01000 est un texte, ni que la virgule est décimale : il faut un
+      schéma explicite. Sortie vérifiée.
+
+  - id: donnees.n1.formats.qcm-parquet
+    type: qcm
+    title: Pourquoi Parquet est-il si rapide ?
+    skills: [formats]
+    difficulty: 3
+    prompt: "Sur un million de ventes, la somme des montants se lit en 7 ms depuis Parquet (5,2 Mo) contre 43 ms depuis le CSV (41,7 Mo). Quelle est la raison principale ?"
+    choices:
+      - id: a
+        text: "Parquet range les données par colonnes, compressées : seule la colonne montant est lue et décompressée, déjà typée."
+        correct: true
+      - id: b
+        text: "Parquet garde le résultat de la somme dans son en-tête."
+        feedback: "Il garde des statistiques (min, max) par groupe de lignes, pas des sommes."
+      - id: c
+        text: "Le CSV est lu ligne par ligne par le noyau."
+      - id: d
+        text: "Parquet est un format texte plus compact."
+        feedback: "C'est un format binaire."
+    explanation: |
+      Stockage en colonnes + compression + types natifs + lecture des seules colonnes utiles.
+      C'est pourquoi les entrepôts et les lacs de données utilisent Parquet ou un équivalent.
+
+  - id: donnees.n1.formats.match
+    type: match
+    title: Le bon format
+    skills: [formats]
+    difficulty: 2
+    prompt: Relie chaque besoin au format le plus adapté.
+    pairs:
+      - left: Analyser des millions de lignes sur quelques colonnes
+        right: Parquet
+      - left: Des messages Kafka dont le schéma évolue
+        right: Avro
+      - left: La réponse d'une API web
+        right: JSON
+      - left: Un export à ouvrir dans un tableur
+        right: CSV
+    explanation: |
+      Par colonnes pour l'analyse, par lignes avec schéma pour les messages, texte pour
+      l'interopérabilité simple.
+
+  - id: donnees.n1.etl.qcm
+    type: qcm
+    title: Pourquoi garder les données brutes ?
+    skills: [etl-elt]
+    difficulty: 3
+    prompt: "Une équipe découvre qu'une règle de nettoyage supprimait à tort les commandes passées par téléphone depuis six mois. Quel avantage l'ELT (charger les données brutes, transformer ensuite dans l'entrepôt) lui donne-t-il ici ?"
+    choices:
+      - id: a
+        text: "Les données brutes de ces six mois sont toujours là : il suffit de corriger la transformation et de tout recalculer."
+        correct: true
+      - id: b
+        text: "L'ELT empêche ce genre de bug."
+      - id: c
+        text: "L'ELT est toujours moins cher que l'ETL."
+      - id: d
+        text: "Aucun : il faut réimporter les six mois depuis les sources."
+        feedback: "C'est le cas en ETL, si la source les a encore."
+    explanation: |
+      La couche bronze garde ce qui a été reçu, tel quel. Les transformations (dbt) sont du
+      code versionné qu'on peut corriger et rejouer.
+
+  - id: donnees.n1.etl.parsons
+    type: parsons
+    title: Les couches d'un pipeline ELT
+    skills: [etl-elt]
+    difficulty: 2
+    language: text
+    prompt: Remets dans l'ordre le trajet des ventes d'une boutique en ligne jusqu'au tableau de bord.
+    lines:
+      - "Extraire les commandes de la base de production"
+      - "Charger les lignes brutes, telles quelles, dans la couche bronze"
+      - "Nettoyer, typer et dédoublonner dans la couche argent"
+      - "Agréger le chiffre d'affaires par jour et par région dans la couche or"
+      - "Le tableau de bord lit la couche or"
+    distractors:
+      - "Supprimer les données brutes une fois la couche or calculée"
+    explanation: |
+      Garder le bronze permet de rejouer l'histoire quand une règle change. Chaque étape
+      doit être idempotente.

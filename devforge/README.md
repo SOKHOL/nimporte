@@ -50,13 +50,14 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 ## Ce qui existe déjà
 
 - La carte des 31 parcours et de leurs prérequis : [`content/curriculum.yaml`](content/curriculum.yaml).
-- 25 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
+- 28 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
   POO, Programmation fonctionnelle, Design patterns, Clean code, Débogage, Performance,
   Architecture, System design, DevOps, SRE, Cloud, Bases de données, Réseau et web, Sécurité,
-  Fonctionnement d'un ordinateur, Langages et compilateurs, Systèmes distribués,
+  Fonctionnement d'un ordinateur, Langages et compilateurs, Systèmes distribués, Frameworks,
+  Ingénierie des données, Développement Android,
   **Gestion de la mémoire, JVM, Threads et concurrence, Métaprogrammation et AOP**.
-- **139 leçons et 692 exercices**, couvrant 9 types d'exercices, et **125 boss chronométrés,
-  un par niveau**. **Les 25 parcours détaillés sont complets du niveau 1 au niveau 5** :
+- **154 leçons et 767 exercices**, couvrant 9 types d'exercices, et **140 boss chronométrés,
+  un par niveau**. **Les 28 parcours détaillés sont complets du niveau 1 au niveau 5** :
   - fondations : types, boucles, collections, exceptions, complexité, nullabilité,
     génériques, fonctions d'ordre supérieur, apprendre n'importe quel langage ;
   - algorithmes : recherche et tris, piles, files, hachage, fenêtres glissantes, arbres,
@@ -127,9 +128,18 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
   - systèmes distribués : pannes partielles et latence de queue, horloges de Lamport et
     vectorielles, réplication PostgreSQL et quorums, modèles de cohérence, élection Raft,
     validation en deux phases et sagas, « exactement une fois », CRDT, split-brain et jetons
-    de fencing, vérification par exploration exhaustive.
+    de fencing, vérification par exploration exhaustive ;
+  - frameworks : inversion de contrôle, cycle d'une requête Spring, conteneur, portées et
+    auto-configuration, Hibernate (contexte de persistance, dirty checking, N+1, transactions),
+    fils, threads virtuels et boucle d'événements, plugins Ktor, un mini-framework écrit à la main ;
+  - ingénierie des données : CSV, JSON, Avro et Parquet mesurés, ETL et ELT, modèle en étoile,
+    SQL analytique, traitement par lots, orchestration idempotente, qualité, Kafka, fenêtres et
+    filigranes, CDC sur PostgreSQL, lakehouse Delta, évolution des schémas, gouvernance, coûts ;
+  - Android : composants et cycle de vie, Compose (état, recomposition, listes), ViewModel,
+    navigation, coroutines, Room et DataStore, modules, WorkManager, tests, injection, R8,
+    accessibilité, publication.
 
-  Tous les extraits (Kotlin, C, Python, Rust, JavaScript) ont été exécutés pour vérifier les
+  Tous les extraits (Kotlin, Java, C, Python, SQL, Rust, JavaScript) ont été exécutés pour vérifier les
   réponses attendues, et les sorties citées dans les cours Git, Linux, System design et DevOps
   sont des sorties réelles (Git, bash, strace, Redis, PostgreSQL, Docker, Terraform, curl,
   openssl, bandit, pip-audit, pytest, Hypothesis, Prometheus, OpenTelemetry, gdb, valgrind,
@@ -174,6 +184,5 @@ python -m unittest discover -s devforge/tools -v
 
 ## Prochaine étape
 
-Rédiger les 6 parcours encore à l'état de plan (frameworks, données, Android, IA pour les
-développeurs, maths, carrière), enrichir les parcours existants (plus d'exercices par compétence), puis
+Rédiger les 3 parcours encore à l'état de plan (IA pour les développeurs, maths, carrière), enrichir les parcours existants (plus d'exercices par compétence), puis
 notifications et widget pour le défi du jour. Voir le [plan d'action](docs/04-plan-d-action.md).

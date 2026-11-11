@@ -1,53 +1,115 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: frameworks
 title: Les frameworks de l'intérieur
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Ce que font vraiment Spring Boot, Hibernate et Ktor : inversion de contrôle, cycle de vie
+  d'une requête, conteneur d'injection, portées, auto-configuration, contexte de persistance,
+  chargement paresseux, transactions, serveurs à fils et à boucle d'événements, et un
+  mini-framework écrit soi-même. Avec de vraies applications exécutées.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: inversion-de-controle
-    title: Inversion de contrôle
-  - id: bibliotheque-ou-framework
-    title: Bibliothèque ou framework
-  - id: cycle-de-vie-d-une-requete-web
-    title: Cycle de vie d'une requête web
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: conteneur-d-injection-de-dependances
-    title: 'Conteneur d''injection de dépendances : beans'
-  - id: portees
-    title: Portées
-  - id: cycle-de-vie
-    title: Cycle de vie
-  - id: auto-configuration-spring-boot
-    title: Auto-configuration (Spring Boot)
-- level: 3
-  title: Approfondir
-  skills:
-  - id: jpa-hibernate-contexte-de
-    title: 'JPA/Hibernate : contexte de persistance'
-  - id: dirty-checking
-    title: Dirty checking
-  - id: chargement-paresseux
-    title: Chargement paresseux
-  - id: transactions
-    title: Transactions
-- level: 4
-  title: Concevoir
-  skills:
-  - id: serveurs-web-servlets-netty-boucle-d
-    title: Serveurs web (servlets, Netty, boucle d'événements)
-  - id: ktor-et-ses-plugins
-    title: Ktor et ses plugins
-  - id: frameworks-reactifs
-    title: Frameworks réactifs
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: lire-le-code-source-d-un-framework
-    title: Lire le code source d'un framework
-  - id: ecrire-ton-propre-mini-framework
-    title: Écrire ton propre mini-framework (injection + routage)
+  - level: 1
+    title: Découvrir
+    skills:
+      - id: inversion-de-controle
+        title: L'inversion de contrôle
+      - id: bibliotheque-ou-framework
+        title: Bibliothèque ou framework
+      - id: cycle-requete
+        title: Le cycle de vie d'une requête web
+    boss:
+      id: frameworks.n1.boss
+      title: "Boss : le framework qui vous appelle"
+      exercises:
+        - frameworks.n1.ioc.predict-patron
+        - frameworks.n1.biblio.qcm
+        - frameworks.n1.requete.parsons
+        - frameworks.n1.ioc.match
+        - frameworks.n1.requete.qcm-abc
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: Le conteneur
+    skills:
+      - id: conteneur-injection
+        title: Le conteneur d'injection et les beans
+      - id: portees
+        title: Les portées
+      - id: cycle-de-vie
+        title: Le cycle de vie des beans
+      - id: auto-configuration
+        title: L'auto-configuration de Spring Boot
+    boss:
+      id: frameworks.n2.boss
+      title: "Boss : le conteneur"
+      exercises:
+        - frameworks.n2.portees.find-bug
+        - frameworks.n2.cycle.parsons
+        - frameworks.n2.auto.match
+        - frameworks.n2.portees.qcm-prototype
+        - frameworks.n2.auto.scenario-datasource
+      pass_ratio: 0.8
+      time_limit_min: 11
+
+  - level: 3
+    title: La persistance
+    skills:
+      - id: contexte-de-persistance
+        title: Le contexte de persistance
+      - id: dirty-checking
+        title: Le dirty checking
+      - id: chargement-paresseux
+        title: Le chargement paresseux et le N+1
+      - id: transactions
+        title: Les transactions
+    boss:
+      id: frameworks.n3.boss
+      title: "Boss : le contexte de persistance"
+      exercises:
+        - frameworks.n3.paresseux.qcm-proxy
+        - frameworks.n3.transactions.find-bug
+        - frameworks.n3.revue
+        - frameworks.n3.contexte.match
+        - frameworks.n3.paresseux.qcm-n-plus-1
+      pass_ratio: 0.8
+      time_limit_min: 10
+
+  - level: 4
+    title: Les serveurs
+    skills:
+      - id: serveurs-web
+        title: Fils, threads virtuels et boucle d'événements
+      - id: ktor-plugins
+        title: Ktor et ses plugins
+      - id: reactif
+        title: Les frameworks réactifs
+    boss:
+      id: frameworks.n4.boss
+      title: "Boss : la boucle d'événements"
+      exercises:
+        - frameworks.n4.ktor.find-bug
+        - frameworks.n4.modeles.match
+        - frameworks.n4.serveurs.predict-boucle
+        - frameworks.n4.serveurs.qcm-virtuels
+        - frameworks.n4.ktor.qcm-plugins
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 5
+    title: Maîtriser
+    skills:
+      - id: lire-le-code-source
+        title: Lire le code source d'un framework
+      - id: mini-framework
+        title: Écrire son propre mini-framework
+    boss:
+      id: frameworks.n5.boss
+      title: "Boss : le mini-framework"
+      exercises:
+        - frameworks.n5.source.qcm-pile
+        - frameworks.n5.mini.predict-ordre
+        - frameworks.n5.mini.find-bug
+        - frameworks.n5.source.match
+        - frameworks.n5.mini.qcm-compilation
+      pass_ratio: 0.8
+      time_limit_min: 9

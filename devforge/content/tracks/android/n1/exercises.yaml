@@ -1,0 +1,106 @@
+exercises:
+  - id: android.n1.cycle.parsons-rotation
+    type: parsons
+    title: Ce qui se passe à la rotation
+    skills: [cycle-de-vie]
+    difficulty: 3
+    language: text
+    prompt: "L'activité est au premier plan et l'utilisateur tourne son téléphone. Remets dans l'ordre les appels réellement observés."
+    lines:
+      - "onPause"
+      - "onStop"
+      - "onSaveInstanceState"
+      - "onDestroy (isChangingConfigurations = true)"
+      - "onCreate, avec le Bundle sauvegardé, sur une nouvelle instance"
+      - "onStart"
+      - "onResume"
+    distractors:
+      - "onCleared du ViewModel"
+    explanation: |
+      Séquence réelle obtenue avec Robolectric. Le ViewModel n'est pas détruit lors d'un
+      changement de configuration : onCleared n'est appelé que lorsque l'utilisateur quitte
+      vraiment l'écran.
+
+  - id: android.n1.cycle.qcm-etat
+    type: qcm
+    title: Où ranger le compteur ?
+    skills: [cycle-de-vie]
+    difficulty: 3
+    prompt: "Un compteur vaut 5 avant une rotation. Après la rotation, il vaut 0 s'il était dans un champ de l'activité, et 5 dans un Bundle ou un ViewModel. Lequel survit aussi à la mort du processus par manque de mémoire ?"
+    choices:
+      - id: a
+        text: "Le Bundle de onSaveInstanceState (ou rememberSaveable, SavedStateHandle) : le système le conserve et le rend à la recréation."
+        correct: true
+      - id: b
+        text: "Le ViewModel, puisqu'il survit déjà à la rotation."
+        feedback: "Il vit en mémoire dans le processus : si le processus est tué, il disparaît."
+      - id: c
+        text: "Le champ de l'activité, s'il est déclaré val."
+      - id: d
+        text: "Aucun : Android ne tue jamais une application en arrière-plan."
+    explanation: |
+      Le ViewModel garde les données pendant la vie du processus ; le Bundle garde un petit
+      état d'écran au-delà. Testez avec l'option « Ne pas conserver les activités ».
+
+  - id: android.n1.composants.match
+    type: match
+    title: Les quatre composants
+    skills: [composants]
+    difficulty: 2
+    prompt: Relie chaque besoin au composant Android adapté.
+    pairs:
+      - left: Afficher l'écran principal de l'application
+        right: Activité
+      - left: Continuer la lecture de musique écran éteint
+        right: Service (de premier plan)
+      - left: Réagir au redémarrage du téléphone
+        right: Récepteur de diffusion
+      - left: Partager des contacts avec d'autres applications
+        right: Fournisseur de contenu
+    explanation: |
+      Tous sont déclarés dans le manifeste et créés par le système, jamais par votre code.
+
+  - id: android.n1.cycle.find-bug
+    type: find-bug
+    title: Le panier qui se vide
+    skills: [cycle-de-vie]
+    difficulty: 3
+    language: kotlin
+    prompt: "Des utilisateurs se plaignent que leur panier se vide quand ils tournent le téléphone ou passent en thème sombre. Touche la ligne en cause."
+    code: |
+      class BoutiqueActivity : ComponentActivity() {
+          private val panier = mutableListOf<Article>()
+
+          override fun onCreate(savedInstanceState: Bundle?) {
+              super.onCreate(savedInstanceState)
+              setContent {
+                  Boutique(onAjouter = { panier += it }, articles = panier)
+              }
+          }
+      }
+    bug_lines: [2]
+    explanation: |
+      Un changement de configuration crée une nouvelle instance de l'activité : le champ
+      repart vide (mesure réelle : 0 au lieu de 5). Le panier doit vivre dans un ViewModel,
+      et idéalement être enregistré (base ou serveur).
+
+  - id: android.n1.manifeste.qcm-target
+    type: qcm
+    title: minSdk et targetSdk
+    skills: [manifeste-ressources]
+    difficulty: 3
+    prompt: "DevForge déclare minSdk 26 et targetSdk 35. Que signifie targetSdk 35 ?"
+    choices:
+      - id: a
+        text: "L'application déclare accepter les comportements d'Android 15 : le système lui applique les règles de cette version (permissions, arrière-plan, affichage bord à bord)."
+        correct: true
+      - id: b
+        text: "Elle ne s'installe que sur Android 15."
+        feedback: "C'est minSdk qui fixe la version minimale d'installation (26, Android 8)."
+      - id: c
+        text: "Elle est compilée en code machine pour Android 15."
+      - id: d
+        text: "Elle ne peut utiliser que les API d'Android 15."
+    explanation: |
+      Augmenter le targetSdk est une migration à tester : de nouvelles règles s'appliquent.
+      Google Play impose un targetSdk récent pour publier.

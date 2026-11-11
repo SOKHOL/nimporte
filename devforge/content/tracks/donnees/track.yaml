@@ -1,53 +1,115 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: donnees
 title: Ingénierie des données
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Déplacer, transformer et servir des données de façon fiable : formats (CSV, JSON, Avro,
+  Parquet), ETL et ELT, entrepôts et modèle en étoile, SQL analytique, traitement par lots,
+  orchestration, qualité, streaming et fenêtres temporelles, capture des changements,
+  lakehouse, évolution des schémas, gouvernance et coûts. Avec des mesures réelles.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: formats-csv-json-parquet-avro
-    title: Formats (CSV, JSON, Parquet, Avro)
-  - id: etl-et-elt
-    title: ETL et ELT
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: entrepots-de-donnees
-    title: Entrepôts de données
-  - id: modele-en-etoile
-    title: Modèle en étoile
-  - id: sql-analytique-fonctions-de-fenetre
-    title: SQL analytique (fonctions de fenêtre)
-- level: 3
-  title: Approfondir
-  skills:
-  - id: traitement-par-lots-spark
-    title: Traitement par lots (Spark)
-  - id: orchestration-airflow
-    title: Orchestration (Airflow)
-  - id: qualite-des-donnees
-    title: Qualité des données
-- level: 4
-  title: Concevoir
-  skills:
-  - id: streaming-kafka-flink
-    title: Streaming (Kafka, Flink)
-  - id: fenetres-temporelles
-    title: Fenêtres temporelles
-  - id: semantiques-de-livraison
-    title: Sémantiques de livraison
-  - id: change-data-capture
-    title: Change data capture
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: lakehouse
-    title: Lakehouse
-  - id: gouvernance
-    title: Gouvernance
-  - id: evolution-des-schemas
-    title: Évolution des schémas
-  - id: couts
-    title: Coûts
+  - level: 1
+    title: Découvrir
+    skills:
+      - id: formats
+        title: Les formats (CSV, JSON, Avro, Parquet)
+      - id: etl-elt
+        title: ETL et ELT
+    boss:
+      id: donnees.n1.boss
+      title: "Boss : le CSV trompeur"
+      exercises:
+        - donnees.n1.formats.qcm-parquet
+        - donnees.n1.etl.parsons
+        - donnees.n1.formats.predict-csv
+        - donnees.n1.formats.match
+        - donnees.n1.etl.qcm
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: L'entrepôt
+    skills:
+      - id: entrepots
+        title: Les entrepôts de données
+      - id: modele-etoile
+        title: Le modèle en étoile
+      - id: sql-analytique
+        title: Le SQL analytique
+    boss:
+      id: donnees.n2.boss
+      title: "Boss : le schéma en étoile"
+      exercises:
+        - donnees.n2.etoile.match
+        - donnees.n2.sql.find-bug-fan-out
+        - donnees.n2.sql.predict-fenetre
+        - donnees.n2.etoile.qcm-grain
+        - donnees.n2.entrepots.qcm-oltp
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Les traitements
+    skills:
+      - id: traitement-par-lots
+        title: Le traitement par lots (Spark)
+      - id: orchestration
+        title: L'orchestration (Airflow)
+      - id: qualite
+        title: La qualité des données
+    boss:
+      id: donnees.n3.boss
+      title: "Boss : le pipeline idempotent"
+      exercises:
+        - donnees.n3.lots.qcm-shuffle
+        - donnees.n3.orchestration.find-bug
+        - donnees.n3.qualite.scenario-volume
+        - donnees.n3.orchestration.predict-idempotence
+        - donnees.n3.qualite.match
+      pass_ratio: 0.8
+      time_limit_min: 11
+
+  - level: 4
+    title: Le temps réel
+    skills:
+      - id: streaming
+        title: Le streaming (Kafka, Flink)
+      - id: fenetres
+        title: Les fenêtres temporelles
+      - id: livraison
+        title: Les sémantiques de livraison
+      - id: cdc
+        title: La capture des changements (CDC)
+    boss:
+      id: donnees.n4.boss
+      title: "Boss : le filigrane"
+      exercises:
+        - donnees.n4.livraison.qcm-checkpoint
+        - donnees.n4.fenetres.predict-temps
+        - donnees.n4.cdc.qcm-slot
+        - donnees.n4.fenetres.match
+        - donnees.n4.streaming.predict-partitions
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 5
+    title: Maîtriser
+    skills:
+      - id: lakehouse
+        title: Le lakehouse
+      - id: evolution-schemas
+        title: L'évolution des schémas
+      - id: gouvernance
+        title: La gouvernance
+      - id: couts
+        title: Les coûts
+    boss:
+      id: donnees.n5.boss
+      title: "Boss : le lakehouse"
+      exercises:
+        - donnees.n5.gouvernance.scenario-effacement
+        - donnees.n5.schemas.qcm-compatible
+        - donnees.n5.couts.find-bug
+        - donnees.n5.lakehouse.predict-journal
+        - donnees.n5.gouvernance.match
+      pass_ratio: 0.8
+      time_limit_min: 11

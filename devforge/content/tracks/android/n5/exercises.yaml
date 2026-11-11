@@ -1,0 +1,126 @@
+exercises:
+  - id: android.n5.performance.find-bug-r8
+    type: find-bug
+    title: Le plantage qui n'existe qu'en version publiée
+    skills: [performance]
+    difficulty: 4
+    language: kotlin
+    prompt: "En débogage, tout fonctionne. Dans la version publiée (R8 activé), l'ouverture d'un module plante avec ClassNotFoundException. Touche la ligne en cause."
+    code: |
+      interface Module { fun ouvrir() }
+      class ModuleStatistiques : Module { override fun ouvrir() { … } }
+
+      fun chargerModule(nom: String): Module {
+          val classe = Class.forName("dev.app.modules.Module$nom")
+          return classe.getDeclaredConstructor().newInstance() as Module
+      }
+    bug_lines: [5]
+    explanation: |
+      R8 ne voit aucune référence directe à ModuleStatistiques : il la supprime ou la
+      renomme. Le code chargé par réflexion doit être protégé par une règle
+      `-keep class dev.app.modules.** { <init>(); }`, ou mieux, référencé directement
+      (une table `mapOf("Statistiques" to ::ModuleStatistiques)`). Toujours tester la version
+      minifiée.
+
+  - id: android.n5.performance.qcm-r8
+    type: qcm
+    title: Ce que fait R8
+    skills: [performance]
+    difficulty: 3
+    prompt: "Sur l'application de démonstration, R8 fait passer l'APK de 7116 Ko à 804 Ko et de 102 552 à 8 836 méthodes. D'où vient l'essentiel du gain ?"
+    choices:
+      - id: a
+        text: "De la suppression du code et des ressources des bibliothèques que l'application n'appelle jamais, puis du raccourcissement des noms et des optimisations."
+        correct: true
+      - id: b
+        text: "De la compression des images."
+      - id: c
+        text: "De la suppression des commentaires du code source."
+        feedback: "Les commentaires ne sont jamais dans l'APK."
+      - id: d
+        text: "De la conversion du Kotlin en Java."
+    explanation: |
+      Le prix : des règles -keep pour la réflexion, et le fichier mapping.txt de chaque version
+      pour désobscurcir les piles d'appels des plantages.
+
+  - id: android.n5.accessibilite.find-bug
+    type: find-bug
+    title: Le bouton muet
+    skills: [accessibilite]
+    difficulty: 2
+    language: kotlin
+    prompt: "Avec TalkBack, un utilisateur aveugle entend seulement « bouton » sur l'un de ces deux boutons. Touche la ligne en cause."
+    code: |
+      Row {
+          IconButton(onClick = onModifier) {
+              Icon(Icons.Default.Edit, contentDescription = "Modifier la tâche")
+          }
+          IconButton(onClick = onSupprimer) {
+              Icon(Icons.Default.Delete, contentDescription = null)
+          }
+      }
+    bug_lines: [6]
+    explanation: |
+      contentDescription = null est réservé aux icônes décoratives. Une icône cliquable doit
+      être décrite (« Supprimer la tâche »). L'arbre sémantique réel de la leçon montre la
+      différence entre un bouton décrit et un bouton muet.
+
+  - id: android.n5.publication.match
+    type: match
+    title: Le vocabulaire de la publication
+    skills: [publication]
+    difficulty: 3
+    prompt: Relie chaque notion à son rôle.
+    pairs:
+      - left: Android App Bundle
+        right: Le format envoyé à Play, qui génère un APK adapté à chaque appareil
+      - left: Play App Signing
+        right: Google garde la clé de signature, vous signez avec une clé d'envoi remplaçable
+      - left: Déploiement progressif
+        right: Publier pour 1 %, puis 5 %, puis 20 % des utilisateurs, en surveillant
+      - left: Fichier mapping.txt
+        right: Désobscurcir les piles d'appels d'une version minifiée
+    explanation: |
+      Perdre une clé de signature sans Play App Signing empêche toute mise à jour future.
+
+  - id: android.n5.publication.scenario
+    type: scenario
+    title: La version 4.2 à 5 %
+    skills: [publication, performance]
+    difficulty: 3
+    prompt: |
+      La version 4.2 est en déploiement progressif à 5 % depuis ce matin. Android vitals montre
+      un taux de plantages de 2,3 % sur cette version, contre 0,4 % sur la 4.1. Tous les
+      plantages viennent de l'écran de paiement, sur Android 9 et 10.
+    start: debut
+    nodes:
+      debut:
+        text: Que fais-tu d'abord ?
+        options:
+          - text: "Interrompre le déploiement progressif : les 95 % restants ne reçoivent pas la 4.2."
+            next: stop
+            points: 3
+          - text: "Passer à 100 % pour avoir plus de données."
+            next: cent
+            points: 0
+      cent:
+        ending: failure
+        text: "❌ Tous les utilisateurs d'Android 9 et 10 ne peuvent plus payer, et l'application dépasse les seuils d'Android vitals."
+      stop:
+        text: "Les 5 % déjà mis à jour plantent toujours. Ensuite ?"
+        options:
+          - text: "Couper la nouvelle fonctionnalité de paiement par un indicateur à distance, puis analyser les piles désobscurcies avec le mapping.txt de la 4.2."
+            next: analyse
+            points: 3
+          - text: "Attendre la 4.3, dans deux semaines."
+            next: attendre
+            points: 0
+      attendre:
+        ending: partial
+        text: "🟡 Le déploiement est arrêté, mais 5 % des utilisateurs ne peuvent pas payer pendant deux semaines."
+      analyse:
+        ending: success
+        text: "✅ Le paiement remarche immédiatement pour tous ; la cause (une API absente avant Android 11) est corrigée dans la 4.2.1, testée sur ces versions."
+    explanation: |
+      Le déploiement progressif limite les dégâts, l'indicateur de fonctionnalité permet de
+      couper sans attendre une mise à jour, et mapping.txt rend les piles lisibles.

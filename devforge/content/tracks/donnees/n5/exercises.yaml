@@ -1,0 +1,154 @@
+exercises:
+  - id: donnees.n5.lakehouse.predict-journal
+    type: predict-output
+    title: Rejouer un journal de transactions
+    skills: [lakehouse]
+    difficulty: 3
+    language: python
+    prompt: "Ce programme reconstruit, comme Delta Lake, la liste des fichiers d'une table à une version donnée. Qu'affiche-t-il ?"
+    code: |
+      journal = [
+          {"add": ["a.parquet"]},
+          {"add": ["b.parquet"]},
+          {"add": ["c.parquet"], "remove": ["a.parquet"]},
+      ]
+
+      def fichiers(version):
+          actifs = set()
+          for entree in journal[:version + 1]:
+              actifs |= set(entree.get("add", []))
+              actifs -= set(entree.get("remove", []))
+          return sorted(actifs)
+
+      print(fichiers(0), fichiers(2))
+    choices:
+      - id: a
+        text: "`['a.parquet'] ['b.parquet', 'c.parquet']`"
+        correct: true
+      - id: b
+        text: "`['a.parquet'] ['a.parquet', 'b.parquet', 'c.parquet']`"
+        feedback: "La version 2 retire a.parquet (par exemple après une suppression de lignes)."
+      - id: c
+        text: "`[] ['c.parquet']`"
+      - id: d
+        text: "`['a.parquet'] ['c.parquet']`"
+        feedback: "b.parquet, ajouté en version 1, n'a jamais été retiré."
+    explanation: |
+      Une version est l'ensemble des fichiers ajoutés et non retirés jusqu'à elle. Les
+      fichiers ne sont jamais modifiés : c'est ce qui permet le voyage dans le temps, tant
+      que VACUUM ne les a pas effacés. Sortie vérifiée.
+
+  - id: donnees.n5.schemas.qcm-compatible
+    type: qcm
+    title: Un changement sans risque
+    skills: [evolution-schemas]
+    difficulty: 3
+    prompt: "Des messages Avro sont écrits avec le schéma Client(id: int, nom: string). Quel changement du schéma des lecteurs leur permet de relire les anciens messages ?"
+    choices:
+      - id: a
+        text: "Ajouter un champ pays de type string avec la valeur par défaut « FR »."
+        correct: true
+      - id: b
+        text: "Ajouter un champ pays obligatoire, sans défaut."
+        feedback: "Réel : SchemaResolutionError: No default value for field pays."
+      - id: c
+        text: "Renommer nom en nom_complet, sans alias."
+        feedback: "Réel : le lecteur cherche nom_complet, absent des anciennes données."
+      - id: d
+        text: "Changer id de long en int."
+        feedback: "Rétrécir un type peut perdre des valeurs ; seul l'élargissement (int vers long) est permis."
+    explanation: |
+      Les cinq cas de la leçon ont été exécutés avec fastavro. Un registre de schémas refuse
+      les changements incompatibles avant le déploiement.
+
+  - id: donnees.n5.couts.find-bug
+    type: find-bug
+    title: La requête qui lit toute la table
+    skills: [couts]
+    difficulty: 4
+    language: sql
+    prompt: "La table ventes (3 ans d'historique) est partitionnée par la colonne jour. Ce rapport quotidien sur la veille coûte autant que s'il lisait les trois ans. Touche les lignes en cause."
+    code: |
+      select *
+      from ventes
+      where date(horodatage) = current_date - 1
+        and ville = 'Lyon'
+    bug_lines: [1, 3]
+    explanation: |
+      Le filtre porte sur une fonction d'une autre colonne (horodatage), pas sur la colonne
+      de partition : le moteur ne peut éliminer aucune partition (il faut `where jour =
+      current_date - 1`). Et `select *` lit toutes les colonnes au lieu des seules utiles.
+      Mesure de la leçon : partitions et colonnes bien utilisées, on lit 5,5 % du jeu.
+
+  - id: donnees.n5.gouvernance.match
+    type: match
+    title: Les outils de la gouvernance
+    skills: [gouvernance]
+    difficulty: 2
+    prompt: Relie chaque question à la pratique qui y répond.
+    pairs:
+      - left: "D'où vient ce chiffre, et qui sera touché si cette source change ?"
+        right: Le lignage
+      - left: "Que signifie cette colonne et qui en est responsable ?"
+        right: Le catalogue de données
+      - left: "Comment analyser des comportements sans exposer les e-mails ?"
+        right: La pseudonymisation
+      - left: "Qui garantit le schéma et la fraîcheur de cette table ?"
+        right: Le contrat de données
+    explanation: |
+      La gouvernance répond à des questions simples, de plus en plus difficiles à mesure que
+      les données et les équipes se multiplient.
+
+  - id: donnees.n5.gouvernance.scenario-effacement
+    type: scenario
+    title: Le droit à l'effacement dans le lac
+    skills: [gouvernance, lakehouse]
+    difficulty: 4
+    prompt: |
+      Une cliente demande l'effacement de ses données (RGPD). Elles sont dans la base de
+      production, et dans une table Delta Lake de 4 ans d'historique, avec un voyage dans le
+      temps conservé 30 jours.
+    start: debut
+    nodes:
+      debut:
+        text: Que fais-tu dans le lac ?
+        options:
+          - text: "Un DELETE sur la table Delta : il réécrit les fichiers concernés sans ses lignes."
+            next: delete
+            points: 2
+          - text: "Rien : les fichiers Parquet sont immuables, on ne peut pas y toucher."
+            next: rien
+            points: 0
+      rien:
+        ending: failure
+        text: "❌ L'obligation légale n'est pas respectée."
+      delete:
+        text: "Le DELETE est fait. Ses données sont-elles effacées ?"
+        options:
+          - text: "Non : les anciennes versions restent lisibles par voyage dans le temps. Il faut un VACUUM une fois la rétention écoulée, et le documenter dans le délai légal."
+            next: vacuum
+            points: 3
+          - text: "Oui, la table ne les montre plus."
+            next: faux
+            points: 0
+      faux:
+        ending: partial
+        text: "🟡 Les lignes restent lisibles dans les fichiers retirés pendant 30 jours, et pour toujours si personne ne lance VACUUM."
+      vacuum:
+        text: Et pour les prochaines demandes ?
+        options:
+          - text: "Pseudonymiser les identifiants dans le lac (clé de correspondance gardée à part), pour qu'effacer la clé suffise à rendre les données anonymes."
+            next: resolu
+            points: 3
+          - text: "Traiter chaque demande à la main."
+            next: main
+            points: 1
+      main:
+        ending: partial
+        text: "🟡 Conforme, mais coûteux et fragile à chaque demande."
+      resolu:
+        ending: success
+        text: "✅ L'effacement devient simple : supprimer une ligne dans la table de correspondance."
+    explanation: |
+      Immuabilité et historique sont des atouts du lakehouse, et des obstacles à l'effacement.
+      Réel dans la leçon : après VACUUM, l'ancienne version n'est plus lisible.

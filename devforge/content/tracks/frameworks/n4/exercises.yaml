@@ -1,0 +1,119 @@
+exercises:
+  - id: frameworks.n4.serveurs.predict-boucle
+    type: predict-output
+    title: Un seul fil, deux façons d'attendre
+    skills: [serveurs-web]
+    difficulty: 3
+    language: kotlin
+    prompt: "runBlocking exécute les coroutines sur un seul fil, comme une boucle d'événements. Qu'affiche ce programme (durées arrondies à la centaine de millisecondes inférieure) ?"
+    code: |
+      import kotlinx.coroutines.*
+      import kotlin.system.measureTimeMillis
+
+      fun main() = runBlocking {          // un seul fil, comme une boucle d'événements
+          val suspendu = measureTimeMillis {
+              List(5) { launch { delay(200) } }.joinAll()
+          }
+          val bloquant = measureTimeMillis {
+              List(5) { launch { Thread.sleep(200) } }.joinAll()
+          }
+          println("${suspendu / 100 * 100} ${bloquant / 100 * 100}")
+      }
+    choices:
+      - id: a
+        text: "`200 1000`"
+        correct: true
+      - id: b
+        text: "`200 200`"
+        feedback: "Thread.sleep bloque le seul fil : les cinq attentes s'enchaînent."
+      - id: c
+        text: "`1000 1000`"
+        feedback: "delay suspend la coroutine et libère le fil : les cinq attentes se superposent."
+      - id: d
+        text: "`1000 200`"
+    explanation: |
+      Le même phénomène que Ktor mesuré dans la leçon : 1,1 s avec delay, 13 s avec
+      Thread.sleep pour 50 requêtes. Sortie vérifiée (trois exécutions identiques).
+
+  - id: frameworks.n4.ktor.find-bug
+    type: find-bug
+    title: Le serveur Ktor qui gèle
+    skills: [serveurs-web, ktor-plugins]
+    difficulty: 4
+    language: kotlin
+    prompt: "Sous charge, toutes les routes de ce serveur Ktor, même /sante, deviennent lentes. Touche la ligne en cause."
+    code: |
+      routing {
+          get("/sante") { call.respondText("ok") }
+          get("/rapport/{id}") {
+              val id = call.parameters["id"]!!.toLong()
+              val lignes = jdbc.query("select * from lignes where rapport = ?", id)
+              call.respond(Rapport(id, lignes))
+          }
+      }
+    bug_lines: [5]
+    explanation: |
+      Un appel JDBC bloquant dans un gestionnaire exécuté sur les quelques fils de la boucle
+      d'événements : chaque requête lente gèle un fil, et tout le serveur ralentit. Isoler
+      l'appel avec `withContext(Dispatchers.IO) { … }`, ou utiliser un accès non bloquant.
+
+  - id: frameworks.n4.serveurs.qcm-virtuels
+    type: qcm
+    title: Les threads virtuels
+    skills: [serveurs-web]
+    difficulty: 3
+    prompt: "Avec 10 fils Tomcat, 50 requêtes qui attendent 1 s prennent 5,1 s. En activant spring.threads.virtual.enabled, elles prennent 1,1 s sans changer le code. Pourquoi ?"
+    choices:
+      - id: a
+        text: "Chaque requête a son thread virtuel ; quand il bloque, la JVM le décroche de son fil système porteur, qui peut en exécuter un autre."
+        correct: true
+      - id: b
+        text: "Les threads virtuels exécutent Thread.sleep plus vite."
+      - id: c
+        text: "Spring met les réponses en cache."
+      - id: d
+        text: "Tomcat crée automatiquement 50 fils système."
+        feedback: "Le nom réel du fil le montre : VirtualThread[…]@ForkJoinPool-1-worker-2, un petit nombre de porteurs."
+    explanation: |
+      Le code reste bloquant et lisible. La ressource limitante se déplace : pool de
+      connexions à la base, quotas des API appelées.
+
+  - id: frameworks.n4.modeles.match
+    type: match
+    title: Modèles de serveurs et leurs pièges
+    skills: [serveurs-web, reactif]
+    difficulty: 3
+    prompt: Relie chaque modèle à son principal piège.
+    pairs:
+      - left: Un fil système par requête
+        right: Le pool de fils s'épuise quand les requêtes attendent
+      - left: Boucle d'événements (Netty, Ktor)
+        right: Un seul appel bloquant gèle tout le serveur
+      - left: Threads virtuels
+        right: Un synchronized qui attend épingle le fil porteur (avant Java 24)
+      - left: Programmation réactive (Reactor)
+        right: Des piles d'appels illisibles et un débogage difficile
+    explanation: |
+      Aucun modèle n'est gratuit. Pour un service web classique, threads virtuels ou
+      coroutines ; le réactif pour les vrais flux avec contre-pression.
+
+  - id: frameworks.n4.ktor.qcm-plugins
+    type: qcm
+    title: Le pipeline de Ktor
+    skills: [ktor-plugins]
+    difficulty: 2
+    prompt: "Dans la sortie réelle, pour /produits/abc, le plugin Chrono affiche le début, puis StatusPages traite l'exception, puis Chrono affiche la réponse. Que montre cet ordre ?"
+    choices:
+      - id: a
+        text: "Les plugins sont branchés sur un pipeline commun : Chrono entoure tout le traitement, y compris la réponse d'erreur produite par StatusPages."
+        correct: true
+      - id: b
+        text: "Ktor exécute les plugins dans un ordre aléatoire."
+      - id: c
+        text: "StatusPages remplace la route."
+      - id: d
+        text: "Chrono a été appelé deux fois par erreur."
+        feedback: "onCall et onCallRespond sont deux points d'accroche du même plugin."
+    explanation: |
+      C'est l'équivalent des filtres de Spring, mais installé explicitement dans le code :
+      pas d'analyse de paquets ni d'auto-configuration dans Ktor.

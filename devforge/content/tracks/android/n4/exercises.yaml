@@ -1,0 +1,107 @@
+exercises:
+  - id: android.n4.modules.qcm-kotlin-pur
+    type: qcm
+    title: Pourquoi des modules en Kotlin pur ?
+    skills: [architecture-modules, tests]
+    difficulty: 3
+    prompt: "Dans DevForge, core:domain est un module Kotlin pur, sans dépendance à Android. Quel est le principal avantage mesuré ?"
+    choices:
+      - id: a
+        text: "Ses 25 tests s'exécutent sur la JVM en 0,11 s, sans émulateur ni Robolectric ; et le compilateur empêche le domaine de dépendre de l'interface ou d'Android."
+        correct: true
+      - id: b
+        text: "L'APK est plus petit."
+      - id: c
+        text: "Le code s'exécute plus vite sur le téléphone."
+      - id: d
+        text: "Il n'y a plus besoin de ViewModel."
+    explanation: |
+      Les dépendances ne vont que dans un sens : app → data → domain → model. Une frontière
+      vérifiée par le compilateur vaut mieux qu'une convention.
+
+  - id: android.n4.workmanager.find-bug
+    type: find-bug
+    title: Dix synchronisations en parallèle
+    skills: [workmanager]
+    difficulty: 3
+    language: kotlin
+    prompt: "Les utilisateurs qui ouvrent souvent l'application voient leur batterie fondre : le serveur reçoit parfois dix synchronisations simultanées d'un même téléphone. Touche la ligne en cause."
+    code: |
+      class MainActivity : ComponentActivity() {
+          override fun onCreate(savedInstanceState: Bundle?) {
+              super.onCreate(savedInstanceState)
+              val sync = PeriodicWorkRequestBuilder<SyncWorker>(1, TimeUnit.HOURS)
+                  .setConstraints(Constraints(requiredNetworkType = NetworkType.CONNECTED))
+                  .build()
+              WorkManager.getInstance(this).enqueue(sync)
+              setContent { App() }
+          }
+      }
+    bug_lines: [7]
+    explanation: |
+      Chaque lancement (et chaque rotation !) ajoute un nouveau travail périodique, qui
+      persiste. Il faut un travail unique :
+      `enqueueUniquePeriodicWork("sync", ExistingPeriodicWorkPolicy.KEEP, sync)`.
+
+  - id: android.n4.workmanager.match
+    type: match
+    title: Le bon outil pour le bon travail
+    skills: [workmanager, coroutines-android]
+    difficulty: 3
+    prompt: Relie chaque travail à l'outil adapté.
+    pairs:
+      - left: Charger les données de l'écran affiché
+        right: Une coroutine dans viewModelScope
+      - left: Envoyer les photos même si l'utilisateur ferme l'application
+        right: WorkManager avec une contrainte de réseau
+      - left: Lire de la musique écran éteint
+        right: Un service de premier plan avec une notification
+      - left: Nettoyer un cache chaque nuit, téléphone en charge
+        right: Un travail périodique WorkManager avec contraintes
+    explanation: |
+      WorkManager pour ce qui doit aboutir de façon fiable et peut attendre ; une coroutine
+      pour ce qui vit avec l'écran ; un service de premier plan pour ce que l'utilisateur
+      perçoit en continu.
+
+  - id: android.n4.tests.qcm-pyramide
+    type: qcm
+    title: Où tester quoi ?
+    skills: [tests]
+    difficulty: 3
+    prompt: "Quelle répartition des tests est la plus raisonnable pour une application Android ?"
+    choices:
+      - id: a
+        text: "Beaucoup de tests JVM (domaine, ViewModels avec de faux dépôts), des tests Robolectric pour Room, WorkManager et l'interface, et quelques tests instrumentés sur les parcours critiques."
+        correct: true
+      - id: b
+        text: "Uniquement des tests instrumentés, les seuls réalistes."
+        feedback: "Ils prennent des minutes et sont fragiles : on en garde peu."
+      - id: c
+        text: "Uniquement des tests JVM : Android n'a pas besoin d'être testé."
+      - id: d
+        text: "Pas de tests : les captures d'écran suffisent."
+    explanation: |
+      Mesures réelles : 25 tests JVM en 0,11 s, 11 tests Robolectric en 7,9 s ; un test
+      instrumenté se compte en secondes, plus le démarrage de l'émulateur.
+
+  - id: android.n4.injection.qcm-hilt
+    type: qcm
+    title: Conteneur manuel ou Hilt ?
+    skills: [injection]
+    difficulty: 3
+    prompt: "DevForge construit ses objets dans un AppContainer de 85 lignes, sans bibliothèque. Quand passer à Hilt devient-il intéressant ?"
+    choices:
+      - id: a
+        text: "Quand le graphe grandit (nombreux écrans, portées liées aux cycles de vie, plusieurs modules) : Hilt génère le câblage à la compilation et détecte les dépendances manquantes avant l'exécution."
+        correct: true
+      - id: b
+        text: "Dès la première classe : un conteneur manuel est une mauvaise pratique."
+        feedback: "Pour une petite application, un conteneur manuel est simple, explicite et suffisant."
+      - id: c
+        text: "Jamais : Hilt utilise la réflexion au démarrage, trop lente."
+        feedback: "Hilt, comme Dagger, génère son code à la compilation, sans réflexion."
+      - id: d
+        text: "Quand on veut se passer des constructeurs."
+    explanation: |
+      Dans les deux cas, le principe est l'injection par constructeur, qui permet de donner
+      des faux aux classes dans les tests.

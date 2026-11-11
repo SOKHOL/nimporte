@@ -1,61 +1,119 @@
-# Généré à partir de docs/02-curriculum.md ; à affiner lors de la rédaction du parcours.
 id: android
 title: Développement Android
-description: 'Parcours pas encore rédigé : le programme ci-dessous liste ce qu''il couvrira, niveau par
-  niveau.'
+description: >
+  Construire des applications Android modernes en Kotlin : composants et cycle de vie,
+  Jetpack Compose (état, recomposition, listes), ViewModel, navigation, coroutines, Room et
+  DataStore, architecture en modules, WorkManager, tests, injection, performance,
+  accessibilité et publication. Mesures réelles avec Robolectric et l'application DevForge.
+
 levels:
-- level: 1
-  title: Découvrir
-  skills:
-  - id: composants-d-une-app
-    title: Composants d'une app
-  - id: activites
-    title: Activités
-  - id: cycle-de-vie
-    title: Cycle de vie
-  - id: ressources
-    title: Ressources
-  - id: manifeste
-    title: Manifeste
-- level: 2
-  title: Pratiquer
-  skills:
-  - id: jetpack-compose-composables
-    title: 'Jetpack Compose : composables'
-  - id: etat
-    title: État
-  - id: recomposition
-    title: Recomposition
-  - id: listes
-    title: Listes
-- level: 3
-  title: Approfondir
-  skills:
-  - id: viewmodel
-    title: ViewModel
-  - id: navigation
-    title: Navigation
-  - id: coroutines-sur-android
-    title: Coroutines sur Android
-  - id: persistance-room-datastore
-    title: Persistance (Room, DataStore)
-- level: 4
-  title: Concevoir
-  skills:
-  - id: architecture-en-couches-et-en
-    title: Architecture en couches et en modules
-  - id: workmanager
-    title: WorkManager
-  - id: tests
-    title: Tests
-  - id: injection-de-dependances
-    title: Injection de dépendances
-- level: 5
-  title: Maîtriser
-  skills:
-  - id: performance-fluidite-demarrage
-    title: Performance (fluidité, démarrage)
-  - id: accessibilite
-    title: Accessibilité
-  - id: publication-et-suivi-en-production
-    title: Publication et suivi en production
+  - level: 1
+    title: Découvrir
+    skills:
+      - id: composants
+        title: Les composants d'une application
+      - id: cycle-de-vie
+        title: Le cycle de vie d'une activité
+      - id: manifeste-ressources
+        title: Le manifeste et les ressources
+    boss:
+      id: android.n1.boss
+      title: "Boss : la rotation"
+      exercises:
+        - android.n1.composants.match
+        - android.n1.cycle.parsons-rotation
+        - android.n1.manifeste.qcm-target
+        - android.n1.cycle.find-bug
+        - android.n1.cycle.qcm-etat
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 2
+    title: Compose
+    skills:
+      - id: composables
+        title: Les composables
+      - id: etat
+        title: L'état
+      - id: recomposition
+        title: La recomposition
+      - id: listes
+        title: Les listes
+    boss:
+      id: android.n2.boss
+      title: "Boss : la recomposition"
+      exercises:
+        - android.n2.composables.find-bug-effet
+        - android.n2.etat.match
+        - android.n2.listes.qcm-lazy
+        - android.n2.recomposition.qcm-compte
+        - android.n2.etat.find-bug
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 3
+    title: Approfondir
+    skills:
+      - id: viewmodel
+        title: Le ViewModel
+      - id: navigation
+        title: La navigation
+      - id: coroutines-android
+        title: Les coroutines sur Android
+      - id: persistance
+        title: La persistance (Room, DataStore)
+    boss:
+      id: android.n3.boss
+      title: "Boss : le ViewModel"
+      exercises:
+        - android.n3.viewmodel.predict-stateflow
+        - android.n3.navigation.qcm-arguments
+        - android.n3.persistance.find-bug-room
+        - android.n3.coroutines.qcm-scope
+        - android.n3.viewmodel.find-bug
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 4
+    title: Concevoir
+    skills:
+      - id: architecture-modules
+        title: Architecture en couches et en modules
+      - id: workmanager
+        title: WorkManager
+      - id: tests
+        title: Les tests
+      - id: injection
+        title: L'injection de dépendances
+    boss:
+      id: android.n4.boss
+      title: "Boss : WorkManager"
+      exercises:
+        - android.n4.modules.qcm-kotlin-pur
+        - android.n4.workmanager.find-bug
+        - android.n4.injection.qcm-hilt
+        - android.n4.workmanager.match
+        - android.n4.tests.qcm-pyramide
+      pass_ratio: 0.8
+      time_limit_min: 9
+
+  - level: 5
+    title: Maîtriser
+    skills:
+      - id: performance
+        title: La performance (taille, démarrage, fluidité)
+      - id: accessibilite
+        title: L'accessibilité
+      - id: publication
+        title: La publication et le suivi en production
+    boss:
+      id: android.n5.boss
+      title: "Boss : la mise en production"
+      exercises:
+        - android.n5.performance.find-bug-r8
+        - android.n5.accessibilite.find-bug
+        - android.n5.publication.match
+        - android.n5.performance.qcm-r8
+        - android.n5.publication.scenario
+      pass_ratio: 0.8
+      time_limit_min: 11

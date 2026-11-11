@@ -1,0 +1,132 @@
+exercises:
+  - id: frameworks.n1.ioc.predict-patron
+    type: predict-output
+    title: Qui appelle qui ?
+    skills: [inversion-de-controle]
+    difficulty: 2
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      abstract class Ecran {
+          fun lancer() {
+              println("le framework crée l'écran")
+              creer()
+              println("le framework l'affiche")
+              afficher()
+          }
+          abstract fun creer()
+          open fun afficher() = println("affichage par défaut")
+      }
+
+      class Accueil : Ecran() {
+          override fun creer() = println("Accueil prépare ses données")
+      }
+
+      fun main() {
+          Accueil().lancer()
+      }
+    choices:
+      - id: a
+        text: "`le framework crée l'écran` / `Accueil prépare ses données` / `le framework l'affiche` / `affichage par défaut`"
+        correct: true
+      - id: b
+        text: "`Accueil prépare ses données` seulement"
+        feedback: "main appelle lancer(), la méthode du « framework », qui appelle ensuite le code d'Accueil."
+      - id: c
+        text: "`le framework crée l'écran` / `le framework l'affiche` / `affichage par défaut`"
+      - id: d
+        text: "Une erreur : Accueil ne redéfinit pas afficher()."
+        feedback: "afficher() est open avec une implémentation par défaut : la redéfinir est facultatif."
+    explanation: |
+      C'est la méthode patron : la classe de base fixe l'enchaînement et appelle les méthodes
+      que vous fournissez. onCreate() d'une activité Android fonctionne ainsi. Sortie vérifiée.
+
+  - id: frameworks.n1.requete.parsons
+    type: parsons
+    title: Le trajet d'une requête dans Spring MVC
+    skills: [cycle-requete]
+    difficulty: 3
+    language: text
+    prompt: Remets dans l'ordre le trajet de GET /produits/7 dans une application Spring Boot.
+    lines:
+      - "Tomcat accepte la connexion et confie la requête à un fil de son pool"
+      - "Les filtres servlet s'exécutent (partie « avant »)"
+      - "Le DispatcherServlet trouve le gestionnaire de GET /produits/{id}"
+      - "Les intercepteurs exécutent preHandle"
+      - "Le texte « 7 » est converti en long et le contrôleur est appelé"
+      - "Jackson convertit l'objet renvoyé en JSON"
+      - "Les filtres servlet terminent (partie « après »)"
+    distractors:
+      - "Le contrôleur ouvre lui-même la socket pour lire la requête"
+    explanation: |
+      Ordre réellement observé dans l'application instrumentée de la leçon. Les filtres
+      entourent tout le reste, comme des poupées russes.
+
+  - id: frameworks.n1.requete.qcm-abc
+    type: qcm
+    title: Le gestionnaire d'exceptions trop large
+    skills: [cycle-requete]
+    difficulty: 4
+    language: java
+    prompt: "Avec ce gestionnaire, GET /produits/abc renvoie 400 et {\"erreur\":\"For input string: \\\"abc\\\"\"}, alors que le contrôleur n'a jamais été appelé. Pourquoi ?"
+    code: |
+      @RestControllerAdvice
+      class Erreurs {
+          @ExceptionHandler(IllegalArgumentException.class)
+          @ResponseStatus(HttpStatus.BAD_REQUEST)
+          Map<String, String> mauvaiseRequete(IllegalArgumentException e) {
+              return Map.of("erreur", e.getMessage());
+          }
+      }
+    choices:
+      - id: a
+        text: "La conversion de « abc » en long échoue avant le contrôleur ; la cause est une NumberFormatException, qui est une IllegalArgumentException, et Spring choisit un gestionnaire selon l'exception ou sa cause."
+        correct: true
+      - id: b
+        text: "Le contrôleur a été appelé avec id = 0."
+      - id: c
+        text: "Tomcat renvoie toujours 400 pour une URL contenant des lettres."
+      - id: d
+        text: "Jackson n'a pas su écrire la réponse."
+    explanation: |
+      Comportement réel observé. Le message interne fuit vers le client : un gestionnaire
+      d'exceptions doit être précis et renvoyer des messages contrôlés.
+
+  - id: frameworks.n1.biblio.qcm
+    type: qcm
+    title: Bibliothèque ou framework ?
+    skills: [bibliotheque-ou-framework, inversion-de-controle]
+    difficulty: 2
+    prompt: "Lequel de ces outils est un framework, au sens de l'inversion de contrôle ?"
+    choices:
+      - id: a
+        text: "Android : le système crée vos activités et appelle onCreate, onResume, onPause quand il le décide."
+        correct: true
+      - id: b
+        text: "Jackson : on appelle readValue pour lire du JSON."
+        feedback: "C'est vous qui l'appelez : c'est une bibliothèque."
+      - id: c
+        text: "OkHttp : on construit une requête et on appelle execute."
+      - id: d
+        text: "Guava : on appelle ses fonctions utilitaires."
+    explanation: |
+      Le critère n'est pas la taille, mais qui appelle qui. Un framework structure toute
+      l'application, d'où l'intérêt de garder le cœur métier indépendant de lui.
+
+  - id: frameworks.n1.ioc.match
+    type: match
+    title: Les formes de l'inversion de contrôle
+    skills: [inversion-de-controle]
+    difficulty: 2
+    prompt: Relie chaque exemple à la forme d'inversion de contrôle qu'il illustre.
+    pairs:
+      - left: "bouton.setOnClickListener { … }"
+        right: Fonction de rappel
+      - left: "override fun onCreate() dans une activité"
+        right: Méthode patron
+      - left: "Un constructeur qui reçoit son dépôt au lieu de le créer"
+        right: Injection de dépendances
+      - left: "@EventListener sur une méthode"
+        right: Événements
+    explanation: |
+      Dans tous les cas, votre code est appelé par le framework au moment qu'il choisit.

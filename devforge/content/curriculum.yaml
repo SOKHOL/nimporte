@@ -183,7 +183,7 @@ tracks:
     title: Les frameworks de l'intérieur
     domain: architecture
     requires: [metaprog@2, bdd@2]
-    status: planned
+    status: pilot
 
   - id: compilation
     title: Langages et compilateurs
@@ -213,13 +213,13 @@ tracks:
     title: Ingénierie des données
     domain: data
     requires: [bdd@2, system-design@1]
-    status: planned
+    status: pilot
 
   - id: android
     title: Développement Android
     domain: code
     requires: [poo@2, fonctionnel@1]
-    status: planned
+    status: pilot
 
   - id: ia-dev
     title: IA pour les développeurs

@@ -1,0 +1,127 @@
+exercises:
+  - id: android.n3.viewmodel.predict-stateflow
+    type: predict-output
+    title: Ce que voit l'écran
+    skills: [viewmodel, coroutines-android]
+    difficulty: 4
+    language: kotlin
+    prompt: "Un StateFlow d'état d'écran est modifié plusieurs fois entre deux suspensions du collecteur. Qu'affiche ce programme ?"
+    code: |
+      import kotlinx.coroutines.*
+      import kotlinx.coroutines.flow.*
+
+      fun main() = runBlocking {
+          val etat = MutableStateFlow(0)
+          val recus = mutableListOf<Int>()
+          val job = launch { etat.collect { recus += it } }
+          yield()
+          etat.value = 1; etat.value = 2; etat.value = 2
+          yield()
+          etat.value = 3; etat.value = 3
+          yield()
+          job.cancel()
+          println(recus)
+      }
+    choices:
+      - id: a
+        text: "`[0, 2, 3]`"
+        correct: true
+      - id: b
+        text: "`[0, 1, 2, 2, 3, 3]`"
+        feedback: "Un StateFlow n'est pas une file : il ne garde que la dernière valeur, et ignore une valeur égale à la précédente."
+      - id: c
+        text: "`[0, 1, 2, 3]`"
+        feedback: "Entre deux suspensions, le collecteur ne voit que la valeur la plus récente : 1 est écrasée par 2."
+      - id: d
+        text: "`[3]`"
+    explanation: |
+      Un StateFlow représente un état, pas une suite d'événements : il est conflaté et
+      n'émet pas deux fois la même valeur. Parfait pour un état d'écran ; pour des événements
+      uniques (afficher un message une fois), on modélise l'événement dans l'état ou on
+      utilise un Channel. Sortie vérifiée (trois exécutions identiques).
+
+  - id: android.n3.coroutines.qcm-scope
+    type: qcm
+    title: La coroutine qui survit à l'écran
+    skills: [coroutines-android]
+    difficulty: 3
+    prompt: "Deux ViewModels comptent toutes les 100 ms. On ferme l'écran, puis on attend 1 s : celui qui utilise viewModelScope reste à 10, celui qui utilise GlobalScope passe à 20. Que faut-il en conclure ?"
+    choices:
+      - id: a
+        text: "La coroutine de GlobalScope n'est pas liée au cycle de vie : elle continue (batterie, réseau) et retient le ViewModel en mémoire. viewModelScope l'annule automatiquement dans onCleared."
+        correct: true
+      - id: b
+        text: "GlobalScope est plus rapide."
+      - id: c
+        text: "viewModelScope met les coroutines en pause, elles reprendront au retour de l'écran."
+        feedback: "Elles sont annulées (isCancelled = true), pas suspendues."
+      - id: d
+        text: "Aucune différence en production."
+    explanation: |
+      Mesure réelle avec Robolectric. Toujours une portée liée au cycle de vie :
+      viewModelScope, lifecycleScope avec repeatOnLifecycle.
+
+  - id: android.n3.viewmodel.find-bug
+    type: find-bug
+    title: Le ViewModel qui retient l'activité
+    skills: [viewmodel]
+    difficulty: 3
+    language: kotlin
+    prompt: "Après plusieurs rotations, l'outil de détection de fuites signale des activités détruites toujours en mémoire. Touche la ligne en cause."
+    code: |
+      class ProfilViewModel(
+          private val activite: Activity,
+          private val depot: ProfilDepot,
+      ) : ViewModel() {
+          val profil = depot.observer().stateIn(viewModelScope, SharingStarted.Lazily, null)
+
+          fun texteBienvenue() = activite.getString(R.string.bienvenue)
+      }
+    bug_lines: [2]
+    explanation: |
+      Le ViewModel survit à la rotation, l'activité non : il garde une référence vers une
+      activité détruite (et toute sa hiérarchie d'interface). Les textes se résolvent dans
+      l'interface, ou avec le contexte de l'application si c'est vraiment nécessaire.
+
+  - id: android.n3.persistance.find-bug-room
+    type: find-bug
+    title: L'application qui ne répond plus
+    skills: [persistance, coroutines-android]
+    difficulty: 3
+    language: kotlin
+    prompt: "Ce bouton fait planter l'application dès le premier clic. Touche la ligne en cause."
+    code: |
+      @Composable
+      fun BoutonExport(dao: TacheDao, onExport: (List<Tache>) -> Unit) {
+          Button(onClick = {
+              val taches = dao.toutesBloquant()
+              onExport(taches)
+          }) { Text("Exporter") }
+      }
+    bug_lines: [4]
+    explanation: |
+      Une requête bloquante sur le fil principal. Room la refuse (réel : « Cannot access
+      database on the main thread since it may potentially lock the UI for a long period of
+      time. »). Utiliser une méthode suspend appelée depuis viewModelScope.
+
+  - id: android.n3.navigation.qcm-arguments
+    type: qcm
+    title: Que passer à l'écran suivant ?
+    skills: [navigation]
+    difficulty: 3
+    prompt: "Pour ouvrir le détail d'un parcours, que faut-il passer dans la route de navigation ?"
+    choices:
+      - id: a
+        text: "Son identifiant ; l'écran de détail recharge le parcours depuis la couche données."
+        correct: true
+      - id: b
+        text: "L'objet Parcours complet, sérialisé dans la route."
+        feedback: "Les arguments doivent rester petits, et l'objet serait figé : s'il change, l'écran montrerait une version périmée."
+      - id: c
+        text: "Une référence vers le ViewModel de l'écran précédent."
+      - id: d
+        text: "Rien : l'écran de détail lit une variable globale."
+        feedback: "Une variable globale disparaît avec le processus ; l'écran recréé ne retrouverait rien."
+    explanation: |
+      La route doit suffire à reconstruire l'écran, même après la mort du processus. C'est
+      ce que fait DevForge : Routes.track(trackId).

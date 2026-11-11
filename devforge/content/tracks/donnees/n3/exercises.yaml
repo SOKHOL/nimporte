@@ -1,0 +1,133 @@
+exercises:
+  - id: donnees.n3.orchestration.predict-idempotence
+    type: predict-output
+    title: Écraser ou ajouter
+    skills: [orchestration]
+    difficulty: 2
+    language: python
+    prompt: "Un pipeline a été lancé cinq fois (relances et rattrapage compris). Qu'affiche ce programme ?"
+    code: |
+      ecrase, ajoute = {}, {}
+      executions = ["03-01", "03-02", "03-01", "03-03", "03-02"]
+      for jour in executions:
+          ca = int(jour[-2:]) * 10           # le même jour donne toujours le même résultat
+          ecrase[jour] = [ca]
+          ajoute.setdefault(jour, []).append(ca)
+      print(sum(len(v) for v in ecrase.values()), sum(len(v) for v in ajoute.values()))
+      print(ecrase["03-01"], ajoute["03-01"])
+    choices:
+      - id: a
+        text: "`3 5` / `[10] [10, 10]`"
+        correct: true
+      - id: b
+        text: "`5 5` / `[10] [10]`"
+      - id: c
+        text: "`3 3` / `[10] [10]`"
+        feedback: "L'ajout garde une copie par exécution : le 1er mars a été traité deux fois."
+      - id: d
+        text: "`3 5` / `[10] [20]`"
+    explanation: |
+      Écraser la partition rend la tâche idempotente : trois jours, trois résultats, quel que
+      soit le nombre de relances. L'ajout duplique, comme dans l'expérience de la leçon.
+      Sortie vérifiée.
+
+  - id: donnees.n3.orchestration.find-bug
+    type: find-bug
+    title: Le rattrapage qui recopie la même journée
+    skills: [orchestration]
+    difficulty: 3
+    language: python
+    prompt: "On a lancé le rattrapage de tout le mois de février : les 28 partitions contiennent toutes les ventes de la veille du rattrapage. Touche la ligne en cause."
+    code: |
+      def extraire_ventes(jour_logique):
+          jour = datetime.date.today() - datetime.timedelta(days=1)
+          lignes = source.lire_ventes(jour)
+          entrepot.ecraser_partition("ventes", jour_logique, lignes)
+          return len(lignes)
+    bug_lines: [2]
+    explanation: |
+      La tâche calcule son jour à partir de l'horloge au lieu d'utiliser l'intervalle de
+      données que lui donne l'orchestrateur. Une tâche doit dépendre uniquement de son jour
+      logique pour pouvoir être relancée et rattrapée.
+
+  - id: donnees.n3.lots.qcm-shuffle
+    type: qcm
+    title: L'étape la plus coûteuse
+    skills: [traitement-par-lots]
+    difficulty: 3
+    prompt: "Dans un traitement Spark qui filtre des ventes, les joint aux clients puis agrège par région, quelle étape coûte en général le plus cher ?"
+    choices:
+      - id: a
+        text: "Le shuffle des transformations larges (jointure, agrégation) : toutes les lignes d'une même clé doivent être redistribuées par le réseau vers la même machine."
+        correct: true
+      - id: b
+        text: "Le filtre, parce qu'il lit toutes les lignes."
+        feedback: "Il est étroit : chaque partition se filtre sur place, sans échange."
+      - id: c
+        text: "L'affichage du plan avec explain()."
+      - id: d
+        text: "La création de la session Spark."
+    explanation: |
+      D'où les réflexes : filtrer et réduire les colonnes avant, diffuser la petite table
+      (broadcast join), surveiller le déséquilibre des clés.
+
+  - id: donnees.n3.qualite.match
+    type: match
+    title: Les familles de contrôles
+    skills: [qualite]
+    difficulty: 2
+    prompt: Relie chaque contrôle réel du lot abîmé à sa famille.
+    pairs:
+      - left: "aucun id en double"
+        right: Unicité
+      - left: "client renseigné"
+        right: Complétude
+      - left: "montant entre 0 et 10 000"
+        right: Validité
+      - left: "641 lignes contre 1000 la veille"
+        right: Volume
+    explanation: |
+      Les cinq contrôles de la leçon ont tous échoué sur le lot abîmé. Le contrôle de volume
+      détecte souvent une source cassée en amont.
+
+  - id: donnees.n3.qualite.scenario-volume
+    type: scenario
+    title: Le tableau de bord du lundi
+    skills: [qualite, orchestration]
+    difficulty: 3
+    prompt: |
+      Lundi, 7 h. Le pipeline de la nuit a réussi, sans erreur. Mais le contrôle de volume
+      signale 3 200 commandes pour dimanche, contre 11 000 en moyenne les dimanches. Le
+      tableau de bord de la direction se met à jour à 8 h.
+    start: debut
+    nodes:
+      debut:
+        text: Que fais-tu d'abord ?
+        options:
+          - text: "Bloquer la publication vers la couche or : le tableau de bord garde les chiffres de samedi, avec un bandeau « données de dimanche en cours de vérification »."
+            next: enquete
+            points: 3
+          - text: "Laisser publier : le pipeline n'a pas échoué."
+            next: publie
+            points: 0
+      publie:
+        ending: failure
+        text: "❌ La direction voit une chute de 70 % des ventes et convoque une réunion de crise."
+      enquete:
+        text: "Tu découvres que l'application mobile a changé le nom d'un champ samedi soir : ses commandes sont rejetées à l'extraction. Ensuite ?"
+        options:
+          - text: "Adapter l'extraction, relancer la journée de dimanche (la tâche est idempotente), puis proposer un contrat de données avec l'équipe mobile."
+            next: resolu
+            points: 3
+          - text: "Corriger à la main les chiffres de dimanche dans la couche or."
+            next: main
+            points: 0
+      main:
+        ending: partial
+        text: "🟡 Le chiffre est juste aujourd'hui, mais la couche argent reste fausse et la prochaine relance écrasera ta correction."
+      resolu:
+        ending: success
+        text: "✅ Dimanche est retraité proprement, et un changement de schéma sera désormais détecté avant la mise en production."
+    explanation: |
+      Un pipeline qui réussit peut publier des données fausses. Mieux vaut un chiffre
+      d'hier qu'un chiffre faux ; et la cause d'une chute de volume est souvent en amont.

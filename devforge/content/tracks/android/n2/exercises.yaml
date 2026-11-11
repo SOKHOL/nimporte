@@ -1,0 +1,119 @@
+exercises:
+  - id: android.n2.recomposition.qcm-compte
+    type: qcm
+    title: Qui est recomposé ?
+    skills: [recomposition]
+    difficulty: 4
+    language: kotlin
+    prompt: "On clique trois fois sur « Ajouter ». Combien de fois chaque fonction s'exécute-t-elle au total (composition initiale comprise) ?"
+    code: |
+      @Composable fun Ecran() {
+          var n by remember { mutableIntStateOf(0) }
+          Column {
+              Button(onClick = { n++ }) { Text("Ajouter") }
+              Compteur(n)
+              EnTete()
+          }
+      }
+      @Composable fun Compteur(n: Int) { Text("Total : $n") }
+      @Composable fun EnTete() { Text("Mes tâches") }
+    choices:
+      - id: a
+        text: "Ecran 4, Compteur 4, EnTete 1"
+        correct: true
+      - id: b
+        text: "Ecran 1, Compteur 4, EnTete 1"
+        feedback: "Ce serait le cas si Ecran ne lisait pas n, par exemple en passant une lambda { n } à Compteur."
+      - id: c
+        text: "Ecran 4, Compteur 4, EnTete 4"
+        feedback: "EnTete n'a aucun paramètre qui change : Compose la saute."
+      - id: d
+        text: "Ecran 1, Compteur 1, EnTete 1"
+    explanation: |
+      Mesure réelle avec Robolectric : Ecran=4 Compteur=4 EnTete=1. Avec une lecture différée
+      (Compteur reçoit { n }), on mesure Ecran=1 Compteur=4.
+
+  - id: android.n2.etat.find-bug
+    type: find-bug
+    title: Le compteur bloqué à zéro
+    skills: [etat]
+    difficulty: 2
+    language: kotlin
+    prompt: "Après trois clics, l'écran affiche toujours « Total : 0 ». Touche la ligne en cause."
+    code: |
+      @Composable
+      fun Panier() {
+          var n by mutableIntStateOf(0)
+          Column {
+              Button(onClick = { n++ }) { Text("Ajouter") }
+              Text("Total : $n")
+          }
+      }
+    bug_lines: [3]
+    explanation: |
+      Sans remember, chaque recomposition recrée un état à 0. Résultat réel : « Total : 0 »
+      après trois clics. Il faut `var n by remember { mutableIntStateOf(0) }`, ou
+      rememberSaveable pour survivre à la rotation.
+
+  - id: android.n2.composables.find-bug-effet
+    type: find-bug
+    title: Le composable qui appelle le serveur
+    skills: [composables, recomposition]
+    difficulty: 3
+    language: kotlin
+    prompt: "Le serveur reçoit des centaines de requêtes par minute depuis chaque téléphone affichant cet écran. Touche la ligne en cause."
+    code: |
+      @Composable
+      fun EcranArticles(api: ArticlesApi, filtre: String) {
+          val articles = runBlocking { api.charger(filtre) }
+          LazyColumn {
+              items(articles, key = { it.id }) { article ->
+                  CarteArticle(article)
+              }
+          }
+      }
+    bug_lines: [3]
+    explanation: |
+      Le corps d'un composable est rejoué à chaque recomposition : l'appel réseau part à
+      chaque fois, et runBlocking gèle en plus le fil principal. Le chargement va dans un
+      ViewModel (ou un LaunchedEffect(filtre)), qui expose un état que l'écran observe.
+
+  - id: android.n2.listes.qcm-lazy
+    type: qcm
+    title: Column ou LazyColumn ?
+    skills: [listes]
+    difficulty: 2
+    prompt: "Avec 1000 tâches, combien d'éléments sont réellement composés au départ dans un Column et dans un LazyColumn (mesure Robolectric) ?"
+    choices:
+      - id: a
+        text: "Column : 1000 ; LazyColumn : 12, ceux qui sont visibles."
+        correct: true
+      - id: b
+        text: "1000 dans les deux cas."
+      - id: c
+        text: "12 dans les deux cas."
+        feedback: "Column compose tous ses enfants, visibles ou non."
+      - id: d
+        text: "Column : 12 ; LazyColumn : 1000."
+    explanation: |
+      Après un défilement jusqu'à la tâche 500, le LazyColumn n'avait composé que 24
+      éléments en tout. Donnez une clé stable à chaque élément (key = { it.id }).
+
+  - id: android.n2.etat.match
+    type: match
+    title: Garder un état
+    skills: [etat]
+    difficulty: 3
+    prompt: Relie chaque outil à ce à quoi il survit.
+    pairs:
+      - left: remember
+        right: Aux recompositions seulement
+      - left: rememberSaveable
+        right: Aux recompositions, à la rotation et à la mort du processus
+      - left: Un ViewModel
+        right: Aux recompositions et à la rotation, pas à la mort du processus
+      - left: Une variable locale sans remember
+        right: À rien, elle est recréée à chaque recomposition
+    explanation: |
+      Choisir selon la nature de l'état : état d'écran saisi par l'utilisateur
+      (rememberSaveable), données de l'écran (ViewModel), détail visuel (remember).

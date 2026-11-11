@@ -1,0 +1,132 @@
+exercises:
+  - id: frameworks.n5.mini.predict-ordre
+    type: predict-output
+    title: L'ordre de création des composants
+    skills: [mini-framework]
+    difficulty: 3
+    language: kotlin
+    prompt: "Ce résolveur crée chaque composant après ses dépendances, comme un conteneur d'injection. Qu'affiche-t-il ?"
+    code: |
+      val dependances = mapOf(
+          "Controleur" to listOf("Service"),
+          "Service" to listOf("Depot", "Horloge"),
+          "Depot" to listOf("Connexion"),
+          "Connexion" to listOf(),
+          "Horloge" to listOf(),
+      )
+      val crees = mutableListOf<String>()
+
+      fun creer(nom: String) {
+          if (nom in crees) return
+          dependances.getValue(nom).forEach { creer(it) }
+          crees += nom
+      }
+
+      fun main() {
+          creer("Controleur")
+          creer("Horloge")
+          println(crees.joinToString(" "))
+      }
+    choices:
+      - id: a
+        text: "`Connexion Depot Horloge Service Controleur`"
+        correct: true
+      - id: b
+        text: "`Controleur Service Depot Connexion Horloge`"
+        feedback: "Un composant est ajouté après ses dépendances, pas avant."
+      - id: c
+        text: "`Connexion Depot Horloge Service Controleur Horloge`"
+        feedback: "Horloge existe déjà : le second appel ne crée rien (singleton)."
+      - id: d
+        text: "`Horloge Connexion Depot Service Controleur`"
+    explanation: |
+      C'est un parcours en profondeur du graphe (un tri topologique) : exactement l'ordre
+      « créé DepotMemoire, créé Prix, créé Catalogue » du mini-framework de la leçon. Sortie
+      vérifiée.
+
+  - id: frameworks.n5.mini.find-bug
+    type: find-bug
+    title: Le routeur qui ne sait pas convertir
+    skills: [mini-framework]
+    difficulty: 3
+    language: kotlin
+    prompt: "GET /produits/2 échoue avec « IllegalArgumentException: argument type mismatch » sur la méthode `fun produit(id: Long)`. Touche la ligne en cause."
+    code: |
+      fun traiter(chemin: String): String {
+          val morceaux = chemin.trim('/').split("/")
+          for (r in routes) {
+              if (r.motif.size != morceaux.size) continue
+              val variables = r.motif.zip(morceaux)
+                  .filter { (m, _) -> m.startsWith("{") }
+                  .map { (_, v) -> v }
+              return "200 " + r.methode.invoke(r.cible, *variables.toTypedArray())
+          }
+          return "404"
+      }
+    bug_lines: [8]
+    explanation: |
+      Les variables de l'URL sont du texte ; la méthode attend un Long. Il faut les convertir
+      selon `r.methode.parameterTypes` avant l'appel par réflexion (et répondre 400 si la
+      conversion échoue). C'est la « liaison des paramètres » de Spring.
+
+  - id: frameworks.n5.source.qcm-pile
+    type: qcm
+    title: Lire une pile d'appels de framework
+    skills: [lire-le-code-source]
+    difficulty: 3
+    prompt: "Dans la pile réelle de 52 cadres sous un contrôleur Spring, quelle méthode faut-il lire en premier pour comprendre comment Spring MVC choisit et appelle le contrôleur ?"
+    choices:
+      - id: a
+        text: "DispatcherServlet.doDispatch : elle cherche le gestionnaire, appelle les intercepteurs, invoque l'adaptateur et gère les exceptions."
+        correct: true
+      - id: b
+        text: "java.lang.Thread.run"
+        feedback: "C'est le bas de la pile : le démarrage du fil, sans rapport avec Spring MVC."
+      - id: c
+        text: "Http11Processor.service"
+        feedback: "C'est Tomcat qui analyse le HTTP, avant Spring."
+      - id: d
+        text: "CharacterEncodingFilter.doFilterInternal"
+    explanation: |
+      Une pile se lit de bas en haut : pool de fils, socket, HTTP, filtres, puis le cœur du
+      framework, et enfin votre code.
+
+  - id: frameworks.n5.source.match
+    type: match
+    title: Où chercher la réponse ?
+    skills: [lire-le-code-source]
+    difficulty: 3
+    prompt: Relie chaque question à l'endroit du code de Spring à ouvrir.
+    pairs:
+      - left: "Pourquoi ma transaction n'est-elle pas annulée ?"
+        right: DefaultTransactionAttribute.rollbackOn
+      - left: "Pourquoi une DataSource a-t-elle été créée ?"
+        right: Les conditions de DataSourceAutoConfiguration
+      - left: "Dans quel ordre passent filtres, intercepteurs et contrôleur ?"
+        right: La pile d'appels sous le contrôleur
+      - left: "Quelles auto-configurations existent ?"
+        right: Le fichier AutoConfiguration.imports
+    explanation: |
+      Partir d'une question précise. Le bytecode réel de rollbackOn se résume à
+      `ex instanceof RuntimeException || ex instanceof Error`.
+
+  - id: frameworks.n5.mini.qcm-compilation
+    type: qcm
+    title: L'injection à la compilation
+    skills: [mini-framework, lire-le-code-source]
+    difficulty: 3
+    prompt: "Pourquoi Android utilise-t-il Dagger ou Hilt, qui génèrent le code d'assemblage à la compilation, plutôt qu'un conteneur fondé sur la réflexion comme celui de la leçon ?"
+    choices:
+      - id: a
+        text: "La réflexion au démarrage coûte cher sur un téléphone ; à la compilation, le graphe est vérifié (dépendance manquante, cycle) avant même l'exécution et le démarrage est rapide."
+        correct: true
+      - id: b
+        text: "Android interdit la réflexion."
+        feedback: "Elle est permise, mais lente, et gênée par l'optimiseur R8 qui renomme les classes."
+      - id: c
+        text: "Dagger n'utilise pas de graphe de dépendances."
+      - id: d
+        text: "La réflexion ne fonctionne pas en Kotlin."
+    explanation: |
+      Même idée côté serveur avec Micronaut, Quarkus et Spring AOT : faire à la compilation
+      ce que le mini-framework fait à chaque démarrage.

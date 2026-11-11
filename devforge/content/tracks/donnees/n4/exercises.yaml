@@ -1,0 +1,129 @@
+exercises:
+  - id: donnees.n4.streaming.predict-partitions
+    type: predict-output
+    title: Une clé, une partition
+    skills: [streaming]
+    difficulty: 3
+    language: python
+    prompt: "Ce programme range des messages dans 3 partitions selon leur clé, comme le producteur Kafka. Qu'affiche-t-il ? (crc32(\"alice\") % 3 et crc32(\"bob\") % 3 valent tous deux 2.)"
+    code: |
+      import zlib
+
+      def partition(cle, n=3):
+          return zlib.crc32(cle.encode()) % n
+
+      messages = [("alice", "créée"), ("bob", "créée"), ("alice", "payée"),
+                  ("alice", "livrée"), ("bob", "annulée")]
+      partitions = {}
+      for cle, ev in messages:
+          partitions.setdefault(partition(cle), []).append(f"{cle}:{ev}")
+      print(len(partitions))
+      print([m for p in partitions.values() for m in p if m.startswith("alice")])
+    choices:
+      - id: a
+        text: "`1` / `['alice:créée', 'alice:payée', 'alice:livrée']`"
+        correct: true
+      - id: b
+        text: "`3` / `['alice:créée', 'alice:payée', 'alice:livrée']`"
+        feedback: "Les deux clés tombent dans la partition 2 : une seule partition est utilisée."
+      - id: c
+        text: "`2` / `['alice:payée', 'alice:créée', 'alice:livrée']`"
+        feedback: "Dans une partition, l'ordre d'ajout est conservé."
+      - id: d
+        text: "`1` / `['alice:créée']`"
+    explanation: |
+      Une partition contient plusieurs clés, mais tous les messages d'une clé vont dans la
+      même partition, dans l'ordre : c'est ce qui garantit l'ordre par clé dans Kafka.
+      Sortie vérifiée.
+
+  - id: donnees.n4.fenetres.predict-temps
+    type: predict-output
+    title: Temps d'événement ou temps d'arrivée
+    skills: [fenetres]
+    difficulty: 3
+    language: python
+    prompt: Qu'affiche ce programme, qui compte des événements par minute ?
+    code: |
+      evenements = [(10, 12), (50, 65), (70, 71), (55, 130)]   # (heure de l'événement, heure d'arrivée) en secondes
+      par_evenement, par_arrivee = {}, {}
+      for ev, arr in evenements:
+          par_evenement[ev // 60] = par_evenement.get(ev // 60, 0) + 1
+          par_arrivee[arr // 60] = par_arrivee.get(arr // 60, 0) + 1
+      print(par_evenement)
+      print(par_arrivee)
+    choices:
+      - id: a
+        text: "`{0: 3, 1: 1}` / `{0: 1, 1: 2, 2: 1}`"
+        correct: true
+      - id: b
+        text: "`{0: 3, 1: 1}` / `{0: 3, 1: 1}`"
+        feedback: "Deux événements de la minute 0 arrivent pendant les minutes 1 et 2."
+      - id: c
+        text: "`{0: 1, 1: 2, 2: 1}` / `{0: 3, 1: 1}`"
+      - id: d
+        text: "`{0: 2, 1: 2}` / `{0: 1, 1: 2, 2: 1}`"
+    explanation: |
+      En temps d'arrivée, les retardataires faussent les comptes. En temps d'événement,
+      chacun est dans sa minute, mais il faut décider quand une minute est complète : c'est
+      le rôle du filigrane. Sortie vérifiée.
+
+  - id: donnees.n4.cdc.qcm-slot
+    type: qcm
+    title: Le disque qui se remplit
+    skills: [cdc]
+    difficulty: 4
+    prompt: "Le connecteur Debezium d'une équipe est arrêté depuis une semaine. Le disque de la base PostgreSQL de production se remplit. Pourquoi ?"
+    choices:
+      - id: a
+        text: "Le slot de réplication logique garde tout le journal (WAL) non consommé : PostgreSQL ne peut pas le supprimer tant que le slot n'a pas avancé."
+        correct: true
+      - id: b
+        text: "Debezium écrit ses messages dans la base quand Kafka est indisponible."
+      - id: c
+        text: "Les tables grossissent parce que les suppressions ne sont plus appliquées."
+      - id: d
+        text: "Le CDC désactive VACUUM."
+    explanation: |
+      Mesure réelle : 77 Mo retenus après 300 000 insertions avec un slot inactif. Surveiller
+      la taille retenue, plafonner avec max_slot_wal_keep_size, et supprimer les slots
+      abandonnés.
+
+  - id: donnees.n4.fenetres.match
+    type: match
+    title: Les types de fenêtres
+    skills: [fenetres]
+    difficulty: 2
+    prompt: Relie chaque besoin au type de fenêtre adapté.
+    pairs:
+      - left: Le nombre de commandes par heure, heure par heure
+        right: Fenêtre fixe (tumbling)
+      - left: La moyenne des 10 dernières minutes, mise à jour chaque minute
+        right: Fenêtre glissante
+      - left: Les visites d'un utilisateur, séparées par 30 minutes d'inactivité
+        right: Fenêtre de session
+      - left: Décider qu'une fenêtre est complète malgré les retardataires
+        right: Le filigrane (watermark)
+    explanation: |
+      Le filigrane n'est pas une fenêtre mais l'outil qui décide quand émettre une fenêtre en
+      temps d'événement.
+
+  - id: donnees.n4.livraison.qcm-checkpoint
+    type: qcm
+    title: Reprendre après une panne sans compter deux fois
+    skills: [livraison, streaming]
+    difficulty: 4
+    prompt: "Comment Flink évite-t-il de compter deux fois un événement dans son état après une panne ?"
+    choices:
+      - id: a
+        text: "Un point de contrôle sauvegarde ensemble l'état des opérateurs et les offsets lus ; après une panne, il repart de ce point cohérent et relit les événements suivants."
+        correct: true
+      - id: b
+        text: "Kafka ne relivre jamais un message."
+        feedback: "Il relivre au contraire tout ce qui suit l'offset sauvegardé."
+      - id: c
+        text: "Chaque événement est supprimé de Kafka une fois lu."
+      - id: d
+        text: "Flink garde tout en mémoire et ne tombe jamais en panne."
+    explanation: |
+      L'état et la position de lecture sont restaurés ensemble. Pour les sorties externes, il
+      faut en plus un puits transactionnel ou idempotent.

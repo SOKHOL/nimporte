@@ -17,6 +17,17 @@ levels:
         title: Créer et attendre des threads
       - id: race-condition
         title: Conditions de course
+    boss:
+      id: concurrence.n1.boss
+      title: "Boss : la course aux données"
+      exercises:
+        - concurrence.n1.notions.qcm-concurrence-parallelisme
+        - concurrence.n1.notions.qcm-partage
+        - concurrence.n1.threads.predict-run-start
+        - concurrence.n1.course.qcm-compteur
+        - concurrence.n1.threads.predict-join
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 2
     title: Synchroniser
@@ -56,6 +67,18 @@ levels:
         title: ReentrantLock, ReadWriteLock et conditions
       - id: threadlocal
         title: ThreadLocal
+    boss:
+      id: concurrence.n3.boss
+      title: "Boss : le pool épuisé"
+      exercises:
+        - concurrence.n3.jmm.qcm-reordonnancement
+        - concurrence.n3.executors.review-meteo
+        - concurrence.n3.verrous.bug-finally
+        - concurrence.n3.threadlocal.predict-pool
+        - concurrence.n3.jmm.match-arrive-avant
+        - concurrence.n3.jmm.bug-double-checked
+      pass_ratio: 0.8
+      time_limit_min: 13
 
   - level: 4
     title: Concurrence moderne
@@ -68,6 +91,18 @@ levels:
         title: Threads virtuels
       - id: flux-reactifs
         title: Flux réactifs et backpressure
+    boss:
+      id: concurrence.n4.boss
+      title: "Boss : la coroutine annulée"
+      exercises:
+        - concurrence.n4.annulation.bug-catch-exception
+        - concurrence.n4.virtuels.qcm-quand
+        - concurrence.n4.flux.match-contre-pression
+        - concurrence.n4.structuree.predict-echec
+        - concurrence.n4.coroutines.trous-viewmodel
+        - concurrence.n4.flux.qcm-unlimited
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 5
     title: Concurrence experte
@@ -82,3 +117,15 @@ levels:
         title: Tester du code concurrent
       - id: concevoir-concurrent
         title: Concevoir pour la concurrence
+    boss:
+      id: concurrence.n5.boss
+      title: "Boss : le verrou invisible"
+      exercises:
+        - concurrence.n5.cas.parsons-empiler
+        - concurrence.n5.tests.match-outils
+        - concurrence.n5.acteurs.qcm-principe
+        - concurrence.n5.contention.qcm-longadder
+        - concurrence.n5.cas.qcm-aba
+        - concurrence.n5.conception.qcm-ordre
+      pass_ratio: 0.8
+      time_limit_min: 10

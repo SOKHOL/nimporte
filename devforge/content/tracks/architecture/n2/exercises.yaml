@@ -1,0 +1,188 @@
+exercises:
+  - id: architecture.n2.mvi.predict-reducteur
+    type: predict-output
+    title: Rejouer les actions
+    skills: [mvvm-mvi]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      data class Etat(val compteur: Int = 0, val chargement: Boolean = false, val erreur: String? = null)
+
+      sealed interface Action {
+          data object Incrementer : Action
+          data object DebutChargement : Action
+          data class Echec(val message: String) : Action
+      }
+
+      fun reduire(etat: Etat, action: Action): Etat = when (action) {
+          Action.Incrementer -> etat.copy(compteur = etat.compteur + 1)
+          Action.DebutChargement -> etat.copy(chargement = true, erreur = null)
+          is Action.Echec -> etat.copy(chargement = false, erreur = action.message)
+      }
+
+      fun main() {
+          val actions = listOf(Action.Incrementer, Action.DebutChargement, Action.Echec("hors ligne"), Action.Incrementer)
+          val final = actions.fold(Etat()) { etat, action -> reduire(etat, action) }
+          println(final)
+      }
+    choices:
+      - id: a
+        text: "`Etat(compteur=2, chargement=false, erreur=hors ligne)`"
+        correct: true
+      - id: b
+        text: "`Etat(compteur=2, chargement=true, erreur=hors ligne)`"
+        feedback: "L'action Echec remet `chargement` à false."
+      - id: c
+        text: "`Etat(compteur=2, chargement=false, erreur=null)`"
+        feedback: "Incrementer ne touche pas à l'erreur : `copy` ne change que le champ indiqué."
+      - id: d
+        text: "`Etat(compteur=1, chargement=false, erreur=hors ligne)`"
+    explanation: |
+      `fold` applique le réducteur action par action en partant de l'état initial. Comme le
+      réducteur est une fonction pure, rejouer la même liste donne toujours le même état :
+      c'est ce qui rend MVI si facile à tester et à déboguer. Sortie vérifiée.
+
+  - id: architecture.n2.mvvm.qcm-etat-unique
+    type: qcm
+    title: Chargement et erreur à la fois
+    skills: [mvvm-mvi]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      Un écran affiche parfois en même temps la roue de chargement et le message d'erreur.
+      Le ViewModel expose ces trois flux. Quelle correction attaque la cause ?
+    code: |
+      val chargement = MutableStateFlow(false)
+      val erreur = MutableStateFlow<String?>(null)
+      val articles = MutableStateFlow<List<Article>>(emptyList())
+    choices:
+      - id: a
+        text: "Exposer un seul état immuable (une sealed interface Chargement / Erreur / Contenu), mis à jour d'un bloc."
+        correct: true
+      - id: b
+        text: Ajouter un délai avant d'afficher l'erreur.
+      - id: c
+        text: Remettre chargement à false dans un bloc finally.
+        feedback: "Ça corrige ce cas précis, mais trois variables indépendantes peuvent toujours se contredire."
+      - id: d
+        text: Passer les trois flux en LiveData.
+    explanation: |
+      Avec un état unique, les combinaisons impossibles deviennent **impossibles à
+      représenter** : `sealed interface EtatEcran { Chargement ; Erreur(message) ;
+      Contenu(articles) }`.
+
+  - id: architecture.n2.principes.qcm-instabilite
+    type: qcm
+    title: Calculer l'instabilité
+    skills: [principes-packages]
+    difficulty: 3
+    prompt: |
+      Le module `paiement` dépend de 3 modules ; 1 seul module dépend de lui. Quelle est son
+      instabilité `I = Ce / (Ca + Ce)` ?
+    choices:
+      - id: a
+        text: "0,75"
+        correct: true
+      - id: b
+        text: "0,25"
+        feedback: "`Ce` (sortant) = 3, `Ca` (entrant) = 1 : 3 / (1 + 3)."
+      - id: c
+        text: "3"
+      - id: d
+        text: "0,33"
+    explanation: |
+      `Ce` = dépendances sortantes (3), `Ca` = dépendances entrantes (1). I = 3 / 4 = 0,75 :
+      un module plutôt instable, ce qui est normal pour une fonctionnalité. Un module comme
+      `core:model` (personne en dessous, beaucoup au-dessus) tend vers 0.
+
+  - id: architecture.n2.modules.scenario-cycle
+    type: scenario
+    title: Le cycle entre modules
+    skills: [modularisation, principes-packages]
+    difficulty: 4
+    prompt: |
+      Gradle refuse de compiler : `:feature:commande` dépend de `:feature:client` (pour
+      afficher le nom du client), et `:feature:client` vient d'ajouter une dépendance vers
+      `:feature:commande` (pour afficher l'historique des commandes).
+    start: debut
+    nodes:
+      debut:
+        text: Comment casses-tu le cycle ?
+        options:
+          - text: "J'extrais ce dont les deux ont besoin dans un module commun plus stable (par exemple :core:client-api avec l'interface et le modèle Client)."
+            next: extraction
+            points: 3
+          - text: Je fusionne les deux modules en un seul.
+            next: fusion
+            points: 1
+            feedback: "Ça compile, mais on perd la frontière, et le module fusionné grossira encore."
+          - text: Je passe par la réflexion pour charger la classe sans dépendance déclarée.
+            next: reflexion
+            points: 0
+            feedback: Le cycle existe toujours, il est seulement caché au compilateur.
+      reflexion:
+        ending: failure
+        text: "❌ Ça compile, mais un renommage casse l'app à l'exécution, et plus personne ne voit le couplage."
+      fusion:
+        ending: partial
+        text: "🟡 Le build passe. Six mois plus tard, le module « client-commande » fait 40 000 lignes."
+      extraction:
+        text: "Le module client-api contient le modèle et une interface `HistoriqueCommandes`. Qui l'implémente ?"
+        options:
+          - text: "Le module commande implémente l'interface ; l'application (la racine de composition) relie les deux."
+            next: resolu
+            points: 3
+          - text: Le module client-api lui-même, en appelant directement le module commande.
+            next: cycle-bis
+            points: 0
+      cycle-bis:
+        ending: failure
+        text: "❌ client-api dépend maintenant de commande : le cycle est revenu, avec un module de plus."
+      resolu:
+        ending: success
+        text: "✅ Plus de cycle : client et commande dépendent tous deux de client-api, et l'application assemble le tout."
+    explanation: |
+      Principe des dépendances acycliques : on casse un cycle en extrayant une abstraction
+      stable dont les deux modules dépendent (inversion de dépendance), et c'est la racine de
+      composition qui branche l'implémentation.
+
+  - id: architecture.n2.di.qcm-racine
+    type: qcm
+    title: Où créer les objets ?
+    skills: [di-architecture]
+    difficulty: 2
+    prompt: Dans une application bien structurée, où sont créées les classes concrètes (dépôts, clients HTTP, services) ?
+    choices:
+      - id: a
+        text: "À un seul endroit, la racine de composition (un conteneur manuel ou le framework d'injection), qui les passe en paramètres de constructeur."
+        correct: true
+      - id: b
+        text: Dans chaque classe qui en a besoin, avec `val depot = DepotSql()`.
+        feedback: "La classe est alors soudée à une implémentation précise, et impossible à tester avec un faux."
+      - id: c
+        text: Dans des singletons globaux accessibles partout.
+      - id: d
+        text: Dans le code métier, pour qu'il contrôle ses dépendances.
+    explanation: |
+      Seule la racine de composition connaît les classes concrètes. DevForge le fait à la main
+      avec un `AppContainer` ; Hilt, Koin ou Spring automatisent la même idée.
+
+  - id: architecture.n2.modules.match
+    type: match
+    title: Ce qu'apportent les modules
+    skills: [modularisation]
+    difficulty: 2
+    prompt: Relie chaque problème au mécanisme de modularisation qui le règle.
+    pairs:
+      - left: N'importe quel fichier utilise les classes internes d'une autre fonctionnalité
+        right: Visibilité internal et dépendances déclarées
+      - left: Changer une ligne recompile tout le projet
+        right: Compilation incrémentale par module
+      - left: Le métier importe des classes Android par erreur
+        right: Un module domaine en Kotlin pur, sans dépendance Android
+      - left: Deux équipes se marchent dessus dans le même code
+        right: Un module par fonctionnalité, avec un propriétaire
+    explanation: |
+      Un module transforme une convention (« on ne fait pas ça ») en règle vérifiée par le
+      compilateur.

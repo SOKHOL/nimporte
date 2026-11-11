@@ -99,3 +99,119 @@ exercises:
         et le code source restent dans l'étape 1 et ne finissent pas dans l'image.
       - `USER 1000` exécute l'application avec un utilisateur non privilégié :
         si l'application est compromise, l'attaquant n'est pas `root` dans le conteneur.
+
+  - id: devops.n2.images.qcm-pid1
+    type: qcm
+    title: Dix secondes pour s'arrêter
+    skills: [docker-images]
+    difficulty: 4
+    language: bash
+    prompt: |
+      Chaque `docker stop` de ce conteneur prend exactement 10 secondes, et il sort avec le
+      code 137. Pourquoi ?
+    code: |
+      $ docker run -d --name tache alpine:3.20 sleep 1000
+      $ time docker stop tache        # 10,2 s
+      $ docker inspect -f '{{.State.ExitCode}}' tache
+      137
+    choices:
+      - id: a
+        text: "Le processus est le PID 1 du conteneur et n'a pas de gestionnaire pour SIGTERM, que le noyau ignore donc ; Docker attend 10 s puis envoie SIGKILL."
+        correct: true
+      - id: b
+        text: "Docker attend toujours 10 secondes avant d'arrêter un conteneur."
+        feedback: "Avec `--init`, le même conteneur s'arrête en 0,1 s (mesuré)."
+      - id: c
+        text: Le conteneur manque de mémoire.
+        feedback: "137 = 128 + 9 (SIGKILL) ; ici c'est Docker qui l'envoie après le délai, pas le noyau par manque de mémoire."
+      - id: d
+        text: sleep refuse d'être interrompu.
+    explanation: |
+      Mesure réelle : sans init, 10,2 s et code 137 ; avec `docker run --init`, 0,1 s et code
+      143 (128 + 15, SIGTERM). Solutions : un init (tini), une application qui gère SIGTERM,
+      et la forme exec de `ENTRYPOINT`.
+
+  - id: devops.n2.images.qcm-taille
+    type: qcm
+    title: Le même binaire, trois images
+    skills: [docker-images, docker-securite]
+    difficulty: 3
+    prompt: |
+      Le même binaire statique de 785 Ko est copié dans trois images. Laquelle est la plus
+      petite, et pourquoi est-ce aussi un gain de sécurité ?
+    choices:
+      - id: a
+        text: "FROM scratch (environ 1 Mo) : l'image ne contient rien d'autre que le binaire, pas même un shell à exploiter."
+        correct: true
+      - id: b
+        text: "FROM alpine (environ 13 Mo) : c'est la plus petite distribution possible."
+        feedback: "Petite, mais elle contient un shell et un gestionnaire de paquets ; scratch est vide."
+      - id: c
+        text: "FROM debian:12, car elle est la mieux maintenue."
+        feedback: "Mesuré : 183 Mo pour le même binaire."
+      - id: d
+        text: Elles ont toutes la même taille, seul le binaire compte.
+    explanation: |
+      Mesures réelles : 183 Mo (Debian), 13,2 Mo (Alpine), 1,14 Mo (scratch). Moins de
+      logiciels dans l'image, c'est moins de failles à corriger et moins d'outils pour un
+      attaquant.
+
+  - id: devops.n2.compose.trous-healthcheck
+    type: fill-blanks
+    title: Attendre que la base soit prête
+    skills: [compose]
+    difficulty: 3
+    language: yaml
+    prompt: |
+      Au premier `docker compose up`, l'API plante car la base n'accepte pas encore les
+      connexions. Complète la configuration.
+    code: |
+      services:
+        api:
+          build: .
+          depends_on:
+            db:
+              condition: {{1}}
+        db:
+          image: postgres:16-alpine
+          {{2}}:
+            test: ["CMD", "pg_isready", "-U", "app"]
+            interval: 2s
+            retries: 15
+    blanks:
+      "1":
+        answers: [service_healthy]
+        options: [service_healthy, service_started, service_ready, always]
+      "2":
+        answers: [healthcheck]
+        options: [healthcheck, readiness, probe, wait]
+    explanation: |
+      `depends_on` seul attend le **démarrage** du conteneur ; avec `condition:
+      service_healthy`, Compose attend que le `healthcheck` réussisse.
+
+  - id: devops.n2.securite.qcm-rm-secret
+    type: qcm
+    title: Le secret effacé
+    skills: [docker-securite, docker-couches]
+    difficulty: 4
+    language: dockerfile
+    prompt: Après ce build, le fichier `.env` est-il encore récupérable ?
+    code: |
+      FROM alpine:3.20
+      COPY .env /app/.env
+      RUN echo "configuration..." && rm /app/.env
+    choices:
+      - id: a
+        text: "Oui : la couche créée par COPY contient toujours le fichier ; rm dans la couche suivante ne fait que le masquer."
+        correct: true
+      - id: b
+        text: Non, le fichier a été supprimé pendant le build.
+        feedback: "Il n'apparaît plus dans le conteneur, mais il est toujours dans l'image."
+      - id: c
+        text: Seulement si on a les droits root dans le conteneur.
+      - id: d
+        text: Seulement avec la clé de chiffrement de Docker.
+    explanation: |
+      Démonstration réelle : `/app` est vide dans le conteneur, mais `docker save` puis
+      l'ouverture des couches affiche `DB_PASSWORD=Sup3rS3cret`. Pendant le build, utiliser
+      `RUN --mount=type=secret` ; à l'exécution, des variables ou des secrets injectés.

@@ -1,0 +1,182 @@
+exercises:
+  - id: architecture.n5.fitness.qcm-erosion
+    type: qcm
+    title: La règle qui s'érode
+    skills: [fitness-functions]
+    difficulty: 3
+    prompt: |
+      Le wiki indique que le module domaine ne doit pas dépendre de Spring. Un an plus tard,
+      40 classes du domaine importent Spring. Qu'est-ce qui l'aurait empêché ?
+    choices:
+      - id: a
+        text: "Une fitness function (un test ArchUnit ou Konsist) qui fait échouer le build dès le premier import interdit."
+        correct: true
+      - id: b
+        text: Une formation de rappel pour toute l'équipe.
+        feedback: Utile, mais sous la pression d'une échéance, une règle non vérifiée finit par céder.
+      - id: c
+        text: Une revue de code plus attentive.
+        feedback: "Les relecteurs se fatiguent et changent ; un test ne se fatigue pas."
+      - id: d
+        text: Mettre la règle en gras dans le wiki.
+    explanation: |
+      Ce qui n'est pas vérifié automatiquement s'érode. Démonstration réelle sur DevForge : la
+      fonction de contrôle trouve 0 violation sur le dépôt, et signale aussitôt
+      `Ports.kt:3 → import dev.devforge.core.data.FileProgressStore` dans une copie modifiée.
+
+  - id: architecture.n5.fitness.trous-archunit
+    type: fill-blanks
+    title: Une règle ArchUnit
+    skills: [fitness-functions]
+    difficulty: 3
+    language: kotlin
+    prompt: Complète cette règle pour qu'aucune classe du domaine ne dépende de l'infrastructure ni de Spring.
+    code: |
+      @ArchTest
+      val domaineIndependant = {{1}}().that().resideInAPackage("..domain..")
+          .should().{{2}}().resideInAnyPackage("..infrastructure..", "org.springframework..")
+    blanks:
+      "1":
+        answers: [noClasses]
+        options: [noClasses, classes, allClasses, someClasses]
+      "2":
+        answers: [dependOnClassesThat]
+        options: [dependOnClassesThat, beAnnotatedWith, haveSimpleName, beInterfaces]
+    explanation: |
+      `noClasses()…should().dependOnClassesThat()…` exprime une interdiction de dépendance.
+      Lancée avec les tests unitaires, elle fait échouer le build à la première violation.
+
+  - id: architecture.n5.strangler.scenario-legacy
+    type: scenario
+    title: Remplacer le vieux système de facturation
+    skills: [strangler-fig]
+    difficulty: 5
+    prompt: |
+      Le système de facturation a 15 ans, 400 000 lignes, et plus personne ne le comprend en
+      entier. La direction veut le remplacer.
+    start: debut
+    nodes:
+      debut:
+        text: Quelle stratégie proposes-tu ?
+        options:
+          - text: "Une façade devant l'ancien système, puis migrer une fonctionnalité à la fois vers le nouveau."
+            next: facade
+            points: 3
+          - text: Une équipe réécrit tout pendant 18 mois, puis on bascule un week-end.
+            next: big-bang
+            points: 0
+            feedback: Des mois sans valeur livrée, un ancien système qui continue de bouger, et une bascule à très haut risque.
+      big-bang:
+        ending: failure
+        text: "❌ Après 26 mois, la nouvelle version ne gère toujours pas 30 % des cas particuliers. Le projet est arrêté."
+      facade:
+        text: Par quelle fonctionnalité commences-tu ?
+        options:
+          - text: Une fonctionnalité utile mais peu risquée et bien délimitée (l'envoi des factures PDF), pour roder la chaîne.
+            next: parallele
+            points: 3
+          - text: Le calcul de la TVA, la partie la plus critique, pour régler le plus dur d'abord.
+            next: risque
+            points: 1
+            feedback: "Commencer par le plus risqué, c'est découvrir les problèmes de la chaîne (déploiement, données, supervision) là où une erreur coûte le plus."
+      risque:
+        text: Le nouveau calcul diffère de l'ancien sur 2 % des factures, sans qu'on sache qui a raison. Comment avances-tu ?
+        options:
+          - text: Exécution en parallèle, avec comparaison systématique des résultats avant de basculer.
+            next: parallele
+            points: 1
+      parallele:
+        text: "La fonctionnalité est réécrite. Comment sécurises-tu la bascule ?"
+        options:
+          - text: "Exécution en parallèle : les deux systèmes calculent, on sert l'ancien résultat, on compare et on corrige les écarts ; puis on route le trafic progressivement."
+            next: fin
+            points: 3
+          - text: On bascule tout le trafic d'un coup, on corrigera si des clients se plaignent.
+            next: plaintes
+            points: 0
+      plaintes:
+        ending: partial
+        text: "🟡 Ça marche à 98 %… et les 2 % restants sont des factures fausses envoyées à de vrais clients."
+      fin:
+        text: Deux ans plus tard, 90 % des fonctionnalités sont migrées. Que reste-t-il à faire ?
+        options:
+          - text: Fixer une date d'extinction de l'ancien système, migrer ou abandonner explicitement le reste, puis l'éteindre.
+            next: resolu
+            points: 3
+          - text: Garder les deux systèmes, le reste n'est pas prioritaire.
+            next: deux-systemes
+            points: 0
+      deux-systemes:
+        ending: partial
+        text: "🟡 Cinq ans plus tard, l'entreprise maintient toujours deux systèmes de facturation."
+      resolu:
+        ending: success
+        text: "✅ L'ancien système est éteint. Chaque étape a livré de la valeur et pouvait être annulée."
+    explanation: |
+      Strangler fig : une façade, des migrations par petits morceaux, l'exécution en parallèle
+      pour comparer avant de basculer, et une date d'extinction. Chaque étape est réversible.
+
+  - id: architecture.n5.conway.qcm
+    type: qcm
+    title: La loi de Conway
+    skills: [conway]
+    difficulty: 3
+    prompt: |
+      Une entreprise a une équipe « front-end », une équipe « back-end » et une équipe « base
+      de données ». Chaque nouvelle fonctionnalité demande trois semaines de coordination.
+      Que suggère la loi de Conway ?
+    choices:
+      - id: a
+        text: "L'architecture reproduit cette organisation en couches techniques ; des équipes pluridisciplinaires alignées sur des domaines métier produiraient des parties livrables indépendamment."
+        correct: true
+      - id: b
+        text: Ajouter une équipe d'architectes pour coordonner les trois autres.
+        feedback: "Une équipe de coordination ajoute une étape de communication, et l'architecture la reproduira."
+      - id: c
+        text: Fusionner les trois équipes en une seule équipe de 30 personnes.
+      - id: d
+        text: La loi de Conway ne concerne que les compilateurs.
+    explanation: |
+      Les systèmes copient la structure de communication de leur organisation. La manœuvre de
+      Conway inverse organise les équipes selon l'architecture voulue : une équipe par flux de
+      valeur, du front à la base.
+
+  - id: architecture.n5.topologies.match
+    type: match
+    title: Les types d'équipes
+    skills: [conway]
+    difficulty: 3
+    prompt: Relie chaque équipe à son type selon Team Topologies.
+    pairs:
+      - left: L'équipe qui livre le parcours de paiement, de l'écran à la base
+        right: Alignée sur un flux
+      - left: L'équipe qui fournit le déploiement et les bases de données en libre-service
+        right: Plateforme
+      - left: Deux experts qui accompagnent les équipes pendant six semaines pour adopter les tests de contrat
+        right: Facilitatrice
+      - left: L'équipe qui maintient le moteur de tarification à base de modèles mathématiques
+        right: Sous-système complexe
+    explanation: |
+      La plupart des équipes sont alignées sur un flux ; les autres existent pour réduire leur
+      charge cognitive (plateforme, facilitation) ou isoler une expertise rare.
+
+  - id: architecture.n5.strangler.qcm-parallele
+    type: qcm
+    title: Comparer avant de basculer
+    skills: [strangler-fig]
+    difficulty: 4
+    prompt: "Pendant une migration, à quoi sert l'exécution en parallèle (parallel run) ?"
+    choices:
+      - id: a
+        text: "À envoyer chaque requête aux deux systèmes, servir la réponse de l'ancien, et comparer pour trouver les écarts avant de basculer."
+        correct: true
+      - id: b
+        text: À faire tourner les deux systèmes pour doubler la capacité.
+      - id: c
+        text: À répartir la moitié du trafic sur chaque système.
+        feedback: "Ça, c'est un déploiement progressif ; ici, le nouveau système calcule sans que son résultat soit servi."
+      - id: d
+        text: À tester le nouveau système en environnement de recette.
+    explanation: |
+      Les vraies données de production révèlent les cas particuliers que personne n'avait
+      documentés. GitHub a popularisé la technique avec sa bibliothèque *Scientist*.

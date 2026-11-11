@@ -1,0 +1,145 @@
+exercises:
+  - id: system-design.n3.idempotence.scenario-double-debit
+    type: scenario
+    title: Débité deux fois
+    skills: [idempotence, messages]
+    difficulty: 4
+    prompt: |
+      Des clients sont débités deux fois pour la même commande. Le service de paiement
+      consomme des messages « commande validée » depuis une file, en mode « au moins une fois ».
+    start: debut
+    nodes:
+      debut:
+        text: Les journaux montrent que le même message a été traité deux fois, par deux instances différentes. Pourquoi ?
+        options:
+          - text: "La première instance a débité, puis a planté (ou dépassé son délai) avant d'acquitter : le message a été relivré."
+            next: correction
+            points: 3
+          - text: La file de messages a un bug.
+            next: file
+            points: 0
+            feedback: "C'est le comportement normal d'une livraison « au moins une fois »."
+      file:
+        text: "La documentation de la file précise : « un message non acquitté dans les 30 s est relivré ». Que comprends-tu ?"
+        options:
+          - text: Toute relivraison est normale ; c'est au consommateur de la supporter.
+            next: correction
+            points: 2
+      correction:
+        text: Comment corriges-tu ?
+        options:
+          - text: "J'utilise l'identifiant de la commande comme clé d'idempotence : le paiement est enregistré avec une contrainte d'unicité sur cette clé, et un doublon ne débite pas."
+            next: resolu
+            points: 3
+          - text: J'augmente le délai avant relivraison à 10 minutes.
+            next: delai
+            points: 0
+            feedback: "Ça rend le problème plus rare, pas impossible : une instance peut toujours planter juste après le débit."
+          - text: Je passe en « au plus une fois » (acquitter avant de traiter).
+            next: perte
+            points: 0
+      delai:
+        ending: failure
+        text: "❌ Les doubles débits sont plus rares… et un plantage bloque désormais un paiement pendant 10 minutes."
+      perte:
+        ending: failure
+        text: "❌ Plus de double débit, mais des commandes ne sont plus jamais payées quand une instance plante."
+      resolu:
+        ending: success
+        text: "✅ Le message peut être relivré autant de fois que nécessaire : le client n'est débité qu'une fois."
+    explanation: |
+      « Exactement une fois » s'obtient avec « au moins une fois » + un traitement idempotent.
+      Démonstration réelle : avec `on conflict (cle_idempotence) do nothing`, trois essais
+      donnent un seul débit ; sans clé, trois débits.
+
+  - id: system-design.n3.sharding.qcm-mod-n
+    type: qcm
+    title: Ajouter un serveur de cache
+    skills: [sharding]
+    difficulty: 4
+    prompt: |
+      Un cache réparti sur 10 serveurs choisit le serveur avec `hash(clé) % 10`. On ajoute un
+      onzième serveur. Environ quelle proportion des clés change de serveur ?
+    choices:
+      - id: a
+        text: Environ 91 %
+        correct: true
+      - id: b
+        text: Environ 9 %
+        feedback: "C'est ce qu'on obtient avec le hachage cohérent, pas avec un modulo."
+      - id: c
+        text: Environ 50 %
+      - id: d
+        text: Aucune, seules les nouvelles clés vont sur le nouveau serveur.
+    explanation: |
+      Simulation réelle sur 100 000 clés : 91,0 % déplacées avec le modulo, 9,5 % avec un
+      hachage cohérent (100 nœuds virtuels). Avec un modulo, ajouter un serveur de cache
+      revient presque à vider tout le cache, et la base reçoit d'un coup toute la charge.
+
+  - id: system-design.n3.cap.match
+    type: match
+    title: CP ou AP ?
+    skills: [cap]
+    difficulty: 3
+    prompt: Lors d'une coupure réseau entre deux datacenters, quel choix fait chaque système ?
+    pairs:
+      - left: La vente des dernières places d'un concert
+        right: CP (refuser plutôt que vendre deux fois la même place)
+      - left: Le compteur de « j'aime » d'une publication
+        right: AP (répondre avec une valeur peut-être ancienne)
+      - left: La configuration d'un cluster Kubernetes (etcd)
+        right: CP (une minorité isolée refuse les écritures)
+      - left: Le panier d'un site de commerce
+        right: AP (accepter les ajouts, fusionner après)
+    explanation: |
+      Le choix dépend du coût d'une erreur : vendre deux fois une place est pire qu'une
+      erreur temporaire ; un compteur de « j'aime » un peu faux ne gêne personne.
+
+  - id: system-design.n3.messages.qcm-ordre
+    type: qcm
+    title: L'ordre des événements
+    skills: [messages]
+    difficulty: 4
+    prompt: |
+      Les événements « commande créée », « commande payée », « commande expédiée » sont
+      publiés dans un topic Kafka de 12 partitions. Le consommateur voit parfois « expédiée »
+      avant « payée ». Que faire ?
+    choices:
+      - id: a
+        text: "Utiliser l'identifiant de la commande comme clé de partition : tous les événements d'une commande vont dans la même partition, où l'ordre est garanti."
+        correct: true
+      - id: b
+        text: Passer à une seule partition.
+        feedback: "L'ordre est garanti, mais on perd tout le parallélisme : un seul consommateur pour tout le topic."
+      - id: c
+        text: Ajouter un délai d'une seconde entre chaque publication.
+      - id: d
+        text: Kafka ne garantit aucun ordre, il faut trier côté consommateur.
+        feedback: "Kafka garantit l'ordre **au sein d'une partition**."
+    explanation: |
+      L'ordre n'existe qu'à l'intérieur d'une partition. On choisit une clé de partition qui
+      regroupe ce qui doit rester ordonné (une commande, un compte), et on garde le
+      parallélisme entre clés différentes.
+
+  - id: system-design.n3.cap.qcm-quorum
+    type: qcm
+    title: Régler les quorums
+    skills: [cap, sharding]
+    difficulty: 4
+    prompt: |
+      Une base sans leader garde N = 3 copies de chaque donnée. Quel réglage garantit qu'une
+      lecture voit toujours la dernière écriture confirmée ?
+    choices:
+      - id: a
+        text: "W = 2 et R = 2"
+        correct: true
+      - id: b
+        text: "W = 1 et R = 1"
+        feedback: "1 + 1 = 2, pas plus que 3 : la lecture peut tomber sur une copie qui n'a pas reçu l'écriture."
+      - id: c
+        text: "W = 1 et R = 2"
+      - id: d
+        text: "W = 3 et R = 0"
+    explanation: |
+      Si `R + W > N`, les répliques lues et écrites se chevauchent toujours d'au moins une.
+      W = 2, R = 2 tolère en plus la panne d'une réplique pour la lecture comme pour l'écriture.

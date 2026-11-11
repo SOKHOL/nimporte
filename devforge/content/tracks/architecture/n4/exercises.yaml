@@ -1,0 +1,210 @@
+exercises:
+  - id: architecture.n4.event-sourcing.predict-fold
+    type: predict-output
+    title: Reconstruire un compte
+    skills: [cqrs-event-sourcing]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      sealed interface Evenement
+      data class Ouvert(val titulaire: String) : Evenement
+      data class Depose(val montant: Int) : Evenement
+      data class Retire(val montant: Int) : Evenement
+
+      data class Compte(val titulaire: String = "", val solde: Int = 0, val operations: Int = 0)
+
+      fun appliquer(compte: Compte, e: Evenement): Compte = when (e) {
+          is Ouvert -> compte.copy(titulaire = e.titulaire)
+          is Depose -> compte.copy(solde = compte.solde + e.montant, operations = compte.operations + 1)
+          is Retire -> compte.copy(solde = compte.solde - e.montant, operations = compte.operations + 1)
+      }
+
+      fun main() {
+          val journal = listOf(Ouvert("Ada"), Depose(100), Retire(30), Depose(50))
+          println(journal.fold(Compte(), ::appliquer))
+          println(journal.take(2).fold(Compte(), ::appliquer).solde)
+      }
+    choices:
+      - id: a
+        text: "`Compte(titulaire=Ada, solde=120, operations=3)` / `100`"
+        correct: true
+      - id: b
+        text: "`Compte(titulaire=Ada, solde=120, operations=4)` / `100`"
+        feedback: "L'ouverture ne compte pas comme une opération dans `appliquer`."
+      - id: c
+        text: "`Compte(titulaire=Ada, solde=120, operations=3)` / `120`"
+        feedback: "`take(2)` ne rejoue que l'ouverture et le premier dépôt : c'est l'état à ce moment-là."
+      - id: d
+        text: "`Compte(titulaire=Ada, solde=180, operations=3)` / `100`"
+    explanation: |
+      En event sourcing, l'état est le résultat d'un `fold` sur les événements. Rejouer
+      seulement le début du journal donne l'état à n'importe quel moment passé. Sortie
+      vérifiée.
+
+  - id: architecture.n4.ddd.match-carte
+    type: match
+    title: La carte des contextes
+    skills: [ddd-strategique]
+    difficulty: 4
+    prompt: Relie chaque situation à la relation entre contextes qui convient.
+    pairs:
+      - left: Ton contexte doit lire un vieux système de facturation au modèle confus
+        right: Couche anticorruption
+      - left: Tu consommes l'API de paiement d'un grand fournisseur, sans pouvoir l'influencer
+        right: Conformiste
+      - left: L'équipe catalogue adapte son API aux besoins de l'équipe commande
+        right: Client / fournisseur
+      - left: Ton équipe expose une API stable et documentée pour une dizaine de consommateurs
+        right: Service hôte ouvert et langage publié
+    explanation: |
+      La carte des contextes rend explicites les rapports de force et les traductions. Face à
+      un modèle qu'on ne contrôle pas et qu'on ne veut pas voir contaminer le sien, la couche
+      anticorruption traduit à la frontière.
+
+  - id: architecture.n4.microservices.scenario-monolithe-distribue
+    type: scenario
+    title: Le monolithe distribué
+    skills: [monolithe-microservices, ddd-strategique]
+    difficulty: 5
+    prompt: |
+      Ton entreprise a découpé son application en 12 microservices il y a un an. Résultat :
+      chaque fonctionnalité demande de modifier 4 services, les déploiements se font
+      ensemble le jeudi soir, et une panne du service « utilisateurs » bloque tout le site.
+    start: debut
+    nodes:
+      debut:
+        text: Par quoi commences-tu ton diagnostic ?
+        options:
+          - text: Je regarde comment les services ont été découpés et qui appelle qui de façon synchrone.
+            next: decoupage
+            points: 3
+          - text: J'ajoute un service mesh pour fiabiliser les appels.
+            next: mesh
+            points: 0
+            feedback: "Un outil réseau ne corrige pas un mauvais découpage ; il ajoute un composant de plus."
+      mesh:
+        text: Les pannes sont un peu mieux gérées, mais les fonctionnalités touchent toujours 4 services. Que regardes-tu ?
+        options:
+          - text: Le découpage des services et leurs dépendances.
+            next: decoupage
+            points: 1
+      decoupage:
+        text: |
+          Les services s'appellent « utilisateurs », « base-commandes », « calculs », « API »,
+          « notifications »… Plusieurs lisent directement les mêmes tables. Le diagnostic ?
+        options:
+          - text: Découpage par couches techniques et base partagée, au lieu de contextes métier ; d'où le couplage.
+            next: plan
+            points: 3
+          - text: Il n'y a pas assez de services, il faut découper davantage.
+            next: pire
+            points: 0
+      pire:
+        ending: failure
+        text: "❌ 25 services, chaque fonctionnalité en touche 7, et le jeudi soir dure jusqu'à minuit."
+      plan:
+        text: Quelle stratégie proposes-tu ?
+        options:
+          - text: "Regrouper selon les contextes délimités (commande, catalogue, paiement…), donner à chacun ses propres données, remplacer les chaînes d'appels synchrones par des événements ; quitte à refusionner certains services en un monolithe modulaire."
+            next: resolu
+            points: 3
+          - text: Tout réécrire en un seul monolithe d'un coup.
+            next: big-bang
+            points: 1
+            feedback: Peut-être la bonne cible pour une partie, mais la réécriture d'un coup est le projet le plus risqué qui soit.
+      big-bang:
+        ending: partial
+        text: "🟡 Dix-huit mois plus tard, la réécriture n'est toujours pas en production, et l'ancien système a continué d'évoluer."
+      resolu:
+        ending: success
+        text: "✅ En six mois : 5 services alignés sur le métier, chacun avec sa base ; une fonctionnalité touche en général un seul service, déployé quand l'équipe le décide."
+    explanation: |
+      Le monolithe distribué combine les inconvénients des deux mondes. La cause habituelle :
+      un découpage technique et des données partagées. Les frontières doivent suivre les
+      contextes délimités, et chaque service posséder ses données.
+
+  - id: architecture.n4.cqrs.qcm-quand
+    type: qcm
+    title: CQRS ou pas ?
+    skills: [cqrs-event-sourcing]
+    difficulty: 3
+    prompt: Dans quel cas CQRS se justifie-t-il le plus ?
+    choices:
+      - id: a
+        text: "Une plateforme où les écritures portent des règles complexes et où les lectures (recherche, tableaux de bord) sont mille fois plus nombreuses et très différentes."
+        correct: true
+      - id: b
+        text: Un back-office qui modifie et affiche des fiches produits, une par une.
+        feedback: "Un seul modèle suffit : CQRS ajouterait un second modèle et un retard de lecture pour rien."
+      - id: c
+        text: Toute application qui utilise une base de données.
+      - id: d
+        text: Une application qui doit être lue juste après chaque écriture, sans aucun retard.
+        feedback: "C'est même un cas défavorable : le modèle de lecture est mis à jour de façon asynchrone."
+    explanation: |
+      CQRS paie quand lecture et écriture ont des besoins opposés. Son coût : deux modèles et
+      une cohérence éventuelle entre eux.
+
+  - id: architecture.n4.adr.trous
+    type: fill-blanks
+    title: Rédiger un ADR
+    skills: [adr]
+    difficulty: 2
+    language: text
+    prompt: Complète la structure de cet ADR.
+    code: |
+      # ADR 0007 : Publier les événements avec le pattern outbox
+
+      ## {{1}}
+      Accepté (2026-03-12)
+
+      ## {{2}}
+      Si la publication dans Kafka échoue après l'enregistrement, la facturation ne voit jamais la commande.
+
+      ## {{3}}
+      Écrire l'événement dans une table outbox, dans la même transaction que la commande.
+
+      ## {{4}}
+      Plus aucune commande perdue ; un événement peut être publié deux fois.
+    blanks:
+      "1":
+        answers: [Statut]
+        options: [Statut, Auteur, Priorité, Version]
+      "2":
+        answers: [Contexte]
+        options: [Contexte, Solution, Planning, Budget]
+      "3":
+        answers: [Décision]
+        options: [Décision, Contexte, Hypothèse, Résumé]
+      "4":
+        answers: [Conséquences]
+        options: [Conséquences, Avantages, Remerciements, Annexes]
+    explanation: |
+      Statut, contexte, décision, conséquences (positives **et** négatives). Un ADR accepté ne
+      se modifie plus : on en écrit un nouveau qui le remplace.
+
+  - id: architecture.n4.ddd.qcm-client
+    type: qcm
+    title: Le Client à 80 champs
+    skills: [ddd-strategique]
+    difficulty: 3
+    prompt: |
+      La classe `Client` contient 80 champs utilisés par les ventes, la comptabilité, le
+      support et la logistique. Chaque modification casse quelque chose chez une autre équipe.
+      Que propose le DDD stratégique ?
+    choices:
+      - id: a
+        text: "Un modèle de client propre à chaque contexte délimité (ventes, comptabilité, support), reliés par un identifiant commun."
+        correct: true
+      - id: b
+        text: Ajouter des commentaires pour indiquer quel champ sert à quelle équipe.
+      - id: c
+        text: Créer une classe Client encore plus générique, avec une Map de champs dynamiques.
+        feedback: Le modèle devient encore plus flou et le compilateur ne vérifie plus rien.
+      - id: d
+        text: Interdire les modifications de la classe Client.
+    explanation: |
+      Le même mot désigne des concepts différents selon le contexte. Chaque contexte garde son
+      modèle, réduit à ce dont il a besoin, et partage seulement un identifiant (et des
+      événements comme « client créé »).

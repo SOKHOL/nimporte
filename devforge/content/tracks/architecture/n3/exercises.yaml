@@ -86,3 +86,128 @@ exercises:
 
       Le domaine ne connaît plus ni Room ni Android : il se teste avec des fakes,
       en quelques millisecondes.
+
+  - id: architecture.n3.ddd.predict-montant
+    type: predict-output
+    title: Des montants qui se défendent
+    skills: [ddd-tactique]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      data class Montant(val centimes: Long, val devise: String) {
+          operator fun plus(autre: Montant): Montant {
+              require(devise == autre.devise) { "devises différentes : $devise et ${autre.devise}" }
+              return Montant(centimes + autre.centimes, devise)
+          }
+      }
+
+      fun main() {
+          println(Montant(1050, "EUR") + Montant(250, "EUR"))
+          println(Montant(100, "EUR") == Montant(100, "EUR"))
+          try {
+              Montant(100, "EUR") + Montant(100, "USD")
+          } catch (e: IllegalArgumentException) {
+              println(e.message)
+          }
+      }
+    choices:
+      - id: a
+        text: "`Montant(centimes=1300, devise=EUR)` / `true` / `devises différentes : EUR et USD`"
+        correct: true
+      - id: b
+        text: "`Montant(centimes=1300, devise=EUR)` / `false` / `devises différentes : EUR et USD`"
+        feedback: "Une data class compare les valeurs : deux montants identiques sont égaux, c'est ce qui en fait un objet-valeur."
+      - id: c
+        text: "`Montant(centimes=1300, devise=EUR)` / `true` / `Montant(centimes=200, devise=EUR)`"
+        feedback: "`require` refuse l'addition de devises différentes."
+      - id: d
+        text: "`1300` / `true` / `devises différentes : EUR et USD`"
+    explanation: |
+      Un objet-valeur est défini par ses valeurs (égalité structurelle), immuable, et il
+      protège ses règles : on ne peut pas additionner des euros et des dollars par accident,
+      ce qu'un `Long` nu n'empêcherait jamais. Sortie vérifiée.
+
+  - id: architecture.n3.ddd.bug-agregat
+    type: find-bug
+    title: L'invariant contourné
+    skills: [ddd-tactique]
+    difficulty: 3
+    language: kotlin
+    prompt: |
+      Une commande validée ne doit plus changer, et elle a au plus 50 lignes. Pourtant, on a
+      trouvé en base des commandes validées de 80 lignes. Touche la ligne qui le permet.
+    code: |
+      class Commande(val id: CommandeId) {
+          val lignes = mutableListOf<Ligne>()
+          var statut = Statut.BROUILLON
+              private set
+
+          fun ajouter(ligne: Ligne) {
+              check(statut == Statut.BROUILLON) { "commande déjà validée" }
+              require(lignes.size < 50) { "50 lignes maximum" }
+              lignes += ligne
+          }
+      }
+    bug_lines: [2]
+    hints:
+      - Faut-il forcément passer par `ajouter` pour ajouter une ligne ?
+    explanation: |
+      `lignes` est une liste **modifiable et publique** : n'importe quel code peut écrire
+      `commande.lignes.add(...)` et contourner les deux règles. La racine de l'agrégat doit
+      garder la liste privée et n'exposer qu'une vue en lecture seule (`private val _lignes`
+      + `val lignes: List<Ligne> get() = _lignes.toList()`).
+
+  - id: architecture.n3.ddd.match-briques
+    type: match
+    title: Les briques du DDD tactique
+    skills: [ddd-tactique]
+    difficulty: 2
+    prompt: Relie chaque élément du domaine d'une boutique à la brique DDD qui lui correspond.
+    pairs:
+      - left: Un montant de 12,50 €
+        right: Objet-valeur
+      - left: "Le client n°4821, même s'il change d'adresse"
+        right: Entité
+      - left: La commande et ses lignes, modifiées ensemble
+        right: Agrégat
+      - left: "« Commande validée », publié à la validation"
+        right: Événement du domaine
+      - left: "trouver(id) et enregistrer(commande)"
+        right: Dépôt (repository)
+    explanation: |
+      Objet-valeur : défini par sa valeur. Entité : définie par son identité. Agrégat : une
+      frontière de cohérence avec une racine. Événement : un fait passé. Dépôt : l'accès aux
+      agrégats, sous forme de port.
+
+  - id: architecture.n3.clean.qcm-regle
+    type: qcm
+    title: La règle de dépendance
+    skills: [clean-architecture]
+    difficulty: 3
+    language: kotlin
+    prompt: Cette entité vit dans le cercle le plus intérieur de la Clean Architecture. Qu'est-ce qui pose problème ?
+    code: |
+      @Entity
+      @Table(name = "comptes")
+      class Compte(
+          @Id val id: Long,
+          @Column(name = "solde") var solde: Long,
+      )
+    choices:
+      - id: a
+        text: "Les annotations JPA font dépendre le cœur du domaine d'un framework de persistance, situé dans le cercle le plus extérieur."
+        correct: true
+      - id: b
+        text: "`var solde` devrait être un `val`."
+        feedback: "Discutable, mais ce n'est pas la règle de dépendance."
+      - id: c
+        text: Il manque une interface `ICompte`.
+      - id: d
+        text: Rien, les annotations ne sont que des métadonnées.
+        feedback: "Le code source du domaine importe `jakarta.persistence` : il ne compile plus sans le framework."
+    explanation: |
+      La règle de dépendance interdit à un cercle intérieur de connaître un nom d'un cercle
+      extérieur. Solution stricte : une entité de persistance séparée dans l'adaptateur, et un
+      *mapping*. Compromis fréquent et assumé : tolérer les annotations JPA dans le domaine
+      quand le métier est simple ; l'important est de le décider en connaissance de cause.

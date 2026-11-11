@@ -14,6 +14,18 @@ levels:
         title: Environnements (dev, staging, prod)
       - id: twelve-factor
         title: Les 12 facteurs
+    boss:
+      id: devops.n1.boss
+      title: "Boss : le post-mortem"
+      exercises:
+        - devops.n1.culture.qcm-grosses-livraisons
+        - devops.n1.environnements.qcm-reconstruire
+        - devops.n1.twelve-factor.match
+        - devops.n1.culture.scenario-postmortem
+        - devops.n1.culture.match-dora
+        - devops.n1.twelve-factor.qcm-config
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 2
     title: Conteneurs
@@ -26,6 +38,18 @@ levels:
         title: Images sûres (non-root, secrets, taille)
       - id: compose
         title: Docker Compose
+    boss:
+      id: devops.n2.boss
+      title: "Boss : le conteneur qui ne s'arrête pas"
+      exercises:
+        - devops.n2.images.qcm-pid1
+        - devops.n2.securite.qcm-rm-secret
+        - devops.n2.compose.trous-healthcheck
+        - devops.n2.securite.bug-secret
+        - devops.n2.images.trous-multi-stage
+        - devops.n2.images.qcm-taille
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 3
     title: Intégration et déploiement continus
@@ -38,6 +62,18 @@ levels:
         title: Rolling, blue/green, canary
       - id: feature-flags
         title: Feature flags
+    boss:
+      id: devops.n3.boss
+      title: "Boss : le déploiement du vendredi"
+      exercises:
+        - devops.n3.cd.review-pipeline
+        - devops.n3.strategies.scenario-colonne
+        - devops.n3.feature-flags.qcm
+        - devops.n3.strategies.match
+        - devops.n3.ci.trous-workflow
+        - devops.n3.ci.qcm-flaky
+      pass_ratio: 0.8
+      time_limit_min: 13
 
   - level: 4
     title: Infrastructure et orchestration
@@ -52,6 +88,18 @@ levels:
         title: Diagnostiquer dans Kubernetes
       - id: helm
         title: Helm
+    boss:
+      id: devops.n4.boss
+      title: "Boss : l'astreinte de 3 h"
+      exercises:
+        - devops.n4.terraform.qcm-plan
+        - devops.n4.ansible.qcm-idempotence
+        - devops.n4.incident-crashloop
+        - devops.n4.helm.qcm-rollback
+        - devops.n4.kubernetes.match-statuts
+        - devops.n4.kubernetes.trous-ressources
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 5
     title: Plateformes
@@ -62,3 +110,15 @@ levels:
         title: Platform engineering
       - id: supply-chain
         title: Sécurité de la chaîne logicielle (SBOM, signature)
+    boss:
+      id: devops.n5.boss
+      title: "Boss : la chaîne compromise"
+      exercises:
+        - devops.n5.gitops.scenario-derive
+        - devops.n5.platform.qcm-golden-path
+        - devops.n5.supply-chain.match
+        - devops.n5.supply-chain.review
+        - devops.n5.gitops.qcm-pull
+        - devops.n5.supply-chain.qcm-digest
+      pass_ratio: 0.8
+      time_limit_min: 13

@@ -113,3 +113,171 @@ exercises:
       2. **Chercher ce qui a changé** : un incident suit très souvent un déploiement.
       3. **Rétablir d'abord** (rollback), **corriger ensuite** (dans Git, avec revue et CI).
       4. **Apprendre** : un post-mortem sans blâme et des actions pour que ça ne se reproduise pas.
+
+  - id: devops.n4.terraform.qcm-plan
+    type: qcm
+    title: Lire un plan Terraform
+    skills: [terraform]
+    difficulty: 3
+    language: text
+    prompt: Que va faire Terraform si l'on applique ce plan ?
+    code: |
+      # terraform_data.serveur_api will be updated in-place
+      ~ resource "terraform_data" "serveur_api" {
+          ~ input  = {
+              ~ replicas = 2 -> "4"
+      Plan: 0 to add, 1 to change, 0 to destroy.
+    choices:
+      - id: a
+        text: "Modifier la ressource existante sur place (le ~), sans la détruire."
+        correct: true
+      - id: b
+        text: Détruire la ressource puis la recréer.
+        feedback: "Ce serait signalé par `-/+` et « must be replaced »."
+      - id: c
+        text: Créer une seconde ressource.
+        feedback: "Ce serait un `+` et « 1 to add »."
+      - id: d
+        text: Rien, le plan est seulement informatif.
+    explanation: |
+      Sortie réelle de Terraform 1.9.8 après `terraform plan -var replicas=4`. Le symbole
+      compte : un `-/+` sur une base de données signifie une base recréée, donc vide.
+
+  - id: devops.n4.terraform.qcm-etat
+    type: qcm
+    title: L'état Terraform en équipe
+    skills: [terraform]
+    difficulty: 3
+    prompt: "Pourquoi stocker l'état Terraform à distance, avec un verrou, plutôt que dans le dépôt Git ou sur un poste ?"
+    choices:
+      - id: a
+        text: "Pour que toute l'équipe et la CI partagent le même état, que deux apply simultanés ne le corrompent pas, et parce qu'il contient souvent des secrets."
+        correct: true
+      - id: b
+        text: Parce que Terraform ne sait pas lire un fichier local.
+      - id: c
+        text: Pour que le plan soit plus rapide.
+      - id: d
+        text: Ce n'est utile qu'avec plus de 100 ressources.
+    explanation: |
+      L'état fait le lien entre le code et les ressources réelles. Partagé, verrouillé
+      pendant chaque opération, chiffré et à accès restreint.
+
+  - id: devops.n4.kubernetes.match-statuts
+    type: match
+    title: Lire l'état d'un pod
+    skills: [kubernetes-debug]
+    difficulty: 3
+    prompt: Relie chaque statut de pod à sa cause la plus probable.
+    pairs:
+      - left: Pending
+        right: Aucun nœud n'a assez de ressources pour ses requests
+      - left: ImagePullBackOff
+        right: Tag d'image inexistant ou registre privé sans identifiants
+      - left: CrashLoopBackOff
+        right: Le conteneur plante au démarrage, en boucle
+      - left: OOMKilled
+        right: Limite mémoire du conteneur dépassée
+      - left: "Running, mais 0/1 READY"
+        right: La readiness probe échoue
+    explanation: |
+      `kubectl describe pod` (section Events) et `kubectl logs --previous` donnent presque
+      toujours la cause précise.
+
+  - id: devops.n4.kubernetes.qcm-liveness
+    type: qcm
+    title: La sonde qui redémarre tout
+    skills: [kubernetes]
+    difficulty: 4
+    prompt: |
+      La liveness probe de l'API appelle `/sante`, qui vérifie aussi la connexion à la base.
+      La base est lente pendant 2 minutes. Que se passe-t-il ?
+    choices:
+      - id: a
+        text: "Kubernetes redémarre tous les pods de l'API en boucle, alors qu'ils n'avaient rien : la panne de la base devient une panne de l'API."
+        correct: true
+      - id: b
+        text: Kubernetes retire simplement les pods du Service.
+        feedback: "C'est l'effet d'une readiness probe, pas d'une liveness."
+      - id: c
+        text: Kubernetes redémarre la base.
+      - id: d
+        text: Rien, les sondes ne regardent que le processus.
+    explanation: |
+      La liveness doit seulement vérifier que le processus n'est pas bloqué. Les dépendances
+      se reflètent, au plus, dans la readiness (et même là, avec prudence).
+
+  - id: devops.n4.kubernetes.trous-ressources
+    type: fill-blanks
+    title: Requests et limits
+    skills: [kubernetes]
+    difficulty: 3
+    language: yaml
+    prompt: |
+      Complète la configuration : l'ordonnanceur doit réserver 250 millicœurs et 512 Mio pour
+      placer le pod, et le conteneur ne doit jamais dépasser 768 Mio.
+    code: |
+      resources:
+        {{1}}:
+          cpu: 250m
+          memory: 512Mi
+        {{2}}:
+          memory: 768Mi
+    blanks:
+      "1":
+        answers: [requests]
+        options: [requests, limits, reserved, minimum]
+      "2":
+        answers: [limits]
+        options: [limits, requests, maximum, quota]
+    explanation: |
+      `requests` sert au placement ; `limits` est un plafond. Au-delà de la limite mémoire,
+      le conteneur est tué (OOMKilled) ; au-delà de la limite CPU, il est bridé.
+
+  - id: devops.n4.ansible.qcm-idempotence
+    type: qcm
+    title: Lancer deux fois
+    skills: [ansible]
+    difficulty: 2
+    language: yaml
+    prompt: On lance ce playbook une deuxième fois, sur un serveur où nginx est déjà installé. Que fait la tâche ?
+    code: |
+      - name: Installer nginx
+        ansible.builtin.apt:
+          name: nginx
+          state: present
+    choices:
+      - id: a
+        text: "Rien : l'état voulu (présent) est déjà atteint, Ansible affiche « ok » et pas « changed »."
+        correct: true
+      - id: b
+        text: Elle réinstalle nginx.
+      - id: c
+        text: Elle échoue, car nginx est déjà là.
+      - id: d
+        text: Elle met nginx à jour vers la dernière version.
+        feedback: "Ce serait `state: latest`."
+    explanation: |
+      On décrit un état, pas une action : c'est l'idempotence. Un module `shell` avec une
+      commande brute n'a pas cette propriété.
+
+  - id: devops.n4.helm.qcm-rollback
+    type: qcm
+    title: Revenir en arrière avec Helm
+    skills: [helm]
+    difficulty: 2
+    prompt: "La révision 42 de la release `api` provoque des erreurs. La révision 41 fonctionnait. Quelle commande ?"
+    choices:
+      - id: a
+        text: "helm rollback api 41"
+        correct: true
+      - id: b
+        text: "helm delete api"
+        feedback: "Ça supprime toute la release : coupure totale."
+      - id: c
+        text: "helm install api --version 41"
+      - id: d
+        text: "kubectl delete pods --all"
+    explanation: |
+      Chaque `helm upgrade` crée une révision ; `helm history api` les liste, `helm rollback`
+      revient à l'une d'elles. Rétablir d'abord, comprendre ensuite.

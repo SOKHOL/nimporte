@@ -73,3 +73,207 @@ exercises:
       Il n'y a pas une seule bonne réponse en system design : ce qui compte, c'est
       de **partir des chiffres**, d'identifier le chemin critique (ici la redirection,
       qui représente 99 % du trafic) et de **justifier chaque compromis**.
+
+  - id: system-design.n4.news-feed.design
+    type: design-challenge
+    title: Concevoir un fil d'actualité
+    skills: [news-feed]
+    difficulty: 5
+    xp: 150
+    prompt: |
+      Conçois le fil d'actualité d'un réseau social : chaque utilisateur voit les publications
+      récentes des comptes qu'il suit.
+
+      Prends 30 minutes : fais un schéma, puis compare ta réponse à la grille et à la
+      solution de référence.
+    requirements:
+      - Publier un message court (texte, avec un lien éventuel vers un média).
+      - Afficher le fil, du plus récent au plus ancien, avec pagination.
+      - Suivre et ne plus suivre un compte.
+    constraints:
+      - 200 millions d'utilisateurs actifs par jour.
+      - Chacun publie 1 message par jour en moyenne et ouvre son fil 10 fois.
+      - Un utilisateur suit 200 comptes en moyenne ; certains comptes ont 50 millions d'abonnés.
+      - Fil affiché en moins de 300 ms (p99).
+      - Un nouveau message peut apparaître avec quelques secondes de retard.
+    rubric:
+      - criterion: "Estimations : ~2 300 publications/s (pic ~7 000), ~23 000 ouvertures de fil/s (pic ~70 000) ; un système de lecture."
+        points: 2
+        hint: 200 millions par jour ÷ 86 400 s.
+      - criterion: "Fan-out à l'écriture : fils précalculés (listes d'identifiants dans Redis) pour une lecture rapide."
+        points: 2
+      - criterion: "Cas des célébrités : pas de fan-out pour les comptes géants, fusion de leurs publications au moment de la lecture (hybride)."
+        points: 2
+        hint: Combien d'écritures déclenche une publication d'un compte à 50 millions d'abonnés ?
+      - criterion: "Le fan-out est asynchrone (file de messages et workers), la publication répond tout de suite."
+        points: 1
+      - criterion: "Les fils ne contiennent que des identifiants ; les publications sont lues à part, depuis un cache."
+        points: 1
+      - criterion: "Fils limités (quelques centaines d'entrées), pas de précalcul pour les utilisateurs inactifs."
+        points: 1
+      - criterion: "Pagination par curseur (identifiant du dernier élément vu), pas par numéro de page."
+        points: 1
+    reference_solution: |
+      **Estimations.** 2 × 10⁸ publications/jour ÷ 10⁵ s ≈ **2 000/s** (pic ×3 ≈ 7 000/s).
+      Ouvertures de fil : 10 fois plus, ≈ **23 000/s** (pic ≈ 70 000/s). En fan-out à
+      l'écriture, chaque publication est copiée chez ~200 abonnés en moyenne : ~460 000
+      insertions/s dans les fils, d'où des workers et Redis partitionné.
+
+      **Publication.** L'API enregistre la publication (base partitionnée par auteur), la
+      met en cache, publie un événement et répond. Des workers de fan-out lisent la liste des
+      abonnés et ajoutent l'identifiant en tête de chaque fil (`LPUSH` + `LTRIM` à 800).
+
+      **Célébrités.** Au-delà d'un seuil (par exemple 100 000 abonnés), pas de fan-out : à la
+      lecture, on récupère les dernières publications des célébrités suivies (quelques
+      dizaines de comptes au plus) et on les fusionne avec le fil précalculé.
+
+      **Lecture.** Fil précalculé (identifiants) + publications des célébrités → hydratation
+      des publications depuis le cache (lecture groupée) → classement → réponse avec un
+      curseur.
+
+      **Compromis.** Le fan-out à l'écriture coûte cher en stockage et en écritures, mais
+      rend la lecture (10 fois plus fréquente) quasi instantanée. Le retard de quelques
+      secondes est accepté par les contraintes.
+    explanation: |
+      Le point clé est l'asymétrie : la plupart des comptes ont peu d'abonnés, quelques-uns
+      en ont des millions. Une seule stratégie ne convient pas aux deux.
+
+  - id: system-design.n4.rate-limiter.qcm-seau
+    type: qcm
+    title: Le seau à jetons
+    skills: [rate-limiter]
+    difficulty: 4
+    prompt: |
+      Un seau à jetons a une capacité de 10 et se remplit de 5 jetons par seconde ; il est
+      plein au départ. Un client envoie 30 requêtes d'un coup à t = 0, puis une requête
+      toutes les 100 ms pendant 2 secondes (20 requêtes). Combien sont acceptées au total ?
+    choices:
+      - id: a
+        text: "20 (10 de la rafale, puis environ 10 sur les 20 suivantes)"
+        correct: true
+      - id: b
+        text: "10"
+        feedback: "Le seau se remplit à nouveau à 5 jetons/s pendant les 2 secondes suivantes."
+      - id: c
+        text: "30"
+      - id: d
+        text: "50, la capacité ne limite que le débit moyen"
+    explanation: |
+      Simulation réelle : 20 acceptées, 30 refusées. La rafale vide les 10 jetons ; ensuite,
+      10 requêtes/s arrivent pour 5 jetons/s de remplissage, donc environ une sur deux passe.
+      Le seau à jetons autorise des rafales jusqu'à sa capacité, puis impose le débit moyen.
+
+  - id: system-design.n4.rate-limiter.qcm-fenetre-fixe
+    type: qcm
+    title: Le défaut de la fenêtre fixe
+    skills: [rate-limiter]
+    difficulty: 3
+    prompt: |
+      Un limiteur à fenêtre fixe autorise 100 requêtes par minute (un compteur par minute
+      civile). Combien de requêtes un client peut-il faire passer en 2 secondes ?
+    choices:
+      - id: a
+        text: "200 : 100 à la 59e seconde d'une minute, 100 à la première seconde de la suivante."
+        correct: true
+      - id: b
+        text: "100"
+      - id: c
+        text: "3"
+        feedback: "La limite est par minute, pas par seconde."
+      - id: d
+        text: "Aucune, la fenêtre fixe lisse le trafic."
+    explanation: |
+      À la frontière entre deux fenêtres, deux compteurs neufs se succèdent. La fenêtre
+      glissante ou le seau à jetons évitent ce double débit. (Démonstration Redis réelle de
+      la fenêtre fixe : avec une limite de 5, la 6e requête reçoit `429`.)
+
+  - id: system-design.n4.chat.scenario-doublons
+    type: scenario
+    title: Les messages en double
+    skills: [chat]
+    difficulty: 4
+    prompt: |
+      Dans ta messagerie, des utilisateurs dans le métro voient leurs messages apparaître deux
+      ou trois fois chez le destinataire.
+    start: debut
+    nodes:
+      debut:
+        text: Que se passe-t-il, probablement ?
+        options:
+          - text: "La connexion coupe après que le serveur a enregistré le message mais avant que le client reçoive la confirmation ; le client le renvoie."
+            next: correction
+            points: 3
+          - text: Le serveur de connexions envoie chaque message deux fois.
+            next: serveur
+            points: 1
+      serveur:
+        text: Les journaux du serveur montrent deux requêtes d'envoi distinctes, à 4 secondes d'écart, avec le même texte. Que comprends-tu ?
+        options:
+          - text: Le client a réessayé après une coupure, sans que le serveur puisse reconnaître le doublon.
+            next: correction
+            points: 2
+      correction:
+        text: Comment corriges-tu ?
+        options:
+          - text: "Le client génère un identifiant unique pour chaque message ; le serveur ignore un identifiant déjà enregistré dans la conversation."
+            next: resolu
+            points: 3
+          - text: Le client ne réessaie plus jamais.
+            next: perdus
+            points: 0
+          - text: Le serveur ignore les messages au texte identique reçus à moins de 10 secondes d'écart.
+            next: heuristique
+            points: 0
+            feedback: "Et l'utilisateur qui envoie « ok » deux fois exprès ?"
+      perdus:
+        ending: failure
+        text: "❌ Plus de doublons, mais des messages perdus à chaque coupure réseau."
+      heuristique:
+        ending: partial
+        text: "🟡 La plupart des doublons disparaissent, et quelques messages légitimes aussi."
+      resolu:
+        ending: success
+        text: "✅ Le client peut réessayer sans risque : chaque message est enregistré exactement une fois."
+    explanation: |
+      Sur un réseau mobile, les réessais sont inévitables. L'identifiant généré par le client
+      rend l'envoi idempotent ; c'est la même technique que la clé d'idempotence des paiements.
+
+  - id: system-design.n4.notifications.match
+    type: match
+    title: Fiabiliser les notifications
+    skills: [notifications]
+    difficulty: 3
+    prompt: Relie chaque problème du système de notifications à sa solution.
+    pairs:
+      - left: Le fournisseur de SMS est en panne et bloque aussi les e-mails
+        right: Une file et des workers par canal
+      - left: L'événement « colis expédié » arrive deux fois
+        right: Une clé de déduplication par notification
+      - left: L'API du fournisseur push renvoie une erreur temporaire
+        right: Réessais avec délai croissant, puis file des messages morts
+      - left: Un utilisateur reçoit des notifications à 3 h du matin
+        right: Préférences et heures de silence par utilisateur
+    explanation: |
+      Un système de notifications parle à des fournisseurs externes peu fiables : isolation
+      par canal, réessais, déduplication et respect des préférences.
+
+  - id: system-design.n4.url-shortener.qcm-302
+    type: qcm
+    title: 301 ou 302 ?
+    skills: [url-shortener]
+    difficulty: 3
+    prompt: Pourquoi un raccourcisseur qui affiche des statistiques de clics redirige-t-il avec un code 302 plutôt que 301 ?
+    choices:
+      - id: a
+        text: "Un 301 (permanent) est mis en cache par le navigateur, qui ne repasse plus par le service : les clics suivants ne seraient plus comptés."
+        correct: true
+      - id: b
+        text: Le code 301 n'est pas supporté par tous les navigateurs.
+      - id: c
+        text: Le 302 est plus rapide.
+        feedback: "C'est l'inverse : un 301 en cache évite même l'aller-retour vers le service."
+      - id: d
+        text: Le 301 est réservé au HTTPS.
+    explanation: |
+      Un compromis typique : le 301 réduit la charge et la latence, le 302 garde la maîtrise
+      (statistiques, possibilité de changer la cible ou de désactiver un lien malveillant).

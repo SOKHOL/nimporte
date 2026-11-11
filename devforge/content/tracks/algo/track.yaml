@@ -14,6 +14,17 @@ levels:
         title: Les tris simples
       - id: analyse-complexite
         title: Analyser la complexité d'un algorithme
+    boss:
+      id: algo.n1.boss
+      title: "Boss : la recherche dichotomique"
+      exercises:
+        - algo.n1.recherche.qcm-debordement
+        - algo.n1.tris.match
+        - algo.n1.recherche.qcm-etapes
+        - algo.n1.recherche.bug-borne
+        - algo.n1.tris.qcm-stable
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 2
     title: Les structures de base
@@ -26,6 +37,17 @@ levels:
         title: Listes chaînées
       - id: deux-pointeurs
         title: Deux pointeurs et fenêtre glissante
+    boss:
+      id: algo.n2.boss
+      title: "Boss : la pile infernale"
+      exercises:
+        - algo.n2.piles.predict-parentheses
+        - algo.n2.structures.match
+        - algo.n2.fenetre.predict-semaine
+        - algo.n2.hachage.qcm-doublons
+        - algo.n2.hachage.predict-deux-somme
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 3
     title: Arbres et récursion
@@ -38,6 +60,18 @@ levels:
         title: Backtracking
       - id: tris-efficaces
         title: Tri fusion et tri rapide
+    boss:
+      id: algo.n3.boss
+      title: "Boss : la forêt des arbres"
+      exercises:
+        - algo.n3.arbres.qcm-degenere
+        - algo.n3.tas.predict-priorite
+        - algo.n3.backtracking.qcm-permutations
+        - algo.n3.tris.match
+        - algo.n3.tris.qcm-pire-cas
+        - algo.n3.arbres.qcm-infixe
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 4
     title: Graphes et programmation dynamique
@@ -52,6 +86,18 @@ levels:
         title: Programmation dynamique
       - id: glouton
         title: Algorithmes gloutons
+    boss:
+      id: algo.n4.boss
+      title: "Boss : le labyrinthe des graphes"
+      exercises:
+        - algo.n4.graphes.predict-bfs
+        - algo.n4.dijkstra.qcm-distances
+        - algo.n4.graphes.match
+        - algo.n4.dp.qcm-fibonacci
+        - algo.n4.glouton.qcm-monnaie
+        - algo.n4.topologique.qcm-ordre
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 5
     title: Structures avancées
@@ -64,3 +110,14 @@ levels:
         title: Union-find
       - id: analyse-amortie
         title: Analyse amortie
+    boss:
+      id: algo.n5.boss
+      title: "Boss : les structures légendaires"
+      exercises:
+        - algo.n5.trie.predict-prefixes
+        - algo.n5.probabilistes.qcm-bloom
+        - algo.n5.structures.match
+        - algo.n5.amortie.qcm-arraylist
+        - algo.n5.union-find.qcm
+      pass_ratio: 0.8
+      time_limit_min: 9

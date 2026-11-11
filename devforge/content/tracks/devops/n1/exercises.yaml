@@ -1,0 +1,169 @@
+exercises:
+  - id: devops.n1.culture.match-dora
+    type: match
+    title: Les quatre métriques DORA
+    skills: [culture]
+    difficulty: 2
+    prompt: Relie chaque métrique DORA à la question qu'elle mesure.
+    pairs:
+      - left: Fréquence de déploiement
+        right: À quelle fréquence livre-t-on en production ?
+      - left: Délai de livraison
+        right: Combien de temps entre un commit et sa mise en production ?
+      - left: Taux d'échec des changements
+        right: Quelle part des déploiements provoque un incident ?
+      - left: Temps de rétablissement
+        right: Combien de temps pour réparer après un incident ?
+    explanation: |
+      Deux métriques de vitesse, deux de stabilité. Les études DORA montrent que les équipes
+      les plus rapides sont aussi les plus stables : de petits changements fréquents sont
+      faciles à vérifier et à annuler.
+
+  - id: devops.n1.culture.qcm-grosses-livraisons
+    type: qcm
+    title: Livrer moins souvent pour être plus sûr ?
+    skills: [culture]
+    difficulty: 3
+    prompt: |
+      Après un incident, la direction propose de passer d'une livraison par semaine à une
+      livraison par mois, avec une semaine de tests manuels. Qu'en disent les études DORA ?
+    choices:
+      - id: a
+        text: "C'est contre-productif : des lots plus gros sont plus risqués et plus difficiles à diagnostiquer ; il vaut mieux livrer plus petit et plus souvent, avec plus d'automatisation."
+        correct: true
+      - id: b
+        text: "C'est la bonne réaction : moins de livraisons, moins d'incidents."
+        feedback: "Chaque livraison contient alors quatre fois plus de changements, et un incident est quatre fois plus long à attribuer."
+      - id: c
+        text: Il faut arrêter de livrer jusqu'à la fin de l'enquête.
+      - id: d
+        text: Les métriques DORA ne s'appliquent qu'aux startups.
+    explanation: |
+      Vitesse et stabilité ne s'opposent pas. Ce qui réduit le risque : de petits changements,
+      des tests automatisés, un déploiement progressif et un retour arrière rapide.
+
+  - id: devops.n1.twelve-factor.qcm-config
+    type: qcm
+    title: Où mettre la configuration ?
+    skills: [twelve-factor, environnements]
+    difficulty: 2
+    language: kotlin
+    prompt: Selon les 12 facteurs, que faut-il changer dans ce code ?
+    code: |
+      object Config {
+          val urlBase = if (System.getProperty("prod") != null)
+              "jdbc:postgresql://db-prod:5432/app?password=Pr0d!"
+          else
+              "jdbc:postgresql://localhost:5432/app"
+      }
+    choices:
+      - id: a
+        text: "Lire l'URL dans une variable d'environnement (DATABASE_URL), fournie par chaque environnement, avec le mot de passe dans un gestionnaire de secrets."
+        correct: true
+      - id: b
+        text: Ajouter une branche pour l'environnement de préproduction.
+        feedback: "Chaque nouvel environnement demanderait un changement de code, et le mot de passe resterait dans le dépôt."
+      - id: c
+        text: Chiffrer le mot de passe dans le code.
+      - id: d
+        text: Rien, c'est une configuration standard.
+    explanation: |
+      Facteur 3 : la configuration vit dans l'environnement. Le même artefact tourne alors
+      partout, et le dépôt pourrait être publié sans exposer de secret.
+
+  - id: devops.n1.environnements.qcm-reconstruire
+    type: qcm
+    title: Reconstruire pour la production
+    skills: [environnements]
+    difficulty: 3
+    prompt: |
+      Le pipeline construit l'image Docker, la teste en préproduction, puis la **reconstruit**
+      à partir du même commit pour la production. Quel est le problème ?
+    choices:
+      - id: a
+        text: "L'image de production n'est pas celle qui a été testée : une dépendance ou une image de base a pu changer entre les deux builds."
+        correct: true
+      - id: b
+        text: Aucun, c'est le même commit.
+        feedback: "Le même commit peut produire un artefact différent si une dépendance non figée ou l'image de base `latest` a changé."
+      - id: c
+        text: Le build est un peu plus long.
+      - id: d
+        text: La production n'a pas besoin d'image.
+    explanation: |
+      On construit **une fois**, puis on promeut le même artefact (identifié par son
+      empreinte, son *digest*) d'environnement en environnement. Seule la configuration change.
+
+  - id: devops.n1.twelve-factor.match
+    type: match
+    title: Les 12 facteurs en pratique
+    skills: [twelve-factor]
+    difficulty: 3
+    prompt: Relie chaque pratique au facteur qu'elle applique.
+    pairs:
+      - left: L'application écrit ses journaux sur la sortie standard
+        right: Journaux comme un flux
+      - left: Les sessions sont stockées dans Redis, pas en mémoire
+        right: Processus sans état
+      - left: L'application s'arrête proprement à la réception de SIGTERM
+        right: Jetable (démarrage rapide, arrêt propre)
+      - left: La migration de base est lancée comme un processus ponctuel avec le même code
+        right: Tâches d'administration
+      - left: Passer de PostgreSQL local à un service géré ne demande que de changer une URL
+        right: Services externes comme ressources attachées
+    explanation: |
+      Ces règles décrivent exactement ce que Kubernetes attend d'une application : image
+      immuable, configuration externe, aucun état local, arrêt propre.
+
+  - id: devops.n1.culture.scenario-postmortem
+    type: scenario
+    title: Le post-mortem
+    skills: [culture]
+    difficulty: 3
+    prompt: |
+      Une erreur dans un fichier de configuration a coupé le paiement pendant 40 minutes. Un
+      développeur a modifié le fichier directement sur le serveur de production. Tu animes
+      le post-mortem.
+    start: debut
+    nodes:
+      debut:
+        text: Comment lances-tu la réunion ?
+        options:
+          - text: "On reconstitue la chronologie sans chercher de coupable : qu'est-ce qui, dans le système, a rendu cette erreur possible et si longue à détecter ?"
+            next: causes
+            points: 3
+          - text: On identifie la personne responsable et on lui retire l'accès à la production.
+            next: coupable
+            points: 0
+      coupable:
+        ending: failure
+        text: "❌ La prochaine erreur sera cachée le plus longtemps possible, et la vraie cause n'est pas traitée."
+      causes:
+        text: Qu'est-ce qui ressort de l'analyse ?
+        options:
+          - text: "La configuration n'est pas versionnée ni validée, n'importe qui peut la modifier en production, et aucune alerte n'a détecté la chute des paiements."
+            next: actions
+            points: 3
+          - text: Le développeur était fatigué.
+            next: actions
+            points: 1
+            feedback: "Possible, mais un système sûr ne dépend pas de l'état de forme de chacun."
+      actions:
+        text: Quelles actions retiens-tu ?
+        options:
+          - text: "Configuration versionnée et déployée par le pipeline avec validation, accès direct en production retiré à tous, alerte sur le taux de paiements réussis."
+            next: resolu
+            points: 3
+          - text: Un rappel par e-mail à tout le monde de faire attention.
+            next: rappel
+            points: 0
+      rappel:
+        ending: partial
+        text: "🟡 Tout le monde fait attention… pendant deux semaines."
+      resolu:
+        ending: success
+        text: "✅ La même erreur est désormais impossible ou détectée en une minute."
+    explanation: |
+      Un post-mortem sans reproche cherche les causes dans le système (processus, outils,
+      alertes), parce que des humains feront toujours des erreurs. Les actions doivent rendre
+      l'erreur impossible ou visible, pas seulement « faire attention ».

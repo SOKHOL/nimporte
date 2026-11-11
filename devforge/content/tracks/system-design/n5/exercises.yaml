@@ -1,0 +1,223 @@
+exercises:
+  - id: system-design.n5.horloges.predict-lamport
+    type: predict-output
+    title: Les horloges de Lamport
+    skills: [horloges]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Processus(val nom: String) {
+          var horloge = 0
+          fun evenementLocal(): Int { horloge += 1; return horloge }
+          fun envoyer(): Int { horloge += 1; return horloge }
+          fun recevoir(estampille: Int): Int { horloge = maxOf(horloge, estampille) + 1; return horloge }
+      }
+
+      fun main() {
+          val a = Processus("A")
+          val b = Processus("B")
+          a.evenementLocal()
+          a.evenementLocal()
+          val m = a.envoyer()
+          b.evenementLocal()
+          val reception = b.recevoir(m)
+          println("A envoie avec $m, B reçoit à $reception")
+          println("A=${a.horloge} B=${b.horloge}")
+      }
+    choices:
+      - id: a
+        text: "`A envoie avec 3, B reçoit à 4` / `A=3 B=4`"
+        correct: true
+      - id: b
+        text: "`A envoie avec 3, B reçoit à 2` / `A=3 B=2`"
+        feedback: "À la réception, B prend le maximum de son horloge et de l'estampille, puis ajoute 1."
+      - id: c
+        text: "`A envoie avec 3, B reçoit à 3` / `A=3 B=3`"
+      - id: d
+        text: "`A envoie avec 2, B reçoit à 3` / `A=2 B=3`"
+        feedback: "L'envoi est aussi un événement : il incrémente l'horloge de A."
+    explanation: |
+      B avait 1 ; il reçoit 3 ; `max(1, 3) + 1 = 4`. Ainsi, la réception a toujours une
+      estampille plus grande que l'envoi qui l'a causée. Sortie vérifiée.
+
+  - id: system-design.n5.sagas.predict-compensations
+    type: predict-output
+    title: La saga qui échoue
+    skills: [sagas]
+    difficulty: 3
+    language: kotlin
+    prompt: Qu'affiche ce programme ?
+    code: |
+      class Etape(val nom: String, val action: () -> Unit, val compensation: () -> Unit)
+
+      fun executerSaga(etapes: List<Etape>) {
+          val faites = ArrayDeque<Etape>()
+          try {
+              for (e in etapes) {
+                  e.action()
+                  println("ok : ${e.nom}")
+                  faites.addFirst(e)
+              }
+          } catch (ex: Exception) {
+              println("échec : ${ex.message}")
+              for (e in faites) e.compensation()
+          }
+      }
+
+      fun main() {
+          executerSaga(listOf(
+              Etape("réserver le stock", {}, { println("annuler : réserver le stock") }),
+              Etape("débiter le client", {}, { println("annuler : débiter le client") }),
+              Etape("réserver le transporteur", { error("aucun transporteur disponible") }, { println("annuler : réserver le transporteur") }),
+          ))
+      }
+    choices:
+      - id: a
+        text: "`ok : réserver le stock` / `ok : débiter le client` / `échec : aucun transporteur disponible` / `annuler : débiter le client` / `annuler : réserver le stock`"
+        correct: true
+      - id: b
+        text: "`ok : réserver le stock` / `ok : débiter le client` / `échec : aucun transporteur disponible` / `annuler : réserver le stock` / `annuler : débiter le client`"
+        feedback: "`addFirst` place la dernière étape réussie en tête : les compensations partent de la plus récente."
+      - id: c
+        text: "`ok : réserver le stock` / `ok : débiter le client` / `échec : aucun transporteur disponible` / `annuler : réserver le transporteur` / `annuler : débiter le client` / `annuler : réserver le stock`"
+        feedback: "L'étape qui a échoué n'a rien fait : il n'y a rien à compenser pour elle."
+      - id: d
+        text: "`ok : réserver le stock` / `ok : débiter le client` / `échec : aucun transporteur disponible`"
+    explanation: |
+      On ne compense que les étapes réussies, de la plus récente à la plus ancienne, comme on
+      dépile. Sortie vérifiée.
+
+  - id: system-design.n5.consensus.qcm-noeuds
+    type: qcm
+    title: Combien de nœuds ?
+    skills: [consensus]
+    difficulty: 3
+    prompt: Un cluster etcd doit continuer à accepter des écritures même si 2 nœuds tombent en même temps. Combien de nœuds au minimum ?
+    choices:
+      - id: a
+        text: "5"
+        correct: true
+      - id: b
+        text: "3"
+        feedback: "Avec 3 nœuds, la majorité est de 2 : on ne tolère qu'une panne."
+      - id: c
+        text: "4"
+        feedback: "Avec 4 nœuds, la majorité est de 3 : toujours une seule panne tolérée. Un nombre pair n'apporte rien."
+      - id: d
+        text: "2"
+    explanation: |
+      Pour tolérer f pannes, il faut 2f + 1 nœuds : la majorité restante (f + 1) doit
+      toujours exister. 5 nœuds → majorité de 3 → 2 pannes tolérées.
+
+  - id: system-design.n5.horloges.qcm-lww
+    type: qcm
+    title: La dernière écriture gagne ?
+    skills: [horloges]
+    difficulty: 4
+    prompt: |
+      Deux serveurs reçoivent une modification du même document à quelques millisecondes
+      d'écart. Le système garde celle qui a l'heure la plus récente (last write wins, heure
+      du serveur). Quel est le risque ?
+    choices:
+      - id: a
+        text: "Si l'horloge d'un serveur avance de quelques dizaines de ms, l'écriture réellement la plus ancienne peut gagner, et l'autre est perdue sans erreur."
+        correct: true
+      - id: b
+        text: Aucun, NTP synchronise parfaitement les horloges.
+        feedback: "NTP réduit l'écart à quelques millisecondes dans le meilleur cas, et peut faire reculer une horloge."
+      - id: c
+        text: Les deux écritures sont gardées.
+      - id: d
+        text: Le système plante.
+    explanation: |
+      L'heure murale n'ordonne pas les événements entre machines. Pour détecter les
+      modifications concurrentes : horloges vectorielles, numéros de version, ou CRDT pour
+      les fusionner.
+
+  - id: system-design.n5.multi-region.match
+    type: match
+    title: Choisir un modèle multi-région
+    skills: [multi-region]
+    difficulty: 4
+    prompt: Relie chaque besoin au modèle multi-région le plus adapté.
+    pairs:
+      - left: Survivre à la perte d'une région, en acceptant quelques minutes de bascule
+        right: Actif-passif
+      - left: Des utilisateurs européens et américains, chacun écrit surtout ses propres données
+        right: Actif-actif, chaque utilisateur a une région maison
+      - left: Un registre financier qui ne doit jamais perdre ni contredire une écriture
+        right: Consensus entre régions (au prix de la latence)
+      - left: Un éditeur collaboratif où chacun modifie partout, hors ligne compris
+        right: Écritures partout, fusion par CRDT
+    explanation: |
+      Chaque modèle est un compromis entre latence, cohérence, complexité et coût. RPO et RTO
+      aident à choisir.
+
+  - id: system-design.n5.sagas.scenario-outbox
+    type: scenario
+    title: L'événement perdu
+    skills: [sagas, multi-region]
+    difficulty: 5
+    prompt: |
+      Le service commande enregistre une commande en base, puis publie « commande créée »
+      dans Kafka. Quelques commandes par jour ne sont jamais facturées.
+    start: debut
+    nodes:
+      debut:
+        text: Que se passe-t-il ?
+        options:
+          - text: "Le service plante, ou Kafka est indisponible, entre la validation en base et la publication : la commande existe, l'événement jamais."
+            next: correction
+            points: 3
+          - text: La facturation perd des messages.
+            next: facturation
+            points: 1
+      facturation:
+        text: Les messages manquants n'apparaissent même pas dans Kafka. Où chercher ?
+        options:
+          - text: Entre l'écriture en base et la publication, deux opérations qui ne sont pas atomiques.
+            next: correction
+            points: 2
+      correction:
+        text: Comment corriges-tu ?
+        options:
+          - text: "Pattern outbox : la commande et l'événement sont écrits dans la même transaction (table outbox), puis un relais publie la table dans Kafka."
+            next: doublons
+            points: 3
+          - text: Publier dans Kafka d'abord, puis enregistrer en base.
+            next: inverse
+            points: 0
+            feedback: "Le problème s'inverse : des commandes facturées qui n'existent pas en base."
+          - text: Une transaction distribuée (2PC) entre la base et Kafka.
+            next: deux-pc
+            points: 1
+      inverse:
+        ending: failure
+        text: "❌ Maintenant, ce sont des factures sans commande."
+      deux-pc:
+        ending: partial
+        text: "🟡 Difficile à mettre en place, lent, et bloquant quand le coordinateur tombe."
+      doublons:
+        text: "Le relais publie l'événement puis plante avant de le marquer comme publié. Que se passe-t-il au redémarrage ?"
+        options:
+          - text: "Il le republie : la facturation doit être idempotente (clé = identifiant de la commande)."
+            next: resolu
+            points: 3
+          - text: Rien, l'événement est perdu.
+            next: relecture
+            points: 0
+            feedback: Le relais relit la table outbox au redémarrage.
+      relecture:
+        text: "Au redémarrage, le relais retrouve l'événement non marqué dans la table outbox et le publie une seconde fois. Qui doit absorber ce doublon ?"
+        options:
+          - text: "La facturation, en étant idempotente (clé = identifiant de la commande)."
+            next: resolu
+            points: 1
+      resolu:
+        ending: success
+        text: "✅ Plus aucune commande sans facture : au pire un événement en double, ignoré par la facturation."
+    explanation: |
+      Écrire en base et publier un message sont deux opérations qui ne peuvent pas être
+      atomiques ensemble. L'outbox les ramène à une seule transaction locale, et
+      l'idempotence du consommateur absorbe les republications.

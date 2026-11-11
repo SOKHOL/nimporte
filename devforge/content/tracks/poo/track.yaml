@@ -46,6 +46,18 @@ levels:
         title: Surcharge ou redéfinition
       - id: equals-hashcode
         title: Contrat equals / hashCode
+    boss:
+      id: poo.n2.boss
+      title: "Boss : le polymorphe"
+      exercises:
+        - poo.n2.concepts.match
+        - poo.n2.abstraction.qcm-interface
+        - poo.n2.egalite.predict-hashcode
+        - poo.n2.heritage.trous-open
+        - poo.n2.surcharge.predict-animal
+        - poo.n2.egalite.predict-cle-modifiee
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 3
     title: Concevoir des objets solides
@@ -60,6 +72,18 @@ levels:
         title: Couplage et cohésion
       - id: immutabilite
         title: Objets immuables et value objects
+    boss:
+      id: poo.n3.boss
+      title: "Boss : le gardien de SOLID"
+      exercises:
+        - poo.n3.composition.predict-fragile
+        - poo.n3.solid.qcm-liskov
+        - poo.n3.solid.review-rapport
+        - poo.n3.immutabilite.predict-lecture-seule
+        - poo.n3.solid.match
+        - poo.n3.demeter.qcm
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 4
     title: Modéliser un domaine
@@ -72,6 +96,17 @@ levels:
         title: Invariants et programmation par contrat
       - id: lsp-avance
         title: Substitution de Liskov en profondeur
+    boss:
+      id: poo.n4.boss
+      title: "Boss : le modèle du domaine"
+      exercises:
+        - poo.n4.uml.match-fleches
+        - poo.n4.modelisation.review-anemique
+        - poo.n4.lsp.qcm-liste
+        - poo.n4.contrats.qcm-exceptions
+        - poo.n4.modelisation.qcm-entite
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 5
     title: Au-delà de la POO
@@ -82,3 +117,14 @@ levels:
         title: Programmation par prototypes
       - id: critique-poo
         title: Quand ne pas utiliser la POO
+    boss:
+      id: poo.n5.boss
+      title: "Boss : au-delà des objets"
+      exercises:
+        - poo.n5.traits.predict-diamant
+        - poo.n5.prototypes.predict-js
+        - poo.n5.critique.qcm-ecs
+        - poo.n5.critique.qcm-quand
+        - poo.n4.modelisation.review-anemique
+      pass_ratio: 0.8
+      time_limit_min: 10

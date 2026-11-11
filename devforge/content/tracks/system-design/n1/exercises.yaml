@@ -23,3 +23,119 @@ exercises:
       1 jour ≈ 86 400 s ≈ 10⁵ s, donc 10⁸ / 10⁵ = **10³ ≈ 1 000 requêtes/s** en moyenne.
       Pour dimensionner, on prévoit le **pic**, souvent 2 à 5 fois la moyenne.
       Retiens ce raccourci : 1 million par jour ≈ 12 par seconde.
+
+  - id: system-design.n1.latence.qcm-fan-out
+    type: qcm
+    title: La page qui attend le plus lent
+    skills: [latence-debit]
+    difficulty: 4
+    prompt: |
+      Une page appelle 100 services en parallèle et attend toutes les réponses. Chaque
+      service a un p99 de 500 ms (et un p50 de 20 ms). Environ quelle proportion des pages
+      attend au moins 500 ms ?
+    choices:
+      - id: a
+        text: Environ 63 %
+        correct: true
+      - id: b
+        text: Environ 1 %
+        feedback: "Ce serait vrai pour un seul appel ; ici il suffit qu'**un** des 100 soit lent."
+      - id: c
+        text: Environ 100 %
+      - id: d
+        text: Environ 20 %
+    explanation: |
+      `1 − 0,99¹⁰⁰ ≈ 63,4 %` (calcul vérifié : 9,6 % pour 10 appels, 63,4 % pour 100). Avec
+      beaucoup d'appels en parallèle, le p99 des dépendances devient la latence normale de la
+      page : c'est l'amplification de la latence de queue.
+
+  - id: system-design.n1.disponibilite.qcm-serie
+    type: qcm
+    title: Trois services en chaîne
+    skills: [latence-debit]
+    difficulty: 3
+    prompt: |
+      Une requête traverse trois services en série (A appelle B qui appelle C), chacun
+      disponible à 99,9 %. Quelle est la disponibilité de l'ensemble, environ ?
+    choices:
+      - id: a
+        text: "99,7 %"
+        correct: true
+      - id: b
+        text: "99,9 %"
+        feedback: "Il suffit qu'un seul des trois soit en panne pour que la requête échoue."
+      - id: c
+        text: "99,99 %"
+        feedback: "C'est l'effet de la redondance (en parallèle), pas d'une chaîne."
+      - id: d
+        text: "97 %"
+    explanation: |
+      En série, on multiplie : 0,999³ ≈ 0,9970, soit environ 26 heures de panne par an au
+      lieu de 8,8. Chaque dépendance synchrone de plus fait baisser la disponibilité.
+
+  - id: system-design.n1.latence.match-ordres
+    type: match
+    title: Les ordres de grandeur
+    skills: [latence-debit]
+    difficulty: 3
+    prompt: Relie chaque opération à son ordre de grandeur de latence.
+    pairs:
+      - left: Lire une valeur en mémoire vive
+        right: ~100 nanosecondes
+      - left: Un GET Redis sur la même machine
+        right: ~30 microsecondes
+      - left: Un aller-retour dans le même datacenter
+        right: ~0,5 milliseconde
+      - left: Un aller-retour Paris ↔ New York
+        right: ~75 millisecondes
+    explanation: |
+      Mesuré sur la machine de test : GET Redis ~34 µs, requête PostgreSQL par clé ~54 µs,
+      écriture avec fsync ~226 µs. Chaque niveau est d'un à trois ordres de grandeur plus
+      lent que le précédent.
+
+  - id: system-design.n1.scalabilite.qcm-horizontal
+    type: qcm
+    title: Ajouter des serveurs
+    skills: [scalabilite]
+    difficulty: 2
+    prompt: |
+      Ton API garde le panier de chaque utilisateur en mémoire, dans le serveur. Tu passes de
+      1 à 4 serveurs derrière un répartiteur de charge. Que se passe-t-il ?
+    choices:
+      - id: a
+        text: "Les utilisateurs perdent leur panier dès qu'une requête arrive sur un autre serveur : il faut rendre les serveurs sans état (panier dans Redis ou en base)."
+        correct: true
+      - id: b
+        text: Tout fonctionne, quatre fois plus vite.
+      - id: c
+        text: Les quatre serveurs synchronisent automatiquement leur mémoire.
+      - id: d
+        text: Le répartiteur de charge copie le panier d'un serveur à l'autre.
+        feedback: "Il peut coller un utilisateur à un serveur (sessions collantes), mais le panier disparaît si ce serveur redémarre."
+    explanation: |
+      La mise à l'échelle horizontale suppose des serveurs **sans état** : tout ce qui doit
+      survivre à une requête vit dans un stockage partagé.
+
+  - id: system-design.n1.estimations.qcm-stockage
+    type: qcm
+    title: Combien de stockage ?
+    skills: [estimations]
+    difficulty: 3
+    prompt: |
+      100 millions de messages de 300 octets sont publiés chaque jour. Environ combien de
+      stockage par an, sans compter les répliques ni les médias ?
+    choices:
+      - id: a
+        text: Environ 11 To
+        correct: true
+      - id: b
+        text: Environ 30 Go
+        feedback: C'est la quantité d'une seule journée.
+      - id: c
+        text: Environ 1 Po
+      - id: d
+        text: Environ 110 Go
+    explanation: |
+      10⁸ × 300 octets = 3 × 10¹⁰ octets = 30 Go par jour ; × 365 ≈ 11 To par an. Avec 3
+      répliques, 33 To ; c'est un ordre de grandeur qui demande déjà de penser au
+      partitionnement et à l'archivage.

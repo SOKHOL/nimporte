@@ -14,6 +14,17 @@ levels:
         title: Les permissions
       - id: pipes-redirections
         title: Pipes et redirections
+    boss:
+      id: linux.n1.boss
+      title: "Boss : le maître du terminal"
+      exercises:
+        - linux.n1.navigation.qcm-rm
+        - linux.n1.permissions.match
+        - linux.n1.pipes.parsons-erreurs
+        - linux.n1.redirections.qcm-ordre
+        - linux.n1.permissions.qcm-754
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 2
     title: Les outils du quotidien
@@ -26,6 +37,18 @@ levels:
         title: Processus et signaux
       - id: environnement
         title: Variables d'environnement
+    boss:
+      id: linux.n2.boss
+      title: "Boss : le script qui continue"
+      exercises:
+        - linux.n2.texte.match
+        - linux.n2.scripts.bug-set-e
+        - linux.n2.processus.qcm-signaux
+        - linux.n2.environnement.qcm-export
+        - linux.n2.scripts.trous-entete
+        - linux.n2.scripts.qcm-guillemets
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 3
     title: Administrer une machine
@@ -38,6 +61,18 @@ levels:
         title: SSH et clés
       - id: planification
         title: Tâches planifiées (cron, timers)
+    boss:
+      id: linux.n3.boss
+      title: "Boss : le service fantôme"
+      exercises:
+        - linux.n3.systemd.scenario-demarrage
+        - linux.n3.ssh.qcm-cles
+        - linux.n3.planification.qcm-cron
+        - linux.n3.systemd.trous-unit
+        - linux.n3.reseau.match
+        - linux.n3.reseau.qcm-refuse
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 4
     title: Diagnostiquer
@@ -50,6 +85,18 @@ levels:
         title: Disques, inodes et systèmes de fichiers
       - id: conteneurs-linux
         title: cgroups et namespaces
+    boss:
+      id: linux.n4.boss
+      title: "Boss : le disque plein qui ne l'est pas"
+      exercises:
+        - linux.n4.diagnostic.match
+        - linux.n4.conteneurs.qcm
+        - linux.n4.disques.scenario-disque-plein
+        - linux.n4.strace.qcm-config
+        - linux.n4.charge.qcm-load
+        - linux.n4.memoire.qcm-free
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 5
     title: Sous le capot
@@ -62,3 +109,15 @@ levels:
         title: Durcir un serveur
       - id: ebpf
         title: eBPF, l'observabilité moderne
+    boss:
+      id: linux.n5.boss
+      title: "Boss : le cœur du noyau"
+      exercises:
+        - linux.n5.appels-systeme.qcm-tampon
+        - linux.n5.ordonnanceur.scenario-throttling
+        - linux.n5.durcissement.match
+        - linux.n5.ebpf.qcm-strace
+        - linux.n5.durcissement.revue-sshd
+        - linux.n5.memoire.qcm-rss
+      pass_ratio: 0.8
+      time_limit_min: 13

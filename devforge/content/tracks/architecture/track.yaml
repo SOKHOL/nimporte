@@ -14,6 +14,17 @@ levels:
         title: Séparation des responsabilités
       - id: mvc
         title: MVC
+    boss:
+      id: architecture.n1.boss
+      title: "Boss : le contrôleur obèse"
+      exercises:
+        - architecture.n1.mvc.review-controleur
+        - architecture.n1.mvc.match-roles
+        - architecture.n1.separation.qcm-changement
+        - architecture.n1.couches.parsons-flux
+        - architecture.n1.couches.qcm-sens
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 2
     title: Structurer une application
@@ -26,6 +37,18 @@ levels:
         title: Modularisation
       - id: principes-packages
         title: Principes de cohésion et de couplage des modules
+    boss:
+      id: architecture.n2.boss
+      title: "Boss : le cycle entre modules"
+      exercises:
+        - architecture.n2.mvi.predict-reducteur
+        - architecture.n2.di.qcm-racine
+        - architecture.n2.modules.scenario-cycle
+        - architecture.n2.modules.match
+        - architecture.n2.mvvm.qcm-etat-unique
+        - architecture.n2.principes.qcm-instabilite
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 3
     title: Le domaine au centre
@@ -36,6 +59,18 @@ levels:
         title: Clean Architecture
       - id: ddd-tactique
         title: DDD tactique (entités, value objects, agrégats, événements)
+    boss:
+      id: architecture.n3.boss
+      title: "Boss : l'hexagone"
+      exercises:
+        - architecture.n3.hexagonale.review-cas-usage
+        - architecture.n3.ddd.predict-montant
+        - architecture.n3.ddd.bug-agregat
+        - architecture.n3.clean.qcm-regle
+        - architecture.n3.ddd.match-briques
+        - architecture.n3.hexagonale.qcm-dependances
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 4
     title: Systèmes qui grandissent
@@ -48,6 +83,18 @@ levels:
         title: Monolithe modulaire ou microservices
       - id: adr
         title: Documenter les décisions (ADR)
+    boss:
+      id: architecture.n4.boss
+      title: "Boss : le monolithe distribué"
+      exercises:
+        - architecture.n4.microservices.scenario-monolithe-distribue
+        - architecture.n4.event-sourcing.predict-fold
+        - architecture.n4.adr.trous
+        - architecture.n4.ddd.match-carte
+        - architecture.n4.cqrs.qcm-quand
+        - architecture.n4.ddd.qcm-client
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 5
     title: Architecture évolutive
@@ -58,3 +105,15 @@ levels:
         title: Migrer un legacy (strangler fig)
       - id: conway
         title: Loi de Conway et Team Topologies
+    boss:
+      id: architecture.n5.boss
+      title: "Boss : le figuier étrangleur"
+      exercises:
+        - architecture.n5.fitness.qcm-erosion
+        - architecture.n5.strangler.scenario-legacy
+        - architecture.n5.topologies.match
+        - architecture.n5.fitness.trous-archunit
+        - architecture.n5.strangler.qcm-parallele
+        - architecture.n5.conway.qcm
+      pass_ratio: 0.8
+      time_limit_min: 12

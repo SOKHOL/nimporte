@@ -53,8 +53,8 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
 - 13 parcours détaillés compétence par compétence : Fondations, Algorithmes, Git, Linux,
   POO, Design patterns, Architecture, System design, DevOps, **Gestion de la mémoire,
   JVM, Threads et concurrence, Métaprogrammation et AOP**.
-- **64 leçons et 296 exercices**, couvrant 9 types d'exercices, et 5 boss.
-  **10 parcours complets du niveau 1 au niveau 5** :
+- **79 leçons et 380 exercices**, couvrant 9 types d'exercices, et **65 boss chronométrés,
+  un par niveau**. **Les 13 parcours détaillés sont complets du niveau 1 au niveau 5** :
   - fondations : types, boucles, collections, exceptions, complexité, nullabilité,
     génériques, fonctions d'ordre supérieur, apprendre n'importe quel langage ;
   - algorithmes : recherche et tris, piles, files, hachage, fenêtres glissantes, arbres,
@@ -79,10 +79,22 @@ défi du jour, XP et série de jours, profil avec radar de compétences.
   - métaprogrammation : annotations, réflexion, proxies, AOP, `@Transactional`, agents
     Java, plugins du compilateur, KSP, DSL Kotlin, macros.
 
-  Et en partie : architecture, system design et DevOps.
+  - architecture : couches, MVC, MVVM et MVI, injection de dépendances, modules et
+    principes de couplage, hexagonale, Clean Architecture, DDD tactique et stratégique,
+    CQRS, event sourcing, microservices, ADR, fitness functions, strangler fig, loi de
+    Conway et Team Topologies ;
+  - system design : latence et percentiles, disponibilité, estimations, répartition de
+    charge, cache, CDN, réplication, files de messages, idempotence, partitionnement et
+    hachage cohérent, CAP, cinq études de cas, consensus (Raft), horloges, sagas,
+    multi-région ;
+  - DevOps : culture et métriques DORA, 12 facteurs, Docker (couches, sécurité, PID 1),
+    Compose, CI/CD, stratégies de déploiement, feature flags, Terraform, Ansible,
+    Kubernetes et son diagnostic, Helm, GitOps, platform engineering, sécurité de la
+    chaîne logicielle.
 
   Tous les extraits (Kotlin, C, Python, Rust, JavaScript) ont été exécutés pour vérifier les
-  réponses attendues, et les sorties citées dans les cours Git et Linux sont des sorties réelles.
+  réponses attendues, et les sorties citées dans les cours Git, Linux, System design et DevOps
+  sont des sorties réelles (Git, bash, strace, Redis, PostgreSQL, Docker, Terraform).
 - Un validateur (schémas + cohérence) avec ses tests, lancé par GitHub Actions.
 
 ## Structure
@@ -123,6 +135,6 @@ python -m unittest discover -s devforge/tools -v
 
 ## Prochaine étape
 
-Phase 2 : rédiger beaucoup plus de contenu (une leçon et ~8 exercices par compétence),
-puis notifications et widget pour le défi du jour. Voir le
-[plan d'action](docs/04-plan-d-action.md).
+Rédiger les 18 parcours encore à l'état de plan (cloud, bases de données, sécurité, SRE,
+réseau et web…), enrichir les parcours existants (plus d'exercices par compétence), puis
+notifications et widget pour le défi du jour. Voir le [plan d'action](docs/04-plan-d-action.md).

@@ -1,0 +1,172 @@
+exercises:
+  - id: devops.n5.gitops.scenario-derive
+    type: scenario
+    title: La modification fantôme
+    skills: [gitops]
+    difficulty: 4
+    prompt: |
+      Pendant un incident, un collègue a augmenté à la main la limite mémoire de l'API en
+      production avec `kubectl edit`. Le cluster est géré par Argo CD, avec l'auto-réparation
+      activée.
+    start: debut
+    nodes:
+      debut:
+        text: Dix minutes plus tard, les pods redémarrent avec l'ancienne limite. Pourquoi ?
+        options:
+          - text: "Argo CD a détecté que le cluster ne correspondait plus au dépôt Git et a rétabli l'état décrit dans Git."
+            next: correction
+            points: 3
+          - text: Un bug de Kubernetes a annulé la modification.
+            next: bug
+            points: 0
+      bug:
+        text: "L'historique d'Argo CD montre une synchronisation automatique juste avant les redémarrages, avec le statut « OutOfSync → Synced ». Que comprends-tu ?"
+        options:
+          - text: L'agent GitOps a réconcilié le cluster avec Git.
+            next: correction
+            points: 1
+      correction:
+        text: Comment appliquer durablement la nouvelle limite ?
+        options:
+          - text: "Par une pull request dans le dépôt de configuration ; une fois fusionnée, Argo CD l'applique, avec une trace de qui l'a demandé et pourquoi."
+            next: resolu
+            points: 3
+          - text: Désactiver l'auto-réparation d'Argo CD pour garder les modifications manuelles.
+            next: desactive
+            points: 0
+            feedback: "On perd la garantie que le cluster correspond au dépôt : la dérive revient."
+      desactive:
+        ending: failure
+        text: "❌ Trois mois plus tard, personne ne sait plus pourquoi la production diffère de Git, et la reconstruction du cluster après une panne échoue."
+      resolu:
+        ending: success
+        text: "✅ La limite est appliquée, tracée dans Git et identique sur tout cluster reconstruit."
+    explanation: |
+      En GitOps, Git est la seule source de vérité. Les changements d'urgence passent aussi
+      par une pull request (qui peut être rapide), sinon l'agent les annule ou la dérive
+      s'installe.
+
+  - id: devops.n5.gitops.qcm-pull
+    type: qcm
+    title: Pourquoi le modèle pull ?
+    skills: [gitops]
+    difficulty: 3
+    prompt: Quel avantage de sécurité apporte un agent GitOps qui tire les changements depuis le cluster, par rapport à une CI qui pousse avec kubectl ?
+    choices:
+      - id: a
+        text: "La CI n'a plus besoin d'identifiants d'administration du cluster de production ; une CI compromise ne peut pas modifier la production directement."
+        correct: true
+      - id: b
+        text: Les déploiements sont plus rapides.
+      - id: c
+        text: Il n'y a plus besoin de Git.
+      - id: d
+        text: Les images sont automatiquement signées.
+    explanation: |
+      Les systèmes de CI sont une cible de choix : ils ont accès au code, aux secrets et souvent
+      à la production. Avec GitOps, l'accès à la production est porté par un agent dans le
+      cluster, qui ne fait que lire le dépôt.
+
+  - id: devops.n5.supply-chain.match
+    type: match
+    title: Les défenses de la chaîne logicielle
+    skills: [supply-chain]
+    difficulty: 4
+    prompt: Relie chaque menace à la défense qui y répond.
+    pairs:
+      - left: "Une faille est annoncée dans une bibliothèque : sommes-nous touchés ?"
+        right: Un SBOM pour chaque artefact
+      - left: Le tag d'une image de base est déplacé vers une version compromise
+        right: Figer l'image par son empreinte (@sha256:…)
+      - left: Une image non construite par notre CI est déployée dans le cluster
+        right: Signature cosign et politique d'admission qui la vérifie
+      - left: Prouver quel commit et quel pipeline ont produit un binaire
+        right: Une attestation de provenance (SLSA)
+      - left: Un paquet public porte le même nom qu'un paquet interne
+        right: Un registre interne qui résout d'abord les noms internes
+    explanation: |
+      Chaque maillon a sa défense : savoir ce qu'on livre, figer, signer, prouver l'origine,
+      contrôler d'où viennent les dépendances.
+
+  - id: devops.n5.supply-chain.review
+    type: code-review
+    title: "Revue : un pipeline et son image"
+    skills: [supply-chain]
+    difficulty: 4
+    language: yaml
+    prompt: Trouve au moins 3 risques pour la chaîne logicielle dans ce workflow.
+    code: |
+      permissions: write-all
+      jobs:
+        build:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - uses: un-auteur/action-deploiement@main
+            - run: curl -sSL https://outil.exemple.com/install.sh | bash
+            - run: docker build -t registre/api:latest .
+            - run: docker push registre/api:latest
+    issues:
+      - lines: [1]
+        category: securite
+        description: "Le jeton du workflow a tous les droits : une étape compromise peut modifier le dépôt, les versions, les paquets. Donner les permissions minimales, job par job."
+      - lines: [7]
+        category: securite
+        description: "Une action tierce référencée par une branche (`@main`) peut changer à tout moment : la figer par le SHA d'un commit relu."
+      - lines: [8]
+        category: securite
+        description: "`curl | bash` exécute ce que le serveur renvoie aujourd'hui, sans vérification : figer une version et vérifier une empreinte ou une signature."
+      - lines: [9, 10]
+        category: securite
+        description: "Image `latest`, sans signature ni SBOM : impossible de prouver ce qui tourne et d'où ça vient. Taguer avec le SHA, signer (cosign), produire un SBOM et une provenance."
+    min_found: 3
+    explanation: |
+      Le pipeline lui-même fait partie de la surface d'attaque : droits minimaux, tout ce qu'on
+      exécute figé par empreinte, et des artefacts signés et traçables.
+
+  - id: devops.n5.platform.qcm-golden-path
+    type: qcm
+    title: Une plateforme utile
+    skills: [platform-engineering]
+    difficulty: 3
+    prompt: "Qu'est-ce qui caractérise le mieux une plateforme interne réussie ?"
+    choices:
+      - id: a
+        text: "Elle est gérée comme un produit : ses utilisateurs (les développeurs) l'adoptent parce que le chemin balisé est le plus simple, et l'équipe mesure cette adoption."
+        correct: true
+      - id: b
+        text: Elle est obligatoire et toute autre façon de déployer est interdite.
+        feedback: "L'obligation masque une plateforme qui ne répond pas aux besoins ; l'adoption volontaire est le meilleur indicateur."
+      - id: c
+        text: Elle cache complètement Kubernetes, au point que personne n'a besoin de savoir comment ça marche.
+        feedback: "Jusqu'au jour où elle casse et que plus personne ne sait diagnostiquer."
+      - id: d
+        text: Elle utilise les outils les plus récents.
+    explanation: |
+      Le but est de réduire la charge cognitive des équipes produit : libre-service, chemins
+      balisés, documentation, et une équipe plateforme à l'écoute de ses utilisateurs.
+
+  - id: devops.n5.supply-chain.qcm-digest
+    type: qcm
+    title: Tag ou empreinte ?
+    skills: [supply-chain]
+    difficulty: 3
+    language: dockerfile
+    prompt: Quelle différence entre ces deux lignes ?
+    code: |
+      FROM alpine:3.20
+      FROM alpine:3.20@sha256:d9e853e87e55526f6b2917df91a2115c36dd7c696a35be12163d44e6e2a4b6bc
+    choices:
+      - id: a
+        text: "La seconde désigne exactement une image (son contenu) ; un tag peut être déplacé vers une autre image à tout moment."
+        correct: true
+      - id: b
+        text: Aucune, l'empreinte n'est qu'un commentaire.
+      - id: c
+        text: La seconde télécharge une version plus récente.
+      - id: d
+        text: La première est plus sûre car plus lisible.
+    explanation: |
+      L'empreinte (digest) est réelle : c'est celle de l'image `alpine:3.20` utilisée pour ce
+      cours. Le build devient reproductible, et un tag compromis ne peut pas changer ce qu'on
+      construit. Renovate ou Dependabot proposent ensuite les nouvelles empreintes.

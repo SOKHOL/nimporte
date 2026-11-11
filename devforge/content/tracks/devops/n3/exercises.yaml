@@ -1,0 +1,169 @@
+exercises:
+  - id: devops.n3.strategies.match
+    type: match
+    title: Choisir une stratégie de déploiement
+    skills: [strategies-deploiement]
+    difficulty: 3
+    prompt: Relie chaque besoin à la stratégie de déploiement adaptée.
+    pairs:
+      - left: Tester la nouvelle version sur 1 % des utilisateurs réels, avec retour arrière automatique
+        right: Canary
+      - left: Basculer et revenir en arrière instantanément, en acceptant de doubler la capacité
+        right: Blue/green
+      - left: Remplacer les instances une à une, sans capacité supplémentaire
+        right: Rolling
+      - left: Une application interne qui peut s'arrêter 2 minutes la nuit
+        right: Recreate
+    explanation: |
+      Chaque stratégie échange du coût et de la complexité contre de la sécurité. Le rolling
+      est le défaut de Kubernetes ; le canary demande des métriques comparées.
+
+  - id: devops.n3.strategies.scenario-colonne
+    type: scenario
+    title: Renommer une colonne sans coupure
+    skills: [strategies-deploiement, cd]
+    difficulty: 5
+    prompt: |
+      Il faut renommer la colonne `nom` en `nom_complet` dans la table `clients`. L'API est
+      déployée en rolling sur 6 instances.
+    start: debut
+    nodes:
+      debut:
+        text: Comment procèdes-tu ?
+        options:
+          - text: "En plusieurs déploiements : ajouter nom_complet, écrire dans les deux colonnes, recopier les données, lire la nouvelle, puis supprimer l'ancienne."
+            next: resolu
+            points: 3
+          - text: "Un seul déploiement : la migration renomme la colonne au démarrage de la nouvelle version."
+            next: rolling
+            points: 0
+      rolling:
+        text: "Pendant le rolling, les instances de l'ancienne version renvoient des erreurs 500 : « column nom does not exist ». Pourquoi ?"
+        options:
+          - text: Les deux versions tournent en même temps sur la même base ; l'ancienne lit une colonne qui n'existe plus.
+            next: correction
+            points: 2
+      correction:
+        text: Comment l'éviter la prochaine fois ?
+        options:
+          - text: "Expand/contract : chaque étape reste compatible avec la version précédente du code."
+            next: resolu
+            points: 2
+      resolu:
+        ending: success
+        text: "✅ Cinq petits déploiements, aucune erreur, et chacun pouvait être annulé."
+    explanation: |
+      Pendant un rolling ou un canary, deux versions du code partagent la même base. Expand,
+      migrer, contract : chaque changement de schéma reste compatible avec le code précédent.
+
+  - id: devops.n3.ci.trous-workflow
+    type: fill-blanks
+    title: Ne publier que si tout est vert
+    skills: [ci, cd]
+    difficulty: 3
+    language: yaml
+    prompt: |
+      Complète ce workflow GitHub Actions : la publication ne doit partir qu'après la réussite
+      des deux jobs de vérification, et seulement sur un push (pas sur une pull request).
+    code: |
+      jobs:
+        build:
+          runs-on: ubuntu-latest
+        smoke-test:
+          runs-on: ubuntu-latest
+        release:
+          {{1}}: [build, smoke-test]
+          {{2}}: github.event_name == 'push'
+          runs-on: ubuntu-latest
+    blanks:
+      "1":
+        answers: [needs]
+        options: [needs, after, depends, requires]
+      "2":
+        answers: [if]
+        options: [if, when, only, filter]
+    explanation: |
+      `needs` attend la réussite des jobs listés ; `if` filtre selon l'événement. C'est
+      exactement la structure du pipeline de DevForge.
+
+  - id: devops.n3.ci.qcm-flaky
+    type: qcm
+    title: Le test capricieux
+    skills: [ci]
+    difficulty: 3
+    prompt: Un test échoue environ une fois sur vingt, sans changement de code. L'équipe relance le pipeline quand il est rouge. Que faire ?
+    choices:
+      - id: a
+        text: "Le corriger tout de suite (ou le mettre en quarantaine avec un ticket prioritaire) : un rouge qu'on ignore apprend à tout le monde à ignorer le rouge."
+        correct: true
+      - id: b
+        text: Configurer trois relances automatiques pour tous les tests.
+        feedback: "Ça masque aussi les vrais bugs intermittents (concurrence, délais) et rallonge le pipeline."
+      - id: c
+        text: Le supprimer.
+        feedback: "On perd ce qu'il protégeait ; il faut comprendre pourquoi il est instable."
+      - id: d
+        text: Continuer à relancer, c'est le plus rapide.
+    explanation: |
+      Un test instable cache souvent un vrai problème (ordre de tests, horloge, concurrence,
+      dépendance réseau). La CI n'a de valeur que si le rouge veut dire quelque chose.
+
+  - id: devops.n3.feature-flags.qcm
+    type: qcm
+    title: Déployer n'est pas livrer
+    skills: [feature-flags]
+    difficulty: 2
+    prompt: Le nouveau parcours de paiement est déployé en production derrière un feature flag désactivé. Que se passe-t-il pour les clients ?
+    choices:
+      - id: a
+        text: "Rien ne change : le code est en production, mais la fonctionnalité n'est visible que lorsqu'on active le flag, pour qui on veut."
+        correct: true
+      - id: b
+        text: Ils voient le nouveau parcours.
+      - id: c
+        text: Le déploiement échoue tant que le flag est désactivé.
+      - id: d
+        text: Le flag ralentit tout le site.
+    explanation: |
+      Le flag sépare le déploiement de la livraison : on ouvre aux employés, puis à 5 % des
+      clients, puis à tous, et on peut couper en une seconde. Une fois à 100 %, on supprime le
+      flag et l'ancien code.
+
+  - id: devops.n3.cd.review-pipeline
+    type: code-review
+    title: "Revue : un pipeline de déploiement"
+    skills: [cd, ci]
+    difficulty: 4
+    language: yaml
+    prompt: Ce pipeline déploie en production à chaque push sur main. Trouve au moins 3 problèmes.
+    code: |
+      on:
+        push:
+          branches: [main]
+      jobs:
+        deploy:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4
+            - run: docker build -t registre.exemple.com/api:latest .
+            - run: docker push registre.exemple.com/api:latest
+            - run: kubectl set image deployment/api api=registre.exemple.com/api:latest
+            - run: ./gradlew test
+    issues:
+      - lines: [12]
+        category: test
+        description: "Les tests tournent **après** le déploiement : une version cassée part en production avant d'être vérifiée."
+      - lines: [9, 10, 11]
+        category: conception
+        description: "Le tag `latest` n'est ni immuable ni traçable : impossible de savoir quelle version tourne, ni de revenir précisément à la précédente. Taguer avec le SHA du commit (ou utiliser le digest)."
+      - lines: [11]
+        category: conception
+        description: "Kubernetes ne redéploie pas si le nom d'image n'a pas changé (`latest` → `latest`) : le déploiement peut n'avoir aucun effet."
+      - lines: [5]
+        category: securite
+        description: "Aucun environnement intermédiaire, aucune validation ni protection : chaque push sur main part directement en production."
+    min_found: 3
+    explanation: |
+      Ordre correct : tests, build d'une image taguée avec le SHA, push, déploiement en
+      préproduction, vérification, puis promotion de **la même image** en production
+      (idéalement en canary).

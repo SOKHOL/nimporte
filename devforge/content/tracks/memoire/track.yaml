@@ -16,6 +16,16 @@ levels:
         title: Portée et durée de vie des objets
       - id: representation
         title: Taille et représentation des données
+    boss:
+      id: memoire.n1.boss
+      title: "Boss : la pile qui déborde"
+      exercises:
+        - memoire.n1.pile.qcm-vrai-faux
+        - memoire.n1.valeurs.predict-references
+        - memoire.n1.representation.qcm-liste-int
+        - memoire.n1.pile.qcm-recursion
+      pass_ratio: 0.75
+      time_limit_min: 8
 
   - level: 2
     title: Gérer la mémoire à la main
@@ -30,6 +40,18 @@ levels:
         title: Comptage de références et cycles
       - id: ownership
         title: Possession et emprunt (Rust)
+    boss:
+      id: memoire.n2.boss
+      title: "Boss : le pointeur fou"
+      exercises:
+        - memoire.n2.bugs.bug-dupliquer
+        - memoire.n2.raii.predict-drop
+        - memoire.n2.comptage.predict-cycle
+        - memoire.n2.ownership.qcm-push
+        - memoire.n2.bugs.match
+        - memoire.n2.bugs.qcm-use-after-free
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 3
     title: Les ramasse-miettes
@@ -44,6 +66,17 @@ levels:
         title: L'hypothèse générationnelle
       - id: pauses-gc
         title: Pauses, GC concurrent et barrières
+    boss:
+      id: memoire.n3.boss
+      title: "Boss : le ramasse-miettes"
+      exercises:
+        - memoire.n3.accessibilite.qcm-cycle
+        - memoire.n3.algorithmes.match
+        - memoire.n3.pauses.qcm-compromis
+        - memoire.n3.generationnel.qcm-pourquoi
+        - memoire.n2.bugs.bug-dupliquer
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 4
     title: Fuites et diagnostic
@@ -56,6 +89,18 @@ levels:
         title: Analyser un heap dump
       - id: hors-tas
         title: Mémoire hors tas et buffers directs
+    boss:
+      id: memoire.n4.boss
+      title: "Boss : la fuite invisible"
+      exercises:
+        - memoire.n4.fuites.review-cache-threadlocal
+        - memoire.n4.references.qcm-weak
+        - memoire.n4.hors-tas.scenario-rss
+        - memoire.n4.fuites.bug-ecouteur
+        - memoire.n4.hors-tas.qcm-direct
+        - memoire.n4.heap-dump.qcm-retained
+      pass_ratio: 0.8
+      time_limit_min: 13
 
   - level: 5
     title: Mémoire et performance
@@ -70,3 +115,14 @@ levels:
         title: Faux partage (false sharing)
       - id: disposition-objets
         title: Disposition des objets en mémoire
+    boss:
+      id: memoire.n5.boss
+      title: "Boss : le cache du processeur"
+      exercises:
+        - memoire.n5.allocateurs.match
+        - memoire.n5.fragmentation.qcm
+        - memoire.n5.caches.qcm-lignes-colonnes
+        - memoire.n5.faux-partage.qcm-compteurs
+        - memoire.n5.disposition.qcm-tableaux
+      pass_ratio: 0.8
+      time_limit_min: 8

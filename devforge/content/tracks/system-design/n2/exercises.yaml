@@ -1,0 +1,168 @@
+exercises:
+  - id: system-design.n2.replication.scenario-profil
+    type: scenario
+    title: Le profil qui ne se met pas à jour
+    skills: [replication]
+    difficulty: 4
+    prompt: |
+      Des utilisateurs se plaignent : après avoir changé leur photo de profil, la page
+      recharge et affiche l'ancienne photo. Quelques secondes plus tard, la nouvelle apparaît.
+    start: debut
+    nodes:
+      debut:
+        text: L'API écrit sur le primaire PostgreSQL et lit sur deux répliques asynchrones. Quelle est ton hypothèse ?
+        options:
+          - text: "Le retard de réplication : la lecture arrive sur une réplique qui n'a pas encore reçu l'écriture."
+            next: solution
+            points: 3
+          - text: Un problème de cache du navigateur.
+            next: navigateur
+            points: 1
+            feedback: Possible pour une image, mais ici le JSON du profil lui-même est ancien.
+      navigateur:
+        text: Même en navigation privée, le JSON renvoyé par l'API contient l'ancienne URL de photo. Et alors ?
+        options:
+          - text: La lecture va sur une réplique en retard.
+            next: solution
+            points: 2
+      solution:
+        text: Comment corriges-tu ?
+        options:
+          - text: "Pendant quelques secondes après une écriture, les lectures de cet utilisateur vont au primaire (ou à une réplique qui a rattrapé la position de l'écriture)."
+            next: resolu
+            points: 3
+          - text: Passer les deux répliques en réplication synchrone.
+            next: synchrone
+            points: 1
+            feedback: Ça règle le problème, mais chaque écriture attend maintenant les répliques, et une réplique lente ralentit tout.
+          - text: Toutes les lectures vont au primaire.
+            next: primaire
+            points: 0
+      synchrone:
+        ending: partial
+        text: "🟡 Plus de photo ancienne, mais la latence des écritures a doublé, et une réplique en maintenance bloque les écritures."
+      primaire:
+        ending: failure
+        text: "❌ Le primaire reçoit dix fois plus de requêtes et sature à l'heure de pointe."
+      resolu:
+        ending: success
+        text: "✅ Chaque utilisateur voit immédiatement ses propres modifications, et les répliques absorbent toujours 90 % des lectures."
+    explanation: |
+      Une réplique asynchrone est presque toujours en retard : mesuré sur la même machine,
+      994 lectures immédiates sur 1 000 ne trouvent pas la ligne qui vient d'être écrite. La
+      garantie à apporter est la lecture de ses propres écritures, pas une cohérence parfaite
+      pour tout le monde.
+
+  - id: system-design.n2.cache.qcm-invalidation
+    type: qcm
+    title: Après une écriture
+    skills: [cache]
+    difficulty: 3
+    prompt: "Avec un cache-aside, que faire du cache quand le prix d'un produit change en base ?"
+    choices:
+      - id: a
+        text: "Supprimer l'entrée du cache ; la prochaine lecture la rechargera depuis la base. Et garder un TTL comme filet de sécurité."
+        correct: true
+      - id: b
+        text: Mettre à jour l'entrée du cache avec le nouveau prix.
+        feedback: "Deux mises à jour concurrentes peuvent arriver dans le désordre et laisser l'ancien prix en cache, sans limite de temps."
+      - id: c
+        text: Vider tout le cache.
+        feedback: Toute la charge tombe d'un coup sur la base (cache froid).
+      - id: d
+        text: Rien, le TTL s'en chargera.
+        feedback: "Acceptable pour certaines données, mais un prix faux pendant tout le TTL peut coûter cher."
+    explanation: |
+      Supprimer est plus sûr que mettre à jour : la valeur est recalculée depuis la source de
+      vérité. Le TTL rattrape les cas où la suppression échoue.
+
+  - id: system-design.n2.cache.qcm-lru
+    type: qcm
+    title: Ce que le cache garde
+    skills: [cache]
+    difficulty: 2
+    prompt: |
+      Redis est limité à 2 Mo avec la politique `allkeys-lru`. On écrit 20 000 pages de 200
+      octets, de `page:0` à `page:19999`, sans les relire. Lesquelles reste-t-il ?
+    choices:
+      - id: a
+        text: "Seulement les plus récentes (quelques milliers) ; les plus anciennes ont été évincées."
+        correct: true
+      - id: b
+        text: Toutes, Redis refuse simplement les nouvelles écritures.
+        feedback: "C'est le comportement de la politique `noeviction`, pas de `allkeys-lru`."
+      - id: c
+        text: Les 20 000, Redis compresse les données.
+      - id: d
+        text: Un échantillon au hasard.
+        feedback: "Ce serait `allkeys-random`."
+    explanation: |
+      Mesure réelle : 3 821 clés gardées, environ 16 000 évincées (`evicted_keys`) ; `page:0`
+      a disparu, `page:19999` est présente. LRU évince ce qui n'a pas servi depuis le plus
+      longtemps.
+
+  - id: system-design.n2.load-balancing.qcm-sonde
+    type: qcm
+    title: La sonde trop profonde
+    skills: [load-balancing]
+    difficulty: 4
+    prompt: |
+      La sonde de santé `/sante` de chaque instance vérifie aussi la connexion à la base. La
+      base a un hoquet de 20 secondes. Que fait le répartiteur de charge ?
+    choices:
+      - id: a
+        text: "Il retire toutes les instances de la rotation en même temps : plus aucune requête n'est servie, même celles qui n'avaient pas besoin de la base."
+        correct: true
+      - id: b
+        text: Il garde les instances, car la base n'est pas l'instance.
+      - id: c
+        text: Il redirige le trafic vers la base de secours.
+      - id: d
+        text: Rien, les sondes ne sont pas utilisées par le répartiteur.
+    explanation: |
+      La sonde du répartiteur doit répondre à « cette instance peut-elle traiter des requêtes ? »,
+      pas « tout le système va-t-il bien ? ». Sinon, la panne d'une dépendance partagée devient
+      une panne totale. Kubernetes distingue d'ailleurs *liveness* et *readiness*.
+
+  - id: system-design.n2.cdn.match
+    type: match
+    title: La bonne brique
+    skills: [cdn, cache, stateless, load-balancing]
+    difficulty: 3
+    prompt: Relie chaque besoin à la brique qui y répond.
+    pairs:
+      - left: Les images du site chargent lentement en Australie
+        right: Un CDN
+      - left: La même requête SQL lourde est exécutée 500 fois par seconde
+        right: Un cache (Redis) devant la base
+      - left: "Router /api vers un service et /admin vers un autre"
+        right: Un répartiteur de charge L7
+      - left: Pouvoir ajouter des instances sans perdre les sessions
+        right: Des serveurs sans état, sessions dans Redis
+    explanation: |
+      Chaque brique répond à un problème précis : distance (CDN), coût répété (cache),
+      routage (L7), élasticité (sans état).
+
+  - id: system-design.n2.cdn.qcm-cache-control
+    type: qcm
+    title: Mettre en cache un fichier JavaScript
+    skills: [cdn]
+    difficulty: 3
+    prompt: |
+      Le build produit `app.3f9a2c.js`, dont le nom change à chaque modification. Quel en-tête
+      lui donner ?
+    choices:
+      - id: a
+        text: "Cache-Control: public, max-age=31536000, immutable"
+        correct: true
+      - id: b
+        text: "Cache-Control: no-store"
+        feedback: "Le fichier serait retéléchargé à chaque visite, alors qu'il ne change jamais."
+      - id: c
+        text: "Cache-Control: max-age=60"
+      - id: d
+        text: Aucun en-tête, le CDN devinera.
+    explanation: |
+      Un fichier dont le nom contient l'empreinte de son contenu ne change jamais : un an de
+      cache et `immutable`. La page HTML qui le référence, elle, a une durée courte, pour
+      pointer vers le nouveau nom après un déploiement.

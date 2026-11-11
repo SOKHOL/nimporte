@@ -1,0 +1,119 @@
+exercises:
+  - id: architecture.n1.couches.qcm-sens
+    type: qcm
+    title: Qui appelle qui ?
+    skills: [couches]
+    difficulty: 1
+    prompt: Dans une architecture en couches classique, quelle dépendance est interdite ?
+    choices:
+      - id: a
+        text: La couche données qui appelle un contrôleur pour savoir quoi afficher.
+        correct: true
+      - id: b
+        text: Le contrôleur qui appelle un service métier.
+      - id: c
+        text: Le service métier qui appelle un dépôt (repository).
+      - id: d
+        text: Le service métier qui lève une exception métier.
+    explanation: |
+      Les dépendances vont vers le bas : présentation → métier → données. Une couche basse
+      qui connaît une couche haute crée un cycle : on ne peut plus changer l'interface sans
+      risquer de casser l'accès aux données.
+
+  - id: architecture.n1.mvc.review-controleur
+    type: code-review
+    title: "Revue : le contrôleur qui fait tout"
+    skills: [mvc, separation-responsabilites, couches]
+    difficulty: 3
+    language: kotlin
+    prompt: Ce contrôleur Spring fonctionne. Trouve au moins 3 problèmes d'architecture.
+    code: |
+      @PostMapping("/commandes")
+      fun creer(@RequestBody d: DemandeCommande): ResponseEntity<Any> {
+          if (d.lignes.isEmpty()) return ResponseEntity.badRequest().build()
+          var total = d.lignes.sumOf { it.prix * it.quantite }
+          if (total > 10_000) total = total * 95 / 100
+          jdbc.update("insert into commandes(client, total) values (?, ?)", d.client, total)
+          mailer.send(d.client, "Commande reçue : $total €")
+          return ResponseEntity.ok(mapOf("total" to total))
+      }
+    issues:
+      - lines: [4, 5]
+        category: conception
+        description: "Les règles métier (calcul du total, remise au-delà de 10 000) sont dans le contrôleur : impossibles à réutiliser (API mobile, traitement par lots) et à tester sans HTTP."
+      - lines: [6]
+        category: conception
+        description: "Du SQL dans la couche présentation : le contrôleur dépend directement du schéma de la base. Passer par un service métier et un dépôt."
+      - lines: [7]
+        category: conception
+        description: "L'envoi d'e-mail est une préoccupation d'infrastructure, appelée en plein milieu du traitement HTTP ; s'il échoue, que devient la commande déjà enregistrée ?"
+      - lines: [5]
+        category: lisibilite
+        description: "Nombres magiques (10 000, 95/100) : la règle de remise n'a pas de nom."
+    min_found: 3
+    explanation: |
+      Le contrôleur devrait seulement traduire : `val commande = service.passerCommande(...)`
+      puis renvoyer une réponse. Les règles vont dans le métier (testable en millisecondes),
+      le SQL dans un dépôt, l'e-mail dans un adaptateur, idéalement déclenché par un
+      événement « commande passée ».
+
+  - id: architecture.n1.mvc.match-roles
+    type: match
+    title: Les rôles de MVC
+    skills: [mvc]
+    difficulty: 2
+    prompt: Relie chaque élément d'une application web à son rôle dans MVC.
+    pairs:
+      - left: La méthode annotée @GetMapping qui reçoit la requête
+        right: Contrôleur
+      - left: La classe Commande et sa règle « pas plus de 50 lignes »
+        right: Modèle
+      - left: Le gabarit HTML qui affiche la liste des commandes
+        right: Vue
+      - left: Le JSON renvoyé par une API REST
+        right: Vue (une représentation du modèle)
+    explanation: |
+      Le contrôleur traduit les actions, le modèle porte les données et les règles, la vue
+      affiche. Dans une API, la « vue » est simplement la représentation JSON.
+
+  - id: architecture.n1.separation.qcm-changement
+    type: qcm
+    title: Le coût d'un changement
+    skills: [separation-responsabilites]
+    difficulty: 2
+    prompt: |
+      Pour changer la règle de calcul des frais de port, l'équipe doit modifier l'écran de
+      panier, l'API mobile, l'export comptable et un script nocturne. Quel est le diagnostic ?
+    choices:
+      - id: a
+        text: "La règle est dupliquée dans la présentation et les traitements au lieu de vivre à un seul endroit, dans le métier."
+        correct: true
+      - id: b
+        text: Le code manque de commentaires.
+      - id: c
+        text: Il faudrait passer aux microservices.
+        feedback: "Découper en services ne règle rien si la règle reste copiée partout ; on aurait quatre déploiements au lieu d'un."
+      - id: d
+        text: C'est normal, une règle métier touche toujours toutes les couches.
+    explanation: |
+      Une règle qui change pour une seule raison doit vivre à un seul endroit. Les quatre
+      consommateurs appellent ensuite la même fonction métier.
+
+  - id: architecture.n1.couches.parsons-flux
+    type: parsons
+    title: Le trajet d'une requête
+    skills: [couches, mvc]
+    difficulty: 2
+    language: text
+    prompt: Remets dans l'ordre le trajet d'une requête « passer une commande » dans une architecture en couches.
+    lines:
+      - Le contrôleur reçoit la requête HTTP et la convertit en appel métier
+      - Le service métier vérifie les règles et calcule le total
+      - Le dépôt enregistre la commande en base
+      - Le service renvoie la commande créée
+      - Le contrôleur la convertit en JSON avec le code 201
+    distractors:
+      - Le dépôt envoie la réponse HTTP au client
+    explanation: |
+      La requête descend (présentation → métier → données) et la réponse remonte. Le dépôt
+      ne sait rien du HTTP.

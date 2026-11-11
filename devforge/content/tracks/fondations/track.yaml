@@ -19,6 +19,18 @@ levels:
         title: Boucles
       - id: fonctions
         title: Fonctions
+    boss:
+      id: fondations.n1.boss
+      title: "Boss : le gardien des types"
+      exercises:
+        - fondations.n1.operateurs.qcm-debordement
+        - fondations.n1.conditions.bug-fizzbuzz
+        - fondations.n1.boucles.predict-intervalles
+        - fondations.n1.fonctions.trous-defaut
+        - fondations.n1.operateurs.qcm-flottants
+        - fondations.n1.operateurs.predict-division
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 2
     title: Organiser les données
@@ -33,6 +45,18 @@ levels:
         title: Récursivité
       - id: exceptions
         title: Gestion des erreurs
+    boss:
+      id: fondations.n2.boss
+      title: "Boss : la collection perdue"
+      exercises:
+        - fondations.n2.collections.predict-notes
+        - fondations.n2.chaines.qcm-concatenation
+        - fondations.n2.portee.predict-masquage
+        - fondations.n2.recursivite.bug-factorielle
+        - fondations.n2.exceptions.predict-finally
+        - fondations.n2.collections.match
+      pass_ratio: 0.8
+      time_limit_min: 12
 
   - level: 3
     title: Ce que coûte le code
@@ -45,6 +69,17 @@ levels:
         title: Nullabilité
       - id: typage
         title: Typage statique et dynamique
+    boss:
+      id: fondations.n3.boss
+      title: "Boss : le chronomètre impitoyable"
+      exercises:
+        - fondations.n3.complexite.match
+        - fondations.n3.structures.qcm-mesure
+        - fondations.n3.nullabilite.predict-elvis
+        - fondations.n3.typage.qcm
+        - fondations.n3.complexite.qcm-boucles
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 4
     title: Abstraire et assembler
@@ -57,6 +92,18 @@ levels:
         title: Compilation et exécution
       - id: modules
         title: Modules, paquets et dépendances
+    boss:
+      id: fondations.n4.boss
+      title: "Boss : l'architecte des fonctions"
+      exercises:
+        - fondations.n4.generiques.predict-plus-grand
+        - fondations.n4.variance.qcm-mutable
+        - fondations.n4.compilation.match
+        - fondations.n4.modules.qcm-semver
+        - fondations.n4.generiques.trous-borne
+        - fondations.n4.variance.match
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 5
     title: Apprendre n'importe quel langage
@@ -67,3 +114,14 @@ levels:
         title: Comparer Kotlin, Python, Go, Rust et TypeScript
       - id: apprendre-langage
         title: Apprendre un langage en une semaine
+    boss:
+      id: fondations.n5.boss
+      title: "Boss : le polyglotte"
+      exercises:
+        - fondations.n5.paradigmes.match
+        - fondations.n5.langages.predict-python
+        - fondations.n5.apprendre.qcm-methode
+        - fondations.n5.langages.match-erreurs
+        - fondations.n4.generiques.trous-borne
+      pass_ratio: 0.8
+      time_limit_min: 10

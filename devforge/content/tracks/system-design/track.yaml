@@ -14,6 +14,18 @@ levels:
         title: Scalabilité verticale et horizontale
       - id: estimations
         title: Estimations à la louche
+    boss:
+      id: system-design.n1.boss
+      title: "Boss : le p99"
+      exercises:
+        - system-design.n1.latence.qcm-fan-out
+        - system-design.n1.scalabilite.qcm-horizontal
+        - system-design.n1.estimations.qcm-stockage
+        - system-design.n1.latence.match-ordres
+        - system-design.n1.disponibilite.qcm-serie
+        - system-design.n1.estimations.qcm-rps
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 2
     title: Les briques de base
@@ -28,6 +40,18 @@ levels:
         title: Réplication de bases de données
       - id: stateless
         title: Services sans état
+    boss:
+      id: system-design.n2.boss
+      title: "Boss : la réplique en retard"
+      exercises:
+        - system-design.n2.load-balancing.qcm-sonde
+        - system-design.n2.cdn.match
+        - system-design.n2.replication.scenario-profil
+        - system-design.n2.cache.qcm-invalidation
+        - system-design.n2.cdn.qcm-cache-control
+        - system-design.n2.cache.qcm-lru
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 3
     title: Distribuer
@@ -40,6 +64,17 @@ levels:
         title: Partitionnement (sharding)
       - id: cap
         title: Théorème CAP et cohérence éventuelle
+    boss:
+      id: system-design.n3.boss
+      title: "Boss : le double débit"
+      exercises:
+        - system-design.n3.idempotence.scenario-double-debit
+        - system-design.n3.sharding.qcm-mod-n
+        - system-design.n3.cap.match
+        - system-design.n3.messages.qcm-ordre
+        - system-design.n3.cap.qcm-quorum
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 4
     title: Études de cas
@@ -54,6 +89,17 @@ levels:
         title: Rate limiter
       - id: notifications
         title: Système de notifications
+    boss:
+      id: system-design.n4.boss
+      title: "Boss : l'entretien de conception"
+      exercises:
+        - system-design.n4.url-shortener.qcm-302
+        - system-design.n4.chat.scenario-doublons
+        - system-design.n4.rate-limiter.qcm-seau
+        - system-design.n4.notifications.match
+        - system-design.n4.rate-limiter.qcm-fenetre-fixe
+      pass_ratio: 0.8
+      time_limit_min: 10
 
   - level: 5
     title: Systèmes distribués avancés
@@ -66,3 +112,15 @@ levels:
         title: Transactions distribuées et sagas
       - id: multi-region
         title: Multi-région
+    boss:
+      id: system-design.n5.boss
+      title: "Boss : le consensus"
+      exercises:
+        - system-design.n5.consensus.qcm-noeuds
+        - system-design.n5.horloges.predict-lamport
+        - system-design.n5.sagas.scenario-outbox
+        - system-design.n5.multi-region.match
+        - system-design.n5.horloges.qcm-lww
+        - system-design.n5.sagas.predict-compensations
+      pass_ratio: 0.8
+      time_limit_min: 12

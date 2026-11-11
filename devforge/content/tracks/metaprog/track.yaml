@@ -15,6 +15,17 @@ levels:
         title: Réflexion
       - id: reflexion-kotlin
         title: KClass et réflexion Kotlin
+    boss:
+      id: metaprog.n1.boss
+      title: "Boss : le réflecteur"
+      exercises:
+        - metaprog.n1.annotations.predict-cible
+        - metaprog.n1.reflexion.qcm-generation
+        - metaprog.n1.annotations.trous-declaration
+        - metaprog.n1.reflexion.qcm-r8
+        - metaprog.n1.annotations.qcm-retention
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 2
     title: Proxies et préoccupations transverses
@@ -25,6 +36,17 @@ levels:
         title: Proxies dynamiques
       - id: delegation-kotlin
         title: Délégation Kotlin (by)
+    boss:
+      id: metaprog.n2.boss
+      title: "Boss : le proxy masqué"
+      exercises:
+        - metaprog.n2.delegation.predict-by
+        - metaprog.n2.proxy.qcm-classe-finale
+        - metaprog.n2.proxy.predict-journal
+        - metaprog.n2.proxy.qcm-retrofit
+        - metaprog.n1.annotations.trous-declaration
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 3
     title: Programmation orientée aspect
@@ -37,6 +59,17 @@ levels:
         title: Spring AOP et ses pièges
       - id: transactional
         title: "@Transactional sous le capot"
+    boss:
+      id: metaprog.n3.boss
+      title: "Boss : l'aspect caché"
+      exercises:
+        - metaprog.n3.aop.predict-appel-interne
+        - metaprog.n3.aop.match-vocabulaire
+        - metaprog.n3.transactional.review-commandes
+        - metaprog.n3.transactional.qcm-rollback
+        - metaprog.n3.aop.trous-around
+      pass_ratio: 0.8
+      time_limit_min: 11
 
   - level: 4
     title: Générer et transformer du code
@@ -49,6 +82,17 @@ levels:
         title: Génération de code (KSP, annotation processing)
       - id: plugins-compilateur
         title: Plugins du compilateur Kotlin
+    boss:
+      id: metaprog.n4.boss
+      title: "Boss : le générateur de code"
+      exercises:
+        - metaprog.n4.techniques.match
+        - metaprog.n4.serialisation.predict-defaut
+        - metaprog.n4.agents.qcm-premain
+        - metaprog.n4.choix.qcm-pourquoi-compilation
+        - metaprog.n4.ksp.qcm-lire
+      pass_ratio: 0.8
+      time_limit_min: 9
 
   - level: 5
     title: Des langages dans le langage
@@ -59,3 +103,14 @@ levels:
         title: Macros (Rust, Lisp)
       - id: cout-magie
         title: Quand la magie coûte trop cher
+    boss:
+      id: metaprog.n5.boss
+      title: "Boss : le langage dans le langage"
+      exercises:
+        - metaprog.n5.dsl.predict-html
+        - metaprog.n5.macros.qcm-c
+        - metaprog.n5.cout.qcm-magie
+        - metaprog.n5.dsl.trous-receveur
+        - metaprog.n5.macros.predict-rust
+      pass_ratio: 0.8
+      time_limit_min: 9
